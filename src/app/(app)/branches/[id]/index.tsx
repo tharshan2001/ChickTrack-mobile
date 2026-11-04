@@ -157,7 +157,10 @@ function BranchHome({ b }: { b: Branch }) {
             {owes.data ? formatRupees(owes.data) : '…'}
           </Text>
         </View>
-        <Text variant="caption">Recording payments comes with the Money tab.</Text>
+        <ActionLink
+          title="Record payment"
+          onPress={() => router.push({ pathname: '/payments/new', params: { branchId: b.id } })}
+        />
       </Section>
     </Screen>
   );

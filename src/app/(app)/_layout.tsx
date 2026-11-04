@@ -12,6 +12,7 @@ export default function AppLayout() {
       ))}
       <Stack.Screen name="purchases/new" options={{ presentation: 'modal' }} />
       <Stack.Screen name="dispatches/new" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="payments/new" options={{ presentation: 'modal' }} />
       <Stack.Screen name="prices/set" options={{ presentation: 'modal' }} />
       <Stack.Screen name="prices/margin" options={{ presentation: 'modal' }} />
     </Stack>

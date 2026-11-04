@@ -307,3 +307,42 @@ export type BranchSaleInput = {
   notes: string | null;
   items: { chickenTypeId: string; weightKg: string }[];
 };
+
+// ---- money ----
+
+export type PaymentMethod = 'CASH' | 'BANK' | 'CHEQUE';
+
+/** Mirrors payment/dto/BranchSettlementResponse. */
+export type Settlement = {
+  id: string;
+  branchId: string;
+  settlementDate: string;
+  amount: string;
+  method: string;
+  reference: string | null;
+  notes: string | null;
+  status: 'POSTED' | 'REVERSED' | string;
+  reversalReason: string | null;
+  allocations: { id: string; branchSaleId: string; amount: string }[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SettlementInput = {
+  branchId: string;
+  settlementDate: string;
+  amount: string;
+  method: PaymentMethod;
+  reference: string | null;
+  notes: string | null;
+  allocations: { branchSaleId: string; amount: string }[];
+};
+
+/** A branch sale not fully paid for yet (GET /branches/{id}/open-sales). */
+export type OpenSale = {
+  branchSaleId: string;
+  reference: string;
+  saleDate: string;
+  transferValue: string;
+  outstandingAmount: string;
+};

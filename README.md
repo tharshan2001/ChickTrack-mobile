@@ -8,7 +8,10 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
   `/oauth2/token` with the `urn:chicktrack:params:oauth:grant-type:password` grant (client `chicktrack-mobile`).
   - Tokens are stored in SecureStore; the password is not.
   - The 15-minute access token refreshes on its own with the rotating 30-day refresh token.
-- Owner tabs: Home, Stock, Branches, Money and More. Money is a placeholder for now.
+- Owner tabs: Home, Stock, Branches, Money and More.
+- **Money**: what each branch owes (total and per branch), recent payments; record a payment by
+  cash, bank or cheque, split across the branch's unpaid sales oldest first (untick a sale to skip
+  it); reverse a payment with a reason — `/api/v1/branch-settlements`, `/api/v1/branches/{id}/open-sales`
 - **Branches**: each branch's stock, today's sales and what it owes; branch home with deliveries to confirm; daily sales per product at the branch's selling price (saving the same day again replaces it) — `/api/v1/branches/{id}/stock`, `/balance`, `/api/v1/branch-sales`
 - **Stock**:
   - warehouse batches oldest first, with free / held weight and landed cost — `/api/v1/stock-batches`
@@ -78,6 +81,7 @@ src/
       purchases/        list, new, [id]
       dispatches/       index, new, [id], [id]/receive
       branches/         new, [id] (home), [id]/edit, [id]/sales
+      payments/         new, [id]
   auth/                 OAuth config, token storage, refresh (single-flight)
   api/                  fetch client, types, createCrud() hooks for master data
   features/             screens shared by several routes, prices API hooks
