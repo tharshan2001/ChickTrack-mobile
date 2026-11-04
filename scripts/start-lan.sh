@@ -13,11 +13,11 @@ if [ -z "$IP" ]; then
   exit 1
 fi
 
-echo "EXPO_PUBLIC_API_URL=http://$IP:8080" > .env
-echo "API: http://$IP:8080  (written to .env)"
+echo "EXPO_PUBLIC_API_URL=http://$IP:8090" > .env
+echo "API: http://$IP:8090  (written to .env)"
 
-if ! curl -s -o /dev/null --max-time 3 "http://$IP:8080/actuator/health"; then
-  echo "Warning: the backend isn't answering at http://$IP:8080 yet. Start it with ../ChickTrack/scripts/run-lan.sh" >&2
+if ! curl -s -o /dev/null --max-time 3 "http://$IP:8090/actuator/health"; then
+  echo "Warning: the backend isn't answering at http://$IP:8090 yet. Start it with ../ChickTrack/scripts/run-lan.sh" >&2
 fi
 
 exec npx expo start --lan --clear

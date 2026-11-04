@@ -36,7 +36,7 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
    cd ../ChickTrack && ./scripts/run-lan.sh
    ```
 
-   It sets `OAUTH_ISSUER=http://<lan-ip>:8080` (tokens must match the URL the phone calls) and
+   It sets `OAUTH_ISSUER=http://<lan-ip>:8090` (tokens must match the URL the phone calls) and
    allows both sign-in redirects: `chicktrack://oauth2/callback` for development builds and
    `exp://<lan-ip>:8081/--/oauth2/callback` for Expo Go. The backend updates its saved client on
    every start, so a new Wi-Fi address only needs a restart.
@@ -48,7 +48,7 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
    npm run lan
    ```
 
-   This writes `.env` with `EXPO_PUBLIC_API_URL=http://<lan-ip>:8080` and starts Expo. Scan the QR
+   This writes `.env` with `EXPO_PUBLIC_API_URL=http://<lan-ip>:8090` and starts Expo. Scan the QR
    code with Expo Go (it must support SDK 58).
 
 3. Sign in as the owner: the bootstrap admin from the backend's `.env`
