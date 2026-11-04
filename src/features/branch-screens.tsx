@@ -15,7 +15,7 @@ import {
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Button, Card, Field, Notice, TextLink } from '@/components/ui';
-import { colors, fonts, space } from '@/theme/tokens';
+import { colors, space, type } from '@/theme/tokens';
 
 type Values = { code: string; name: string; phone: string; address: string };
 
@@ -51,7 +51,7 @@ function BranchForm({
               <View style={{ gap: 6 }}>
                 <Text variant="caption">Code</Text>
                 <View style={{ height: 48, justifyContent: 'center', paddingHorizontal: 2 }}>
-                  <Text variant="mono" style={{ fontSize: 16, color: colors.secondary }}>
+                  <Text variant="mono" style={{ ...type.inputMono, color: colors.secondary }}>
                     {lockedCode}
                   </Text>
                 </View>
@@ -65,7 +65,7 @@ function BranchForm({
                 autoCapitalize="characters"
                 autoCorrect={false}
                 placeholder="KDY"
-                style={{ fontFamily: fonts.mono }}
+                style={type.inputMono}
                 error={err('code')}
               />
             )}

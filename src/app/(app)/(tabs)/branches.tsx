@@ -10,7 +10,7 @@ import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, IconButton, SearchField } from '@/components/ui';
 import { useBranchBalance, useBranchSales, useBranchStock } from '@/features/branch-api';
 import { useDistributions } from '@/features/distribution-api';
-import { formatKg, sum, toUnits } from '@/lib/decimal';
+import { formatKgShort, sum, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
 
@@ -50,10 +50,10 @@ function BranchCard({ b }: { b: Branch }) {
         <Card style={{ padding: space.lg, gap: space.md, opacity: pressed ? 0.8 : 1 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md }}>
             <View style={{ flex: 1, gap: 2 }}>
-              <Text variant="bodyMedium" style={{ fontSize: 16, color: b.active ? colors.ink : colors.secondary }}>
+              <Text variant="headline" style={{ color: b.active ? colors.ink : colors.secondary }}>
                 {b.name}
               </Text>
-              <Text variant="mono" style={{ fontSize: 13, color: colors.secondary }}>
+              <Text variant="monoSmall" style={{ color: colors.secondary }}>
                 {b.code}
               </Text>
             </View>
@@ -61,7 +61,7 @@ function BranchCard({ b }: { b: Branch }) {
           </View>
           {b.active ? (
             <View style={{ flexDirection: 'row', gap: space.sm }}>
-              <Stat label="Stock" value={onHand ? formatKg(onHand) : '…'} />
+              <Stat label="Stock" value={onHand ? formatKgShort(onHand) : '…'} />
               <Stat label="Sales today" value={sold ? formatRupees(sold, 0).replace('Rs ', '') : '—'} muted={!sold} />
               <Stat
                 label="Owes"

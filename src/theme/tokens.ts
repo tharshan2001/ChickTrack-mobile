@@ -26,6 +26,16 @@ export const fonts = {
   mono: 'IBMPlexMono_500Medium',
 } as const;
 
+/** Text styles for inputs and controls (Text components use the variants in components/text.tsx). */
+export const type = {
+  input: { fontFamily: fonts.body, fontSize: 16, lineHeight: 22 },
+  inputMedium: { fontFamily: fonts.bodyMedium, fontSize: 16, lineHeight: 22 },
+  inputMono: { fontFamily: fonts.mono, fontSize: 16, lineHeight: 22 },
+  control: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18 },
+  controlActive: { fontFamily: fonts.bodySemiBold, fontSize: 13, lineHeight: 18 },
+  tab: { fontFamily: fonts.bodyMedium, fontSize: 11 },
+} as const;
+
 export const radius = { field: 10, card: 10, pill: 6 } as const;
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;

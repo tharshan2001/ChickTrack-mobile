@@ -10,7 +10,7 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, IconButton, Separator } from '@/components/ui';
 import { useProcurements } from '@/features/stock-api';
-import { formatKg, sum } from '@/lib/decimal';
+import { formatKgShort, formatKgWhole, sum } from '@/lib/decimal';
 import { colomboToday, formatDayHeading, formatRupees, weekStart } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
 
@@ -54,13 +54,13 @@ export default function Purchases() {
       <View style={{ flexDirection: 'row', paddingHorizontal: space.xs }}>
         <View style={{ flex: 1, gap: 2 }}>
           <Text variant="caption">Bought</Text>
-          <Text variant="mono" style={{ fontSize: 18 }}>
-            {formatKg(sum(list.map((p) => p.paidWeightKg), 3))}
+          <Text variant="num">
+            {formatKgWhole(sum(list.map((p) => p.paidWeightKg), 3))}
           </Text>
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <Text variant="caption">Spent</Text>
-          <Text variant="mono" style={{ fontSize: 18 }}>
+          <Text variant="num">
             {formatRupees(sum(list.map((p) => p.totalCost), 2), 0)}
           </Text>
         </View>
@@ -104,12 +104,12 @@ export default function Purchases() {
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                     <Text variant="caption">
-                      <Text variant="mono" style={{ fontSize: 13, color: colors.secondary }}>
+                      <Text variant="monoSmall" style={{ color: colors.secondary }}>
                         {p.reference}
                       </Text>
                     </Text>
-                    <Text variant="mono" style={{ fontSize: 13, color: colors.secondary }}>
-                      {formatKg(p.paidWeightKg)}
+                    <Text variant="monoSmall" style={{ color: colors.secondary }}>
+                      {formatKgShort(p.paidWeightKg)}
                     </Text>
                   </View>
                 </Pressable>

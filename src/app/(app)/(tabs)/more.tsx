@@ -19,7 +19,7 @@ function initials(name: string) {
 
 const count = (n: number | undefined) =>
   n === undefined ? null : (
-    <Text variant="mono" style={{ fontSize: 13, color: colors.secondary }}>
+    <Text variant="monoSmall" style={{ color: colors.secondary }}>
       {n}
     </Text>
   );
@@ -45,12 +45,12 @@ export default function More() {
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-          <Text variant="bodyMedium" style={{ color: colors.accentPressed, fontSize: 16 }}>
+          <Text variant="headline" style={{ color: colors.accentPressed }}>
             {user ? initials(user.fullName) : ''}
           </Text>
         </View>
         <View style={{ flex: 1, gap: space.xs, alignItems: 'flex-start' }}>
-          <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+          <Text variant="headline">
             {user?.fullName ?? '…'}
           </Text>
           {isOwner ? <Badge label="Owner · full access" tone="brand" /> : null}

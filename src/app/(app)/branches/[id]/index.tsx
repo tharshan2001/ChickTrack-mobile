@@ -10,7 +10,7 @@ import { Text } from '@/components/text';
 import { Badge, Card, IconButton, Separator } from '@/components/ui';
 import { useBranchBalance, useBranchSales, useBranchStock } from '@/features/branch-api';
 import { useDistributions } from '@/features/distribution-api';
-import { formatKg, toUnits } from '@/lib/decimal';
+import { formatKgShort, toUnits } from '@/lib/decimal';
 import { BusinessDate, colomboToday, formatRupees } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
 
@@ -75,16 +75,16 @@ function BranchHome({ b }: { b: Branch }) {
       {(arriving.data?.content ?? []).map((d) => (
         <Section key={d.id}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+            <Text variant="headline">
               Arriving
             </Text>
             <Badge label="Dispatched" tone="warning" />
           </View>
           <View style={{ gap: 2 }}>
-            <Text variant="monoLarge">{formatKg(d.totalWeightKg)}</Text>
+            <Text variant="numTitle">{formatKgShort(d.totalWeightKg)}</Text>
             <Text variant="caption">
               {[...new Set(d.items.map((i) => productName(i.chickenTypeId)))].join(', ')} ·{' '}
-              <Text variant="mono" style={{ fontSize: 13, color: colors.secondary }}>
+              <Text variant="monoSmall" style={{ color: colors.secondary }}>
                 {d.reference}
               </Text>
             </Text>
@@ -99,7 +99,7 @@ function BranchHome({ b }: { b: Branch }) {
 
       <Section>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+          <Text variant="headline">
             Today&apos;s sales
           </Text>
           {sales.isPending ? (
@@ -120,7 +120,7 @@ function BranchHome({ b }: { b: Branch }) {
 
       <Card>
         <View style={{ paddingHorizontal: space.lg, paddingTop: space.lg, paddingBottom: space.sm }}>
-          <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+          <Text variant="headline">
             Stock in branch
           </Text>
         </View>
@@ -142,7 +142,7 @@ function BranchHome({ b }: { b: Branch }) {
                 justifyContent: 'space-between',
               }}>
               <Text>{productName(s.chickenTypeId)}</Text>
-              <Text variant="mono">{formatKg(s.availableWeightKg)}</Text>
+              <Text variant="mono">{formatKgShort(s.availableWeightKg)}</Text>
             </View>
           </Fragment>
         ))}
@@ -150,10 +150,10 @@ function BranchHome({ b }: { b: Branch }) {
 
       <Section>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+          <Text variant="headline">
             Owes head office
           </Text>
-          <Text variant="mono" style={{ fontSize: 16 }}>
+          <Text variant="mono">
             {owes.data ? formatRupees(owes.data) : '…'}
           </Text>
         </View>

@@ -10,8 +10,8 @@ import {
   type ViewProps,
 } from 'react-native';
 
-import { Text } from '@/components/text';
-import { cardShadow, colors, fonts, radius, space } from '@/theme/tokens';
+import { MAX_FONT_SCALE, Text, androidText } from '@/components/text';
+import { cardShadow, colors, radius, space, type } from '@/theme/tokens';
 
 export function Card({ style, ...rest }: ViewProps) {
   return <View {...rest} style={[styles.card, style]} />;
@@ -48,7 +48,7 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
       {loading ? (
         <ActivityIndicator color={primary ? colors.surface : colors.accent} />
       ) : (
-        <Text variant="bodyMedium" style={{ color: primary ? colors.surface : colors.accent, letterSpacing: 0.5 }}>
+        <Text variant="bodyMedium" numberOfLines={1} style={{ color: primary ? colors.surface : colors.accent, letterSpacing: 0.5 }}>
           {title}
         </Text>
       )}
@@ -69,7 +69,9 @@ export function Badge({ label, tone = 'neutral' }: { label: string; tone?: Tone 
   const t = badgeTones[tone];
   return (
     <View style={[styles.badge, { backgroundColor: t.bg, borderColor: t.border }]}>
-      <Text style={[styles.badgeText, { color: t.fg }]}>{label}</Text>
+      <Text variant="badge" numberOfLines={1} style={{ color: t.fg }}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -83,6 +85,7 @@ export function Field({ label, hint, error, style, multiline, ...rest }: FieldPr
       <TextInput
         {...rest}
         accessibilityLabel={rest.accessibilityLabel ?? label}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         multiline={multiline}
         placeholderTextColor={colors.secondary}
         style={[
@@ -109,6 +112,7 @@ export function SearchField(props: TextInputProps) {
       <Feather name="search" size={16} color={colors.secondary} />
       <TextInput
         placeholderTextColor={colors.secondary}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         autoCorrect={false}
         clearButtonMode="while-editing"
         {...props}
@@ -226,12 +230,12 @@ const styles = StyleSheet.create({
   buttonPrimary: { backgroundColor: colors.accent },
   buttonSecondary: { backgroundColor: colors.field },
   badge: {
+    flexShrink: 1,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  badgeText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase' },
   input: {
     minHeight: 48,
     borderRadius: radius.field,
@@ -239,8 +243,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.field,
     borderWidth: 2,
     borderColor: 'transparent',
-    fontFamily: fonts.body,
-    fontSize: 16,
+    ...type.input,
+    ...androidText,
     color: colors.ink,
   },
   inputMultiline: { minHeight: 72, paddingTop: 12, paddingBottom: 12, textAlignVertical: 'top' },
@@ -253,7 +257,7 @@ const styles = StyleSheet.create({
     gap: space.sm,
     paddingHorizontal: space.md,
   },
-  searchInput: { flex: 1, fontFamily: fonts.body, fontSize: 15, color: colors.ink, paddingVertical: 0 },
+  searchInput: { flex: 1, ...type.input, ...androidText, color: colors.ink, paddingVertical: 0 },
   row: { minHeight: 64, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md },
   iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });

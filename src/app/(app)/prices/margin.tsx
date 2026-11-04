@@ -111,7 +111,7 @@ export default function SetMargin() {
       {productId ? (
         <Card>
           <View style={{ minHeight: 48, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text variant="caption" style={{ fontSize: 15 }}>
+            <Text variant="subhead">
               Margin now
             </Text>
             <Text variant="mono">{now ? formatPercent(now.markupPercent) : '0%'}</Text>

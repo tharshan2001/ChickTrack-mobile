@@ -11,7 +11,7 @@ import { Badge, Card, IconButton, Notice, Separator } from '@/components/ui';
 import { useProcurement } from '@/features/stock-api';
 import { formatKg, toUnits } from '@/lib/decimal';
 import { formatIsoDate, formatRupees, statusLabel } from '@/lib/format';
-import { colors, space } from '@/theme/tokens';
+import { colors, fonts, space } from '@/theme/tokens';
 
 const COMMISSION: Record<ProcurementItem['commissionMethod'], (v: string) => string> = {
   FIXED: () => 'fixed',
@@ -34,7 +34,7 @@ function Line({ label, value, strong }: { label: string; value: string; strong?:
       <Text variant={strong ? 'bodyMedium' : 'body'} style={strong ? undefined : { color: colors.secondary }}>
         {label}
       </Text>
-      <Text variant="mono" style={strong ? { fontSize: 16 } : undefined}>
+      <Text variant={strong ? 'headline' : 'mono'} style={strong ? { fontFamily: fonts.mono } : undefined}>
         {value}
       </Text>
     </View>
@@ -92,7 +92,7 @@ function PurchaseDetail({ p }: { p: Procurement }) {
               gap: space.md,
             }}>
             <View style={{ flex: 1, gap: 2 }}>
-              <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+              <Text variant="headline">
                 {productName(it.chickenTypeId)}
               </Text>
               <Text variant="caption">

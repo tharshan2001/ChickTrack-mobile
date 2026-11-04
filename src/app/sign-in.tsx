@@ -6,7 +6,7 @@ import { useAuth } from '@/auth/auth-context';
 import { API_URL } from '@/auth/config';
 import { Text } from '@/components/text';
 import { Button, Card, ErrorBanner, Field } from '@/components/ui';
-import { colors, fonts, space } from '@/theme/tokens';
+import { colors, space } from '@/theme/tokens';
 
 export default function SignIn() {
   const { signIn, signingIn, signInError } = useAuth();
@@ -42,7 +42,7 @@ export default function SignIn() {
                 CT
               </Text>
             </View>
-            <Text variant="largeTitle" accessibilityRole="header" style={{ fontSize: 34, lineHeight: 40, marginTop: space.md }}>
+            <Text variant="display" accessibilityRole="header" style={{ lineHeight: 40, marginTop: space.md }}>
               ChickTrack
             </Text>
             <Text style={{ color: colors.secondary, lineHeight: 22 }}>
@@ -85,7 +85,7 @@ export default function SignIn() {
           </Card>
 
           <View style={{ flexGrow: 1 }} />
-          <Text variant="caption" style={{ textAlign: 'center', marginTop: space.xl, fontFamily: fonts.mono, fontSize: 12 }}>
+          <Text variant="monoSmall" style={{ textAlign: 'center', marginTop: space.xl, color: colors.secondary }}>
             {API_URL}
           </Text>
         </ScrollView>

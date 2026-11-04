@@ -150,11 +150,11 @@ function SalesForm({
         return (
           <Card key={pid} style={{ padding: space.lg, gap: space.md }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+              <Text variant="headline">
                 {allProducts.find((x) => x.id === pid)?.name ?? 'Product'}
               </Text>
               <Text variant="caption">
-                <Text variant="mono" style={{ fontSize: 13 }}>
+                <Text variant="monoSmall">
                   {formatKg(fromUnits(sellable.get(pid)!, 3))}
                 </Text>{' '}
                 in branch
@@ -184,7 +184,7 @@ function SalesForm({
             {line !== null ? (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Text variant="caption">Line total</Text>
-                <Text variant="mono" style={{ fontSize: 14 }}>
+                <Text variant="monoSmall">
                   {formatRupees(fromUnits(line, 2))}
                 </Text>
               </View>
@@ -195,7 +195,7 @@ function SalesForm({
 
       {emptyProducts.map((p) => (
         <Card key={p.id} style={{ padding: space.lg, flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text variant="bodyMedium" style={{ fontSize: 16, color: colors.secondary }}>
+          <Text variant="headline" style={{ color: colors.secondary }}>
             {p.name}
           </Text>
           <Text variant="caption">No stock in branch</Text>
@@ -208,7 +208,7 @@ function SalesForm({
         <Card>
           <View style={{ minHeight: 48, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text variant="bodyMedium">Sales</Text>
-            <Text variant="mono" style={{ fontSize: 16 }}>
+            <Text variant="mono">
               {formatRupees(fromUnits(total, 2))}
             </Text>
           </View>

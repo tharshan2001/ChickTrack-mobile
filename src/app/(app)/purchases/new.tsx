@@ -127,7 +127,7 @@ export default function NewPurchase() {
         <View style={{ gap: 10 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <Text variant="caption">Total cost · {formatKg(preview.totalKg)}</Text>
-            <Text variant="monoLarge">{formatRupees(preview.total)}</Text>
+            <Text variant="numTitle">{formatRupees(preview.total)}</Text>
           </View>
           <Button title="Save purchase" onPress={save} loading={create.isPending} />
         </View>
@@ -161,7 +161,7 @@ export default function NewPurchase() {
             <Pressable key={it.key} accessibilityRole="button" onPress={() => setOpen(it.key)}>
               <Card style={{ padding: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+                  <Text variant="headline">
                     {productName(it.productId)}
                   </Text>
                   <Text variant="caption">
@@ -170,7 +170,7 @@ export default function NewPurchase() {
                   </Text>
                 </View>
                 {landed ? (
-                  <Text variant="mono" style={{ fontSize: 13, color: colors.success }}>
+                  <Text variant="monoSmall" style={{ color: colors.success }}>
                     {landed}
                   </Text>
                 ) : null}

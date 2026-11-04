@@ -3,7 +3,7 @@ import { Platform, Pressable, View } from 'react-native';
 
 import { Text } from '@/components/text';
 import { formatIsoDate, toIsoDate } from '@/lib/format';
-import { colors, radius } from '@/theme/tokens';
+import { colors, radius, type } from '@/theme/tokens';
 
 type Props = {
   label: string;
@@ -53,7 +53,7 @@ export function DateField({ label, value, onChange }: Props) {
           paddingHorizontal: 14,
           justifyContent: 'center',
         }}>
-        <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+        <Text style={type.inputMedium}>
           {formatIsoDate(value)}
         </Text>
       </Pressable>

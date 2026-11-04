@@ -100,7 +100,7 @@ export default function Prices() {
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+              <Text variant="headline">
                 {p.name}
               </Text>
               <Badge

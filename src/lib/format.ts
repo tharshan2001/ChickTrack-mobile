@@ -76,3 +76,23 @@ export function statusLabel(status: string): string {
   const s = status.toLowerCase().replace(/_/g, ' ');
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+/**
+ * Short rupee amount for tight tiles, in the lakh/crore style used in Sri Lanka:
+ * 1,071,894.20 -> "Rs 10.7 lakh", 25,500,000 -> "Rs 2.55 crore", 84,300 -> "Rs 84,300".
+ */
+export function formatRupeesCompact(amount: string): string {
+  const negative = amount.trim().startsWith('-');
+  const rupees = BigInt(amount.replace('-', '').split('.')[0] || '0');
+  const sign = negative ? '-' : '';
+  const scaled = (n: bigint, unit: bigint, digits: number) => {
+    const factor = 10n ** BigInt(digits);
+    const v = (n * factor + unit / 2n) / unit;
+    const whole = v / factor;
+    const frac = (v % factor).toString().padStart(digits, '0').replace(/0+$/, '');
+    return `${whole}${frac ? `.${frac}` : ''}`;
+  };
+  if (rupees >= 10_000_000n) return `${sign}Rs ${scaled(rupees, 10_000_000n, 2)} crore`;
+  if (rupees >= 100_000n) return `${sign}Rs ${scaled(rupees, 100_000n, 1)} lakh`;
+  return formatRupees(amount, 0);
+}

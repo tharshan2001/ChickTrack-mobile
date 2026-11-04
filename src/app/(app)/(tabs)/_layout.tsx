@@ -2,7 +2,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useQueryClient } from '@tanstack/react-query';
 import { Tabs } from 'expo-router/js-tabs';
 
-import { colors, fonts } from '@/theme/tokens';
+import { colors, type } from '@/theme/tokens';
 
 type IconName = keyof typeof Feather.glyphMap;
 
@@ -24,7 +24,8 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.secondary,
-        tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11 },
+        tabBarLabelStyle: type.tab,
+        tabBarAllowFontScaling: false,
         tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.separator },
       }}>
       <Tabs.Screen name="index" options={tab('Home', 'home')} />

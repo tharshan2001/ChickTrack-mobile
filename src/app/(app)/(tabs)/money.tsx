@@ -48,7 +48,7 @@ export default function MoneyTab() {
     <Screen title="Money" left={<></>} right={<TextLink title="+ Payment" onPress={() => router.push('/payments/new')} />}>
       <View style={{ gap: 2, paddingHorizontal: space.xs }}>
         <Text variant="caption">Branches owe you</Text>
-        {loading ? <ActivityIndicator color={colors.accent} style={{ alignSelf: 'flex-start' }} /> : <Text variant="monoLarge" style={{ fontSize: 28 }}>{formatRupees(total)}</Text>}
+        {loading ? <ActivityIndicator color={colors.accent} style={{ alignSelf: 'flex-start' }} /> : <Text variant="numLarge">{formatRupees(total)}</Text>}
       </View>
 
       {branchList.isError ? <ErrorBanner message={errorMessage(branchList.error)} onRetry={branchList.refetch} /> : null}
@@ -121,7 +121,7 @@ export default function MoneyTab() {
                       <Text numberOfLines={1}>
                         {branchName(p.branchId)} · {METHOD_LABEL[p.method] ?? p.method.toLowerCase()}
                         {p.reference ? (
-                          <Text variant="mono" style={{ fontSize: 13, color: colors.secondary }}>
+                          <Text variant="monoSmall" style={{ color: colors.secondary }}>
                             {' '}
                             · {p.reference}
                           </Text>

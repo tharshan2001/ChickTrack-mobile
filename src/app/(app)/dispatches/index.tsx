@@ -10,14 +10,14 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, IconButton, Notice, Separator } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
-import { formatKg } from '@/lib/decimal';
+import { formatKgShort } from '@/lib/decimal';
 import { colomboToday, formatDayHeading, formatRupees, statusLabel, weekStart } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
 
 type View_ = 'open' | 'week' | 'month';
 
 function badgeFor(d: Distribution) {
-  if (d.status === 'DRAFT') return <Badge label={`Draft · ${formatKg(d.totalWeightKg)} held`} tone="warning" />;
+  if (d.status === 'DRAFT') return <Badge label={`Draft · ${formatKgShort(d.totalWeightKg)} held`} tone="warning" />;
   if (d.status === 'DISPATCHED') return <Badge label="Dispatched" tone="neutral" />;
   if (d.status === 'REVERSED') return <Badge label="Reversed" tone="neutral" />;
   return <Badge label={statusLabel(d.status)} tone="success" />;
@@ -45,10 +45,10 @@ function Rows({ list, branchName }: { list: Distribution[]; branchName: (id: str
               {badgeFor(d)}
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text variant="mono" style={{ fontSize: 13, color: colors.secondary }}>
-                {d.reference} · {formatKg(d.totalWeightKg)}
+              <Text variant="monoSmall" style={{ color: colors.secondary }}>
+                {d.reference} · {formatKgShort(d.totalWeightKg)}
               </Text>
-              <Text variant="mono" style={{ fontSize: 13 }}>
+              <Text variant="monoSmall">
                 {formatRupees(d.totalTransferValue)}
               </Text>
             </View>

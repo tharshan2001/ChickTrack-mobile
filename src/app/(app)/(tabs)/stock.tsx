@@ -12,8 +12,8 @@ import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
 import { useOpenBatches } from '@/features/stock-api';
-import { formatKg, formatKgWhole, sum, toUnits } from '@/lib/decimal';
-import { formatRupees } from '@/lib/format';
+import { formatKg, formatKgShort, formatKgWhole, sum, toUnits } from '@/lib/decimal';
+import { formatRupees, formatRupeesCompact } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
 
 const W = 3; // weight scale
@@ -43,11 +43,11 @@ function BatchCard({ b }: { b: StockBatch }) {
       {({ pressed }) => (
         <Card style={{ padding: space.lg, gap: space.md, opacity: pressed ? 0.8 : 1 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+            <Text variant="headline">
               {b.chickenTypeName}
             </Text>
             {held ? (
-              <Badge label={`${formatKg(b.reservedWeightKg)} held`} tone="warning" />
+              <Badge label={`${formatKgShort(b.reservedWeightKg)} held`} tone="warning" />
             ) : (
               <Text variant="caption">{receivedLabel(b)}</Text>
             )}
@@ -59,13 +59,13 @@ function BatchCard({ b }: { b: StockBatch }) {
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: space.sm }}>
             <Text variant="caption" style={{ flex: 1 }} numberOfLines={1}>
-              <Text variant="mono" style={{ fontSize: 13 }}>
-                {formatKg(b.availableWeightKg)}
+              <Text variant="monoSmall">
+                {formatKgShort(b.availableWeightKg)}
               </Text>{' '}
-              free of {formatKg(b.receivedWeightKg).replace(' kg', '')}
+              free of {formatKgShort(b.receivedWeightKg).replace(' kg', '')}
               {held ? ` · ${receivedLabel(b)}` : ''}
             </Text>
-            <Text variant="mono" style={{ fontSize: 13, color: colors.secondary }}>
+            <Text variant="monoSmall" style={{ color: colors.secondary }}>
               {formatRupees(b.landedCostPerKg)}/kg
             </Text>
           </View>
@@ -79,7 +79,7 @@ function Stat({ label, value, tone, flex = 1 }: { label: string; value: string; 
   return (
     <View style={{ flex, gap: 2 }}>
       <Text variant="caption">{label}</Text>
-      <Text variant="mono" numberOfLines={1} adjustsFontSizeToFit style={{ fontSize: 18, color: tone ?? colors.ink }}>
+      <Text variant="num" numberOfLines={1} style={{ color: tone ?? colors.ink }}>
         {value}
       </Text>
     </View>
@@ -108,7 +108,9 @@ function ActionButton({
       onPress={onPress}
       style={({ pressed }) => ({
         flex: 1,
-        height: 44,
+        minHeight: 44,
+        paddingVertical: 6,
+        paddingHorizontal: space.sm,
         borderRadius: radius.field,
         backgroundColor: primary ? (pressed ? colors.accentPressed : colors.accent) : colors.field,
         flexDirection: 'row',
@@ -118,7 +120,7 @@ function ActionButton({
         opacity: disabled ? 0.45 : 1,
       })}>
       <Feather name={icon} size={18} color={fg} />
-      <Text variant="bodyMedium" style={{ color: fg, letterSpacing: 0.5 }}>
+      <Text variant="bodyMedium" style={{ color: fg, letterSpacing: 0.5, flexShrink: 1, textAlign: 'center' }}>
         {title}
       </Text>
     </Pressable>
@@ -157,8 +159,8 @@ export default function StockTab() {
       <ScrollView
         contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: space.xxl }}
         refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void qc.refetchQueries({ type: 'active' })} tintColor={colors.accent} />}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text variant="largeTitle" accessibilityRole="header">
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', columnGap: space.md }}>
+          <Text variant="largeTitle" accessibilityRole="header" style={{ flexShrink: 1 }}>
             Warehouse stock
           </Text>
           <Pressable
@@ -180,7 +182,7 @@ export default function StockTab() {
         <View style={{ flexDirection: 'row', gap: space.sm }}>
           <Stat label="On hand" value={formatKgWhole(onHand)} />
           <Stat label="Held" value={formatKgWhole(held)} tone={toUnits(held, W) > 0n ? colors.warning : undefined} />
-          <Stat label="Value" value={formatRupees(value, 0)} flex={1.5} />
+          <Stat label="Value" value={formatRupeesCompact(value)} flex={1.5} />
         </View>
 
         {productTabs.length > 1 ? (
@@ -212,7 +214,7 @@ export default function StockTab() {
                   <Text variant="bodyMedium">Open dispatches</Text>
                   <Text variant="caption">
                     {[
-                      draftCount ? `${draftCount} ${draftCount === 1 ? 'draft' : 'drafts'} holding ${formatKg(heldByDrafts)}` : null,
+                      draftCount ? `${draftCount} ${draftCount === 1 ? 'draft' : 'drafts'} holding ${formatKgShort(heldByDrafts)}` : null,
                       wayCount ? `${wayCount} on the way` : null,
                     ]
                       .filter(Boolean)

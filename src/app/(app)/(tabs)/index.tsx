@@ -12,9 +12,9 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, SectionHeader, Separator } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
-import { formatKg, formatKgWhole, sum, toUnits } from '@/lib/decimal';
-import { BusinessDate, colomboToday, formatRupees } from '@/lib/format';
-import { colors, space } from '@/theme/tokens';
+import { formatKgShort, formatKgWhole, sum, toUnits } from '@/lib/decimal';
+import { BusinessDate, colomboToday, formatRupeesCompact } from '@/lib/format';
+import { colors, fonts, space } from '@/theme/tokens';
 
 /** Home refreshes on its own every minute while it is open. */
 const LIVE = 60_000;
@@ -42,7 +42,7 @@ function QuickAction({ icon, label, href }: { icon: keyof typeof Feather.glyphMa
         }}>
         <Feather name={icon} size={22} color={colors.accentPressed} />
       </View>
-      <Text variant="bodyMedium" style={{ fontSize: 13 }}>
+      <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, color: colors.ink }}>
         {label}
       </Text>
     </Pressable>
@@ -81,11 +81,11 @@ function Tile({ label, value, note }: { label: string; value: string; note?: str
   return (
     <Card style={{ flexBasis: '47%', flexGrow: 1, padding: space.lg, gap: 4 }}>
       <Text variant="caption">{label}</Text>
-      <Text variant="mono" numberOfLines={1} adjustsFontSizeToFit style={{ fontSize: 18 }}>
+      <Text variant="num" numberOfLines={1}>
         {value}
       </Text>
       {note ? (
-        <Text variant="caption" style={{ fontSize: 12 }} numberOfLines={1}>
+        <Text variant="footnote" numberOfLines={1}>
           {note}
         </Text>
       ) : null}
@@ -94,8 +94,8 @@ function Tile({ label, value, note }: { label: string; value: string; note?: str
 }
 
 const kgStrong = (v: string) => (
-  <Text variant="mono" style={{ fontSize: 13, color: colors.ink }}>
-    {formatKg(v)}
+  <Text variant="monoSmall" style={{ color: colors.ink }}>
+    {formatKgShort(v)}
   </Text>
 );
 
@@ -211,18 +211,18 @@ export default function Home() {
         {dashboard.isPending ? <ActivityIndicator color={colors.accent} /> : null}
         {d ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
-            <Tile label="Sales" value={formatRupees(d.totalSales, 0)} note={`branch profit ${formatRupees(d.branchProfit, 0)}`} />
-            <Tile label="Our margin" value={formatRupees(d.ourMargin, 0)} note={`on ${formatKgWhole(d.distributionWeightKg)} sent`} />
+            <Tile label="Sales" value={formatRupeesCompact(d.totalSales)} note={`branch profit ${formatRupeesCompact(d.branchProfit)}`} />
+            <Tile label="Our margin" value={formatRupeesCompact(d.ourMargin)} note={`on ${formatKgWhole(d.distributionWeightKg)} sent`} />
             <Tile
               label="Branches owe"
-              value={owedTotal ? formatRupees(owedTotal, 0) : '…'}
-              note={`${formatRupees(d.branchOutstanding, 0)} from today`}
+              value={owedTotal ? formatRupeesCompact(owedTotal) : '…'}
+              note={`${formatRupeesCompact(d.branchOutstanding)} from today`}
             />
-            <Tile label="In warehouse" value={formatKgWhole(d.stockWeightKg)} note={formatRupees(d.stockValue, 0)} />
-            <Tile label="Bought" value={formatKgWhole(d.procurementWeightKg)} note={formatRupees(d.procurementValue, 0)} />
+            <Tile label="In warehouse" value={formatKgWhole(d.stockWeightKg)} note={formatRupeesCompact(d.stockValue)} />
+            <Tile label="Bought" value={formatKgWhole(d.procurementWeightKg)} note={formatRupeesCompact(d.procurementValue)} />
             <Tile
               label="Shrinkage"
-              value={formatKg(d.shrinkageWeightKg)}
+              value={formatKgShort(d.shrinkageWeightKg)}
               note={toUnits(d.shrinkageWeightKg, 3) > 0n ? 'damage, loss, short deliveries' : 'none today'}
             />
           </View>

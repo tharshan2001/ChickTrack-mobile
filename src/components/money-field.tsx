@@ -2,7 +2,7 @@ import type { TextInputProps } from 'react-native';
 
 import { Field } from '@/components/ui';
 import { isDecimalDraft } from '@/lib/decimal';
-import { fonts } from '@/theme/tokens';
+import { type } from '@/theme/tokens';
 
 type Props = Omit<TextInputProps, 'onChangeText' | 'value'> & {
   label: string;
@@ -25,7 +25,7 @@ export function DecimalField({ value, onChangeText, scale = 2, ...rest }: Props)
         const cleaned = t.replace(',', '.');
         if (isDecimalDraft(cleaned, scale)) onChangeText(cleaned);
       }}
-      style={{ fontFamily: fonts.mono }}
+      style={type.inputMono}
     />
   );
 }

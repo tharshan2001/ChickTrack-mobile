@@ -222,7 +222,7 @@ export default function RecordPayment() {
                       <View style={{ flex: 1, gap: 2 }}>
                         <Text>{formatIsoDate(s.saleDate)}</Text>
                         <Text variant="caption" numberOfLines={1}>
-                          <Text variant="mono" style={{ fontSize: 12, color: colors.secondary }}>
+                          <Text variant="monoSmall" style={{ color: colors.secondary }}>
                             {s.reference}
                           </Text>
                           {' · '}

@@ -27,10 +27,10 @@ const newLine = (): Line => ({ key: randomUUID(), productId: null, kg: '' });
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 }}>
-      <Text variant={strong ? 'bodyMedium' : 'caption'} style={strong ? undefined : { fontSize: 14 }}>
+      <Text variant={strong ? 'bodyMedium' : 'subhead'}>
         {label}
       </Text>
-      <Text variant="mono" style={{ fontSize: strong ? 16 : 14 }}>
+      <Text variant={strong ? 'mono' : 'monoSmall'}>
         {value}
       </Text>
     </View>
@@ -135,7 +135,7 @@ export default function SendToBranch() {
               <Text variant="caption">Branch will owe</Text>
               <Text variant="caption">Our margin {formatRupees(fromUnits(margin, 2))}</Text>
             </View>
-            <Text variant="monoLarge">{formatRupees(fromUnits(owes, 2))}</Text>
+            <Text variant="numTitle">{formatRupees(fromUnits(owes, 2))}</Text>
           </View>
           <Button
             title={totalKg > 0n ? `Save draft · holds ${formatKg(fromUnits(totalKg, 3))}` : 'Save draft'}
@@ -182,7 +182,7 @@ export default function SendToBranch() {
               <Text variant="caption">
                 {product ? (
                   <>
-                    <Text variant="mono" style={{ fontSize: 13 }}>
+                    <Text variant="monoSmall">
                       {formatKg(fromUnits(p!.freeKg, 3))}
                     </Text>{' '}
                     free

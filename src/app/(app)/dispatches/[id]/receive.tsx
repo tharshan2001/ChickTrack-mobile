@@ -105,13 +105,13 @@ function Receive({ d }: { d: Distribution }) {
         return (
           <Card key={item.id} style={{ padding: space.lg, gap: space.md }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+              <Text variant="headline">
                 {productName(item.chickenTypeId)}
                 {sameProduct(item.chickenTypeId) ? <Text variant="caption"> · line {idx + 1}</Text> : null}
               </Text>
               <Text variant="caption">
                 Sent{' '}
-                <Text variant="mono" style={{ fontSize: 13 }}>
+                <Text variant="monoSmall">
                   {formatKg(item.weightKg)}
                 </Text>
               </Text>
@@ -127,7 +127,7 @@ function Receive({ d }: { d: Distribution }) {
               <>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text variant="caption">Shortfall</Text>
-                  <Text variant="mono" style={{ fontSize: 14, color: colors.warning }}>
+                  <Text variant="monoSmall" style={{ color: colors.warning }}>
                     {formatKg(fromUnits(c.short, 3))}
                   </Text>
                 </View>

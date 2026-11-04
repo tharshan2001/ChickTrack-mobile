@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/text';
 import { Separator, TextLink } from '@/components/ui';
-import { colors, fonts, radius, space } from '@/theme/tokens';
+import { colors, radius, space, type } from '@/theme/tokens';
 
 export type Option = { value: string; label: string; detail?: string };
 
@@ -44,8 +44,7 @@ export function SelectField({ label, value, options, onChange, placeholder = 'Ch
           opacity: pressed ? 0.7 : 1,
         })}>
         <Text
-          variant="bodyMedium"
-          style={{ flex: 1, fontSize: 16, color: selected ? colors.ink : colors.secondary }}
+          style={{ flex: 1, ...type.inputMedium, color: selected ? colors.ink : colors.secondary }}
           numberOfLines={1}>
           {selected?.label ?? placeholder}
         </Text>
@@ -144,7 +143,7 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
               }}>
               <Text
                 numberOfLines={1}
-                style={{ fontFamily: on ? fonts.bodySemiBold : fonts.body, fontSize: 13, color: colors.ink, paddingHorizontal: 4 }}>
+                style={{ ...(on ? type.controlActive : type.control), color: colors.ink, paddingHorizontal: 4 }}>
                 {o.label}
               </Text>
             </Pressable>
@@ -184,7 +183,7 @@ export function Chips<T extends string>({ label, options, value, onChange, error
                 justifyContent: 'center',
                 backgroundColor: on ? colors.ink : colors.field,
               }}>
-              <Text style={{ fontFamily: on ? fonts.bodySemiBold : fonts.body, fontSize: 13, color: on ? colors.surface : colors.ink }}>
+              <Text style={{ ...(on ? type.controlActive : type.control), color: on ? colors.surface : colors.ink }}>
                 {o.label}
               </Text>
             </Pressable>

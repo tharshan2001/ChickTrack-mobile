@@ -90,3 +90,8 @@ export function formatKg(value: string): string {
 export function formatKgWhole(value: string): string {
   return formatKg(fromUnits(divRound(toUnits(value, 3), 1000n) * 1000n, 3));
 }
+
+/** One decimal for lists and summaries: "102.507" -> "102.5 kg", "85.000" -> "85 kg". */
+export function formatKgShort(value: string): string {
+  return formatKg(fromUnits(divRound(toUnits(value, 3), 100n) * 100n, 3));
+}

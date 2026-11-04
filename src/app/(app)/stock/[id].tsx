@@ -119,7 +119,7 @@ function AdjustStock({ batch }: { batch: StockBatch }) {
         {w > 0n ? (
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Text variant="caption">Free after this change</Text>
-            <Text variant="mono" style={{ fontSize: 13, color: after < 0n ? colors.danger : colors.ink }}>
+            <Text variant="monoSmall" style={{ color: after < 0n ? colors.danger : colors.ink }}>
               {fromUnits(available, W)} → {fromUnits(after, W)} kg
             </Text>
           </View>
@@ -160,8 +160,8 @@ function AdjustStock({ batch }: { batch: StockBatch }) {
                     </Text>
                   </View>
                   <Text
-                    variant="mono"
-                    style={{ color: h.change.startsWith('-') ? colors.danger : colors.success, fontSize: 14 }}>
+                    variant="monoSmall"
+                    style={{ color: h.change.startsWith('-') ? colors.danger : colors.success }}>
                     {h.change.startsWith('-') ? '−' + h.change.slice(1) : '+' + h.change}
                   </Text>
                 </View>

@@ -11,7 +11,7 @@ import { Badge, Button, Card, Field, IconButton, Notice, Separator } from '@/com
 import { useDispatch, useDistribution as useDistributionQuery, useReverseDistribution } from '@/features/distribution-api';
 import { divRound, formatKg, fromUnits, sum, toUnits } from '@/lib/decimal';
 import { formatIsoDate, formatRupees, statusLabel } from '@/lib/format';
-import { colors, space } from '@/theme/tokens';
+import { colors, fonts, space } from '@/theme/tokens';
 
 export default function DispatchDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,10 +37,10 @@ function Progress({ d }: { d: Distribution }) {
         return (
           <View key={s.status} style={{ flex: 1, gap: 6 }}>
             <View style={{ height: 4, borderRadius: 2, backgroundColor: done ? colors.accent : colors.field }} />
-            <Text variant="bodyMedium" style={{ fontSize: 13, color: done ? colors.ink : colors.secondary }}>
+            <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, color: done ? colors.ink : colors.secondary }}>
               {s.title}
             </Text>
-            <Text variant="caption" style={{ fontSize: 12 }}>
+            <Text variant="footnote">
               {s.note(formatKg(d.totalWeightKg))}
             </Text>
           </View>
@@ -57,7 +57,7 @@ function Line({ label, value, strong }: { label: string; value: string; strong?:
       <Text variant={strong ? 'bodyMedium' : 'body'} style={strong ? undefined : { color: colors.secondary }}>
         {label}
       </Text>
-      <Text variant="mono" style={strong ? { fontSize: 16 } : undefined}>
+      <Text variant={strong ? 'headline' : 'mono'} style={strong ? { fontFamily: fonts.mono } : undefined}>
         {value}
       </Text>
     </View>
@@ -168,7 +168,7 @@ function DispatchDetail({ d }: { d: Distribution }) {
             {i > 0 ? <Separator /> : null}
             <View style={{ padding: space.lg, gap: 6 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text variant="bodyMedium" style={{ fontSize: 16 }}>
+                <Text variant="headline">
                   {productName(g.productId)}
                 </Text>
                 <Text variant="caption">
