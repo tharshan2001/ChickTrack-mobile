@@ -1,15 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { exchangeCodeAsync, ResponseType, useAuthRequest } from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
 import { createContext, use, useEffect, useState, type ReactNode } from 'react';
 
 import { api } from '@/api/client';
 import type { User } from '@/api/types';
-import { CLIENT_ID, SCOPES, discovery, redirectUri } from '@/auth/config';
-import { endSession, onSessionChange, restoreSession, startSession } from '@/auth/session';
-
-// Closes the browser popup when the redirect lands back on web.
-WebBrowser.maybeCompleteAuthSession();
+import { SignInError, endSession, onSessionChange, restoreSession, signInWithPassword } from '@/auth/session';
 
 type Status = 'loading' | 'signedOut' | 'signedIn';
 
@@ -17,8 +11,8 @@ type AuthValue = {
   status: Status;
   user: User | undefined;
   isOwner: boolean;
-  /** Opens the backend sign-in page. Resolves when the browser closes. */
-  signIn: () => Promise<void>;
+  /** Checks the username and password with the backend and starts a session. */
+  signIn: (username: string, password: string) => Promise<void>;
   signingIn: boolean;
   signInError: string | null;
   signOut: () => Promise<void>;
@@ -31,18 +25,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<Status>('loading');
   const [signingIn, setSigningIn] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
-
-  // Authorization Code + PKCE (S256). The code verifier stays on the device.
-  const [request, , promptAsync] = useAuthRequest(
-    {
-      clientId: CLIENT_ID,
-      redirectUri,
-      scopes: SCOPES,
-      responseType: ResponseType.Code,
-      usePKCE: true,
-    },
-    discovery,
-  );
 
   useEffect(() => {
     restoreSession().then((ok) => setStatus(ok ? 'signedIn' : 'signedOut'));
@@ -59,28 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     staleTime: 5 * 60_000,
   });
 
-  async function signIn() {
-    if (!request) return;
+  async function signIn(username: string, password: string) {
     setSignInError(null);
     setSigningIn(true);
     try {
-      const result = await promptAsync();
-      if (result.type === 'success') {
-        const tokens = await exchangeCodeAsync(
-          {
-            clientId: CLIENT_ID,
-            code: result.params.code,
-            redirectUri,
-            extraParams: { code_verifier: request.codeVerifier ?? '' },
-          },
-          discovery,
-        );
-        await startSession(tokens);
-      } else if (result.type === 'error') {
-        setSignInError(result.error?.description ?? result.error?.message ?? 'Sign-in failed');
-      }
-    } catch {
-      setSignInError('Cannot reach the server. Check the API address and your Wi-Fi.');
+      await signInWithPassword(username, password);
+    } catch (e) {
+      setSignInError(e instanceof SignInError ? e.message : 'Something went wrong. Please try again.');
     } finally {
       setSigningIn(false);
     }
@@ -91,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: me.data,
     isOwner: me.data?.roles.includes('OWNER') ?? false,
     signIn,
-    signingIn: signingIn || !request,
+    signingIn,
     signInError,
     signOut: endSession,
   };

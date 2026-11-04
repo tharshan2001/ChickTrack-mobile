@@ -4,8 +4,9 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
 
 ## What works now
 
-- Sign-in with the backend's OAuth2 Authorization Code + PKCE flow (client `chicktrack-mobile`).
-  - Tokens are stored in SecureStore.
+- Sign-in with username and password on the app's own screen. The app exchanges them at the backend's
+  `/oauth2/token` with the `urn:chicktrack:params:oauth:grant-type:password` grant (client `chicktrack-mobile`).
+  - Tokens are stored in SecureStore; the password is not.
   - The 15-minute access token refreshes on its own with the rotating 30-day refresh token.
 - Owner tabs: Home, Stock, Branches, Money and More. Money is a placeholder for now.
 - **Branches**: each branch's stock, today's sales and what it owes; branch home with deliveries to confirm; daily sales per product at the branch's selling price (saving the same day again replaces it) — `/api/v1/branches/{id}/stock`, `/balance`, `/api/v1/branch-sales`
@@ -36,10 +37,7 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
    cd ../ChickTrack && ./scripts/run-lan.sh
    ```
 
-   It sets `OAUTH_ISSUER=http://<lan-ip>:8090` (tokens must match the URL the phone calls) and
-   allows both sign-in redirects: `chicktrack://oauth2/callback` for development builds and
-   `exp://<lan-ip>:8081/--/oauth2/callback` for Expo Go. The backend updates its saved client on
-   every start, so a new Wi-Fi address only needs a restart.
+   It sets `OAUTH_ISSUER=http://<lan-ip>:8090`, which must match the URL the phone calls.
 
 2. Start the app:
 
@@ -51,7 +49,7 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
    This writes `.env` with `EXPO_PUBLIC_API_URL=http://<lan-ip>:8090` and starts Expo. Scan the QR
    code with Expo Go (it must support SDK 58).
 
-3. Sign in as the owner: the bootstrap admin from the backend's `.env`
+3. Type the owner's username and password on the sign-in screen: the bootstrap admin from the backend's `.env`
    (`OAUTH_ADMIN_USERNAME` / `OAUTH_ADMIN_PASSWORD`, `admin` / `change-me` by default). It is created
    only on the first start against an empty database.
 
@@ -80,7 +78,6 @@ src/
       purchases/        list, new, [id]
       dispatches/       index, new, [id], [id]/receive
       branches/         new, [id] (home), [id]/edit, [id]/sales
-    oauth2/callback.tsx catches the sign-in redirect deep link
   auth/                 OAuth config, token storage, refresh (single-flight)
   api/                  fetch client, types, createCrud() hooks for master data
   features/             screens shared by several routes, prices API hooks

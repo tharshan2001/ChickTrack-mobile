@@ -1,5 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
-import type { ReactNode } from 'react';
+import type { ComponentRef, ReactNode, Ref } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -74,7 +74,7 @@ export function Badge({ label, tone = 'neutral' }: { label: string; tone?: Tone 
   );
 }
 
-type FieldProps = TextInputProps & { label: string; hint?: string; error?: string };
+type FieldProps = TextInputProps & { label: string; hint?: string; error?: string; ref?: Ref<ComponentRef<typeof TextInput>> };
 
 export function Field({ label, hint, error, style, multiline, ...rest }: FieldProps) {
   return (

@@ -1,6 +1,6 @@
 import { refreshAsync, revokeAsync, TokenError, TokenTypeHint, type TokenResponse } from 'expo-auth-session';
 
-import { CLIENT_ID, discovery } from '@/auth/config';
+import { CLIENT_ID, PASSWORD_GRANT, discovery } from '@/auth/config';
 import { clearTokens, loadTokens, saveTokens, type Tokens } from '@/auth/token-store';
 
 /**
@@ -39,8 +39,41 @@ export async function restoreSession(): Promise<boolean> {
   return current !== null;
 }
 
-export async function startSession(res: TokenResponse) {
-  current = fromResponse(res, null);
+/** Why signing in failed, in words for the sign-in screen. */
+export class SignInError extends Error {}
+
+/** Exchanges the typed username and password for tokens and starts the session. */
+export async function signInWithPassword(username: string, password: string) {
+  let res: Response;
+  try {
+    res = await fetch(discovery.tokenEndpoint!, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+      body: new URLSearchParams({ grant_type: PASSWORD_GRANT, client_id: CLIENT_ID, username, password }).toString(),
+    });
+  } catch {
+    throw new SignInError('Cannot reach the server. Check the API address and that the phone is on the same Wi-Fi.');
+  }
+  const body = (await res.json().catch(() => ({}))) as {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+    error?: string;
+  };
+  if (!res.ok || !body.access_token) {
+    throw new SignInError(
+      body.error === 'invalid_grant'
+        ? 'Wrong username or password.'
+        : body.error === 'unauthorized_client'
+          ? 'This server does not allow sign-in from the app yet. Restart the backend to update it.'
+          : `Sign-in failed (${body.error ?? res.status}).`,
+    );
+  }
+  current = {
+    accessToken: body.access_token,
+    refreshToken: body.refresh_token ?? null,
+    expiresAt: Date.now() + (body.expires_in ?? 900) * 1000,
+  };
   await saveTokens(current);
   notify();
 }

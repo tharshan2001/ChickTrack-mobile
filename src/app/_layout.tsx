@@ -47,7 +47,6 @@ function RootNavigator() {
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="sign-in" />
       </Stack.Protected>
-      <Stack.Screen name="oauth2/callback" />
     </Stack>
   );
 }

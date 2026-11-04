@@ -1,4 +1,4 @@
-import { makeRedirectUri, type DiscoveryDocument } from 'expo-auth-session';
+import type { DiscoveryDocument } from 'expo-auth-session';
 
 /**
  * Base URL of the ChickTrack backend, e.g. http://192.168.1.20:8090.
@@ -11,7 +11,11 @@ if (!raw) {
 export const API_URL = (raw ?? 'http://localhost:8090').replace(/\/+$/, '');
 
 export const CLIENT_ID = 'chicktrack-mobile';
-export const SCOPES = ['openid', 'profile', 'api.read', 'api.write'];
+/**
+ * In-app sign-in: the username and password typed on the sign-in screen are exchanged at the
+ * token endpoint for an access token and a rotating refresh token (see the backend's PasswordGrant).
+ */
+export const PASSWORD_GRANT = 'urn:chicktrack:params:oauth:grant-type:password';
 
 /** Spring Authorization Server endpoints. */
 export const discovery: DiscoveryDocument = {
@@ -19,9 +23,3 @@ export const discovery: DiscoveryDocument = {
   tokenEndpoint: `${API_URL}/oauth2/token`,
   revocationEndpoint: `${API_URL}/oauth2/revoke`,
 };
-
-/**
- * Development or release build: chicktrack://oauth2/callback (the backend default).
- * Expo Go: exp://<lan-ip>:8081/--/oauth2/callback, which must be registered on the backend.
- */
-export const redirectUri = makeRedirectUri({ scheme: 'chicktrack', path: 'oauth2/callback' });
