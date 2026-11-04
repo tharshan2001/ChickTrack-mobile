@@ -6,15 +6,26 @@ import type { DiscrepancyReason, Distribution, DistributionInput, DistributionSt
 const BASE = '/api/v1/distributions';
 const keys = {
   all: ['distributions'] as const,
-  list: (from: string, to: string, status?: DistributionStatus) => ['distributions', 'list', from, to, status] as const,
+  list: (from: string, to: string, status?: DistributionStatus, branchId?: string) =>
+    ['distributions', 'list', from, to, status, branchId] as const,
   detail: (id: string) => ['distributions', 'detail', id] as const,
 };
 
-export function useDistributions(from: string, to: string, status?: DistributionStatus) {
+/** Empty from/to means no date limit. */
+export function useDistributions(
+  from: string,
+  to: string,
+  status?: DistributionStatus,
+  branchId?: string,
+  enabled = true,
+) {
   return useQuery({
-    queryKey: keys.list(from, to, status),
+    enabled,
+    queryKey: keys.list(from, to, status, branchId),
     queryFn: () =>
-      api<Page<Distribution>>('GET', BASE, { query: { from, to, status, size: 200, sort: 'distributionDate,desc' } }),
+      api<Page<Distribution>>('GET', BASE, {
+        query: { from, to, status, branchId, size: 200, sort: 'distributionDate,desc' },
+      }),
   });
 }
 
@@ -31,6 +42,7 @@ function useInvalidateAfter() {
       qc.invalidateQueries({ queryKey: keys.all }),
       qc.invalidateQueries({ queryKey: ['stock-batches'] }),
       qc.invalidateQueries({ queryKey: ['branch-balance'] }),
+      qc.invalidateQueries({ queryKey: ['branch-stock'] }),
     ]);
   };
 }
@@ -79,6 +91,7 @@ export function useReceiveDistribution(id: string) {
         qc.invalidateQueries({ queryKey: keys.all }),
         qc.invalidateQueries({ queryKey: ['stock-batches'] }),
         qc.invalidateQueries({ queryKey: ['branch-balance'] }),
+        qc.invalidateQueries({ queryKey: ['branch-stock'] }),
       ]),
   });
 }

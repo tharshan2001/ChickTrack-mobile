@@ -9,6 +9,7 @@ import type { StockBatch } from '@/api/types';
 import { Segmented } from '@/components/pickers';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner } from '@/components/ui';
+import { useDistributions } from '@/features/distribution-api';
 import { useOpenBatches } from '@/features/stock-api';
 import { formatKg, sum, toUnits } from '@/lib/decimal';
 import { formatRupees } from '@/lib/format';
@@ -125,6 +126,11 @@ function ActionButton({
 
 export default function StockTab() {
   const query = useOpenBatches();
+  const drafts = useDistributions('', '', 'DRAFT');
+  const onTheWay = useDistributions('', '', 'DISPATCHED');
+  const draftCount = drafts.data?.totalElements ?? 0;
+  const wayCount = onTheWay.data?.totalElements ?? 0;
+  const heldByDrafts = sum((drafts.data?.content ?? []).map((d) => d.totalWeightKg), W);
   const [filter, setFilter] = useState('all');
   const batches = query.data ?? [];
 
@@ -195,6 +201,33 @@ export default function StockTab() {
             </Text>
           </Card>
         ) : null}
+
+        {draftCount + wayCount > 0 ? (
+          <Pressable accessibilityRole="button" onPress={() => router.push('/dispatches')}>
+            {({ pressed }) => (
+              <Card style={{ padding: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md, opacity: pressed ? 0.8 : 1 }}>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text variant="bodyMedium">Open dispatches</Text>
+                  <Text variant="caption">
+                    {[
+                      draftCount ? `${draftCount} ${draftCount === 1 ? 'draft' : 'drafts'} holding ${formatKg(heldByDrafts)}` : null,
+                      wayCount ? `${wayCount} on the way` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={16} color={colors.secondary} />
+              </Card>
+            )}
+          </Pressable>
+        ) : (
+          <Pressable accessibilityRole="link" onPress={() => router.push('/dispatches')} hitSlop={8}>
+            <Text variant="bodyMedium" style={{ color: colors.accent }}>
+              All dispatches ›
+            </Text>
+          </Pressable>
+        )}
 
         {shown.length ? <Text variant="caption">Oldest first · issued in this order</Text> : null}
         {shown.map((b) => (

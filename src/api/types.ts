@@ -270,3 +270,40 @@ export type Distribution = {
   createdAt: string;
   updatedAt: string;
 };
+
+// ---- branch operations ----
+
+export type BranchStock = { chickenTypeId: string; availableWeightKg: string };
+
+export type BranchSaleItem = {
+  id: string;
+  chickenTypeId: string;
+  weightKg: string;
+  sellingPricePerKg: string;
+  transferPricePerKg: string;
+  revenue: string;
+  cost: string;
+  profit: string;
+};
+
+/** One record per branch per day; saving again for the same day replaces it. */
+export type BranchSale = {
+  id: string;
+  reference: string;
+  branchId: string;
+  saleDate: string;
+  totalSales: string;
+  transferValue: string;
+  branchProfit: string;
+  notes: string | null;
+  items: BranchSaleItem[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BranchSaleInput = {
+  branchId: string;
+  saleDate: string;
+  notes: string | null;
+  items: { chickenTypeId: string; weightKg: string }[];
+};

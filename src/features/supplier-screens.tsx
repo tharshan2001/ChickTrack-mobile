@@ -68,7 +68,6 @@ function SupplierForm({ form, error }: { form: ReturnType<typeof useFormValues<V
           onChangeText={form.set('name')}
           maxLength={150}
           autoCapitalize="words"
-          hint="Must be unique."
           error={err('name')}
         />
         <View style={{ flexDirection: 'row', gap: 10 }}>
