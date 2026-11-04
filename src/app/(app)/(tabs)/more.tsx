@@ -5,7 +5,7 @@ import { useAuth } from '@/auth/auth-context';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Card, ListRow, SectionHeader, Separator } from '@/components/ui';
-import { useProducts } from '@/features/products/api';
+import { branches, expenseCategories, products, suppliers } from '@/api/resources';
 import { colors, space } from '@/theme/tokens';
 
 function initials(name: string) {
@@ -17,11 +17,21 @@ function initials(name: string) {
     .join('');
 }
 
-const soon = <Text variant="caption">Soon</Text>;
+const count = (n: number | undefined) =>
+  n === undefined ? null : (
+    <Text variant="mono" style={{ fontSize: 13, color: colors.secondary }}>
+      {n}
+    </Text>
+  );
 
 export default function More() {
   const { user, isOwner, signOut } = useAuth();
-  const products = useProducts('');
+  const counts = {
+    products: products.useList('', true).data?.totalElements,
+    branches: branches.useList('', true).data?.totalElements,
+    suppliers: suppliers.useList('', true).data?.totalElements,
+    categories: expenseCategories.useList('', true).data?.totalElements,
+  };
 
   return (
     <Screen title="More">
@@ -50,20 +60,20 @@ export default function More() {
       <View style={{ gap: space.sm }}>
         <SectionHeader title="Setup" />
         <Card>
+          <ListRow title="Prices & margins" chevron onPress={() => router.push('/prices')} />
+          <Separator />
+          <ListRow title="Branches" right={count(counts.branches)} chevron onPress={() => router.push('/branches')} />
+          <Separator />
+          <ListRow title="Suppliers" right={count(counts.suppliers)} chevron onPress={() => router.push('/suppliers')} />
+          <Separator />
+          <ListRow title="Products" right={count(counts.products)} chevron onPress={() => router.push('/products')} />
+          <Separator />
           <ListRow
-            title="Products"
-            right={<Text variant="mono" style={{ fontSize: 13, color: colors.secondary }}>{products.data?.totalElements ?? ''}</Text>}
+            title="Expense categories"
+            right={count(counts.categories)}
             chevron
-            onPress={() => router.push('/products')}
+            onPress={() => router.push('/expense-categories')}
           />
-          <Separator />
-          <ListRow title="Prices & margins" right={soon} />
-          <Separator />
-          <ListRow title="Branches" right={soon} />
-          <Separator />
-          <ListRow title="Suppliers" right={soon} />
-          <Separator />
-          <ListRow title="Expense categories" right={soon} />
         </Card>
       </View>
 

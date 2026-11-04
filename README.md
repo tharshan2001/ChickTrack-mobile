@@ -7,12 +7,16 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
 - Sign-in with the backend's OAuth2 Authorization Code + PKCE flow (client `chicktrack-mobile`).
   - Tokens are stored in SecureStore.
   - The 15-minute access token refreshes on its own with the rotating 30-day refresh token.
-- Owner tabs: Home, Stock, Branches, Money and More. Stock, Branches and Money are placeholders for now.
-- **Products** (chicken types), backed by `/api/v1/chicken-types`:
-  - list and search;
-  - add;
-  - edit name and description;
-  - switch active on or off.
+- Owner tabs: Home, Stock, Branches, Money and More. Stock and Money are placeholders for now.
+- **Setup** (list, search, add, edit, active on/off):
+  - Products (chicken types) — `/api/v1/chicken-types`
+  - Suppliers — `/api/v1/suppliers`
+  - Branches — `/api/v1/branches` (the code is fixed once created)
+  - Expense categories — `/api/v1/expense-categories`
+- **Prices & margins**:
+  - today's buying price and each branch's selling price per product — `/api/v1/daily-prices/current`
+  - set a price for all branches or one, starting now or on a date — `POST /api/v1/daily-prices`
+  - change the dispatch markup — `/api/v1/company-margin-rules`
 
 ## Run it
 
@@ -70,15 +74,17 @@ src/
   app/                  routes (Expo Router)
     _layout.tsx         fonts, React Query, auth provider, sign-in guard
     sign-in.tsx
-    (tabs)/             Home, Stock, Branches, Money, More
-    products/           list, new, [id] (edit)
+    (app)/              everything behind sign-in
+      (tabs)/           Home, Stock, Branches, Money, More
+      products/ suppliers/ branches/ expense-categories/   list, new, [id]
+      prices/           index, set, margin
     oauth2/callback.tsx catches the sign-in redirect deep link
   auth/                 OAuth config, token storage, refresh (single-flight)
-  api/                  fetch client: bearer token, retry on 401, Idempotency-Key, error type
-  features/products/    React Query hooks and the shared form
-  components/           Screen, Text, Card, Button, Badge, Field, ListRow…
+  api/                  fetch client, types, createCrud() hooks for master data
+  features/             screens shared by several routes, prices API hooks
+  components/           Screen, MasterList, forms, SelectField, Segmented, DateField…
   theme/tokens.ts       colours, fonts, spacing from the mockups
-  lib/format.ts         Colombo business date, rupee formatting of decimal strings
+  lib/                  Colombo dates, rupee formatting, string decimal helpers
 ```
 
 ## Conventions

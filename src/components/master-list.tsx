@@ -1,30 +1,47 @@
-import { router } from 'expo-router';
+import type { UseQueryResult } from '@tanstack/react-query';
+import { router, type Href } from 'expo-router';
 import { Fragment, useDeferredValue, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
-import { errorMessage } from '@/api/client';
+import { errorMessage, type Page } from '@/api/client';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, IconButton, ListRow, Notice, SearchField, Separator } from '@/components/ui';
-import { useProducts } from '@/features/products/api';
 import { colors, space } from '@/theme/tokens';
 
-export default function Products() {
+type Item = { id: string; name: string; active: boolean };
+
+type Props<T extends Item> = {
+  title: string;
+  subtitle: string;
+  noun: string;
+  plural: string;
+  useList: (search: string) => UseQueryResult<Page<T>>;
+  describe: (item: T) => string | undefined;
+  addHref: Href;
+  itemHref: (item: T) => Href;
+  note: string;
+  emptyText: string;
+  /** Hide the back button when the list is a tab. */
+  isTab?: boolean;
+};
+
+/** Searchable list of a master-data resource with Active/Inactive badges (Products, Suppliers, …). */
+export function MasterList<T extends Item>(p: Props<T>) {
   const [search, setSearch] = useState('');
-  const deferredSearch = useDeferredValue(search);
-  // The product list is short (one row per chicken type), so a single page of 100 covers it.
-  const query = useProducts(deferredSearch);
+  const deferred = useDeferredValue(search);
+  const query = p.useList(deferred);
   const items = query.data?.content ?? [];
 
   return (
     <Screen
-      title="Products"
-      subtitle="Chicken types you buy, stock and sell"
-      left={<IconButton icon="chevron-left" label="Back" onPress={() => router.back()} />}
-      right={<IconButton icon="plus" label="Add product" filled onPress={() => router.push('/products/new')} />}>
+      title={p.title}
+      subtitle={p.subtitle}
+      left={p.isTab ? <></> : <IconButton icon="chevron-left" label="Back" onPress={() => router.back()} />}
+      right={<IconButton icon="plus" label={`Add ${p.noun}`} filled onPress={() => router.push(p.addHref)} />}>
       <SearchField
-        placeholder="Search products"
-        accessibilityLabel="Search products"
+        placeholder={`Search ${p.plural}`}
+        accessibilityLabel={`Search ${p.plural}`}
         value={search}
         onChangeText={setSearch}
       />
@@ -41,23 +58,23 @@ export default function Products() {
                 {i > 0 ? <Separator /> : null}
                 <ListRow
                   title={item.name}
-                  subtitle={item.description ?? undefined}
+                  subtitle={p.describe(item)}
                   muted={!item.active}
                   right={
                     <Badge label={item.active ? 'Active' : 'Inactive'} tone={item.active ? 'success' : 'neutral'} />
                   }
-                  onPress={() => router.push({ pathname: '/products/[id]', params: { id: item.id } })}
+                  onPress={() => router.push(p.itemHref(item))}
                 />
               </Fragment>
             ))}
           </Card>
-          <Notice text="Inactive products are hidden from the purchase picker. Their history and any stock you hold stay as they are." />
+          <Notice text={p.note} />
         </>
       ) : query.isSuccess ? (
         <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>
-          <Text variant="bodyMedium">{deferredSearch ? 'No matches' : 'No products yet'}</Text>
+          <Text variant="bodyMedium">{deferred ? 'No matches' : `No ${p.plural} yet`}</Text>
           <Text variant="caption" style={{ textAlign: 'center' }}>
-            {deferredSearch ? 'Try another name.' : 'Add the chicken types you buy, like Broiler or Layer.'}
+            {deferred ? 'Try another name.' : p.emptyText}
           </Text>
         </Card>
       ) : null}

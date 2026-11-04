@@ -7,12 +7,12 @@ import { ComingSoon } from '@/components/coming-soon';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ListRow, SectionHeader, Separator } from '@/components/ui';
-import { useProducts } from '@/features/products/api';
+import { products as productsApi } from '@/api/resources';
 import { space } from '@/theme/tokens';
 
 export default function Home() {
   const { user } = useAuth();
-  const products = useProducts('', true);
+  const products = productsApi.useList('', true);
   const firstName = user?.fullName.split(' ')[0];
 
   return (
