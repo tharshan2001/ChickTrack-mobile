@@ -9,6 +9,9 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
   - Tokens are stored in SecureStore; the password is not.
   - The 15-minute access token refreshes on its own with the rotating 30-day refresh token.
 - Owner tabs: Home, Stock, Branches, Money and More.
+- **Home**: quick actions, a "Needs you" list (deliveries to confirm, drafts to dispatch, branches
+  without today's sales) and today's figures from `/api/v1/dashboard`; refreshes every minute.
+- Every screen reloads on pull-down, when its tab is shown again, and when the app returns to the foreground.
 - **Money**: what each branch owes (total and per branch), recent payments; record a payment by
   cash, bank or cheque, split across the branch's unpaid sales oldest first (untick a sale to skip
   it); reverse a payment with a reason — `/api/v1/branch-settlements`, `/api/v1/branches/{id}/open-sales`

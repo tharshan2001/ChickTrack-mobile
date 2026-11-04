@@ -346,3 +346,20 @@ export type OpenSale = {
   transferValue: string;
   outstandingAmount: string;
 };
+
+/** Mirrors report/dto/DashboardResponse (amounts are decimal strings). */
+export type Dashboard = {
+  from: string;
+  to: string;
+  procurementValue: string;
+  procurementWeightKg: string;
+  stockWeightKg: string;
+  stockValue: string;
+  distributionWeightKg: string;
+  distributionTransferValue: string;
+  ourMargin: string;
+  totalSales: string;
+  branchProfit: string;
+  branchOutstanding: string;
+  shrinkageWeightKg: string;
+};

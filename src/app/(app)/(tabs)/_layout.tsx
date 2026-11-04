@@ -1,4 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
+import { useQueryClient } from '@tanstack/react-query';
 import { Tabs } from 'expo-router/js-tabs';
 
 import { colors, fonts } from '@/theme/tokens';
@@ -14,8 +15,11 @@ const tab = (title: string, icon: IconName) => ({
 
 /** Owner navigation: Home, Stock, Branches, Money, More. */
 export default function TabsLayout() {
+  const qc = useQueryClient();
   return (
     <Tabs
+      // Tabs stay mounted, so reload anything older than the stale time when a tab is shown.
+      screenListeners={{ focus: () => void qc.refetchQueries({ type: 'active', stale: true }) }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.accent,

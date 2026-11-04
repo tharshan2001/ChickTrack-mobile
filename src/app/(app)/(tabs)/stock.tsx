@@ -1,4 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from 'react-native';
@@ -125,6 +126,7 @@ function ActionButton({
 }
 
 export default function StockTab() {
+  const qc = useQueryClient();
   const query = useOpenBatches();
   const drafts = useDistributions('', '', 'DRAFT');
   const onTheWay = useDistributions('', '', 'DISPATCHED');
@@ -154,7 +156,7 @@ export default function StockTab() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={['top', 'left', 'right']}>
       <ScrollView
         contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: space.xxl }}
-        refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void query.refetch()} tintColor={colors.accent} />}>
+        refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void qc.refetchQueries({ type: 'active' })} tintColor={colors.accent} />}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text variant="largeTitle" accessibilityRole="header">
             Warehouse stock

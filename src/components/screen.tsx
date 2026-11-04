@@ -1,9 +1,25 @@
-import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
+import { useState, type ReactNode } from 'react';
+import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/text';
 import { colors, space } from '@/theme/tokens';
+
+/** Pull down on any screen to reload everything it shows from the server. */
+function usePullToRefresh() {
+  const qc = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await qc.refetchQueries({ type: 'active' });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+  return <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />;
+}
 
 type ScreenProps = {
   title: string;
@@ -22,8 +38,10 @@ type ScreenProps = {
 /** Page shell matching the mockups: top bar, large title, padded body, optional pinned footer. */
 export function Screen({ title, subtitle, left, right, footer, scroll = true, children }: ScreenProps) {
   const hasBar = !!(left || right);
+  const refreshControl = usePullToRefresh();
   const body = scroll ? (
     <ScrollView
+      refreshControl={refreshControl}
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: space.xxl }}>
       {children}
