@@ -28,6 +28,9 @@ const currentQuery = (productId: string, branchId: string | null) => ({
   queryFn: () => fetchCurrent(productId, branchId),
 });
 
+/** For one-off reads outside render (e.g. prefilling a form), shared with the query cache. */
+export const currentPriceQuery = currentQuery;
+
 export function useCurrentPrice(productId: string | null, branchId: string | null) {
   return useQuery({ ...currentQuery(productId ?? '', branchId), enabled: !!productId });
 }

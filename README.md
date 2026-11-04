@@ -7,7 +7,11 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
 - Sign-in with the backend's OAuth2 Authorization Code + PKCE flow (client `chicktrack-mobile`).
   - Tokens are stored in SecureStore.
   - The 15-minute access token refreshes on its own with the rotating 30-day refresh token.
-- Owner tabs: Home, Stock, Branches, Money and More. Stock and Money are placeholders for now.
+- Owner tabs: Home, Stock, Branches, Money and More. Money is a placeholder for now.
+- **Stock**:
+  - warehouse batches oldest first, with free / held weight and landed cost — `/api/v1/stock-batches`
+  - adjust a batch (damage, loss, return, recount) with its history — `/api/v1/stock-adjustments`, `/api/v1/inventory-movements`
+  - new purchase with several chicken types, commission and shared costs; stock is added on save — `POST /api/v1/procurements`
 - **Setup** (list, search, add, edit, active on/off):
   - Products (chicken types) — `/api/v1/chicken-types`
   - Suppliers — `/api/v1/suppliers`
@@ -78,6 +82,8 @@ src/
       (tabs)/           Home, Stock, Branches, Money, More
       products/ suppliers/ branches/ expense-categories/   list, new, [id]
       prices/           index, set, margin
+      stock/[id]        adjust a batch
+      purchases/new     record a purchase
     oauth2/callback.tsx catches the sign-in redirect deep link
   auth/                 OAuth config, token storage, refresh (single-flight)
   api/                  fetch client, types, createCrud() hooks for master data

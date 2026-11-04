@@ -10,6 +10,7 @@ export default function AppLayout() {
       {['products', 'suppliers', 'expense-categories', 'branches'].map((r) => (
         <Stack.Screen key={r} name={`${r}/new`} options={{ presentation: 'modal' }} />
       ))}
+      <Stack.Screen name="purchases/new" options={{ presentation: 'modal' }} />
       <Stack.Screen name="prices/set" options={{ presentation: 'modal' }} />
       <Stack.Screen name="prices/margin" options={{ presentation: 'modal' }} />
     </Stack>

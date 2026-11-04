@@ -82,7 +82,7 @@ export function Field({ label, hint, error, style, multiline, ...rest }: FieldPr
       <Text variant="caption">{label}</Text>
       <TextInput
         {...rest}
-        accessibilityLabel={label}
+        accessibilityLabel={rest.accessibilityLabel ?? label}
         multiline={multiline}
         placeholderTextColor={colors.secondary}
         style={[
