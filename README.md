@@ -8,6 +8,7 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
   - Tokens are stored in SecureStore.
   - The 15-minute access token refreshes on its own with the rotating 30-day refresh token.
 - Owner tabs: Home, Stock, Branches, Money and More. Money is a placeholder for now.
+- **Branches**: each branch's stock, today's sales and what it owes; branch home with deliveries to confirm; daily sales per product at the branch's selling price (saving the same day again replaces it) — `/api/v1/branches/{id}/stock`, `/balance`, `/api/v1/branch-sales`
 - **Stock**:
   - warehouse batches oldest first, with free / held weight and landed cost — `/api/v1/stock-batches`
   - adjust a batch (damage, loss, return, recount) with its history — `/api/v1/stock-adjustments`, `/api/v1/inventory-movements`
@@ -27,47 +28,35 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
   - set a price for all branches or one, starting now or on a date — `POST /api/v1/daily-prices`
   - change the dispatch markup — `/api/v1/company-margin-rules`
 
-## Run it
+## Run it on your phone (same Wi-Fi as the Mac)
 
-1. Install the dependencies:
+1. Start the backend on the Mac's LAN address (Postgres comes up through Docker):
+
+   ```bash
+   cd ../ChickTrack && ./scripts/run-lan.sh
+   ```
+
+   It sets `OAUTH_ISSUER=http://<lan-ip>:8080` (tokens must match the URL the phone calls) and
+   allows both sign-in redirects: `chicktrack://oauth2/callback` for development builds and
+   `exp://<lan-ip>:8081/--/oauth2/callback` for Expo Go. The backend updates its saved client on
+   every start, so a new Wi-Fi address only needs a restart.
+
+2. Start the app:
 
    ```bash
    npm install
+   npm run lan
    ```
 
-2. Point the app at the backend.
+   This writes `.env` with `EXPO_PUBLIC_API_URL=http://<lan-ip>:8080` and starts Expo. Scan the QR
+   code with Expo Go (it must support SDK 58).
 
-   ```bash
-   cp .env.example .env
-   # edit EXPO_PUBLIC_API_URL=http://<your-mac-LAN-IP>:8080
-   ```
+3. Sign in as the owner: the bootstrap admin from the backend's `.env`
+   (`OAUTH_ADMIN_USERNAME` / `OAUTH_ADMIN_PASSWORD`, `admin` / `change-me` by default). It is created
+   only on the first start against an empty database.
 
-   A phone cannot reach `localhost`, so use your computer's LAN IP. Find it with `ipconfig getifaddr en0` on macOS.
-
-3. Start the backend with the **same** URL as its issuer, because tokens are only accepted when the issuer matches:
-
-   ```bash
-   OAUTH_ISSUER=http://<your-mac-LAN-IP>:8080 ./mvnw spring-boot:run
-   ```
-
-4. Start the app:
-
-   ```bash
-   npx expo start
-   ```
-
-### Sign-in redirect
-
-The backend accepts one redirect URI: `app.oauth.client.mobile.redirect-uri`, which defaults to `chicktrack://oauth2/callback`.
-
-| How you run the app | Redirect the app sends | Backend setting |
-| --- | --- | --- |
-| Development build (`npx expo run:ios` / `run:android`) or a release build | `chicktrack://oauth2/callback` | default, nothing to change |
-| Expo Go | `exp://<LAN-IP>:8081/--/oauth2/callback` | set `APP_OAUTH_CLIENT_MOBILE_REDIRECT_URI` to that value |
-
-The sign-in screen does not display the redirect URI. If sign-in fails with a redirect error, check the backend log for the URI it rejected.
-
-The backend registers the client only on first start. If a client already exists in the database, update `oauth2_registered_client.redirect_uris` as well.
+If the phone can't connect, allow Java through the macOS firewall, and check both devices are on
+the same network. Set `LAN_IP=192.168.x.x` in front of either command if the address is wrong.
 
 ## Checks
 
@@ -85,11 +74,12 @@ src/
     sign-in.tsx
     (app)/              everything behind sign-in
       (tabs)/           Home, Stock, Branches, Money, More
-      products/ suppliers/ branches/ expense-categories/   list, new, [id]
+      products/ suppliers/ expense-categories/   list, new, [id]
       prices/           index, set, margin
       stock/[id]        adjust a batch
       purchases/        list, new, [id]
-      dispatches/       new, [id], [id]/receive
+      dispatches/       index, new, [id], [id]/receive
+      branches/         new, [id] (home), [id]/edit, [id]/sales
     oauth2/callback.tsx catches the sign-in redirect deep link
   auth/                 OAuth config, token storage, refresh (single-flight)
   api/                  fetch client, types, createCrud() hooks for master data
