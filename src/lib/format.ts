@@ -43,3 +43,36 @@ export function formatIsoDate(isoDate: string): string {
     new Date(y!, m! - 1, d!),
   );
 }
+
+/** Today's calendar date in Colombo (yyyy-mm-dd), whatever the phone's time zone. */
+export function colomboToday(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(new Date());
+}
+
+/** Shifts a yyyy-mm-dd date by whole days. */
+export function addDays(isoDate: string, days: number): string {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const t = new Date(Date.UTC(y!, m! - 1, d! + days));
+  return t.toISOString().slice(0, 10);
+}
+
+/** Monday of the week containing the date. */
+export function weekStart(isoDate: string): string {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const dow = new Date(Date.UTC(y!, m! - 1, d!)).getUTCDay(); // 0 = Sunday
+  return addDays(isoDate, -((dow + 6) % 7));
+}
+
+/** "2026-11-04" -> "Wednesday 4 Nov". */
+export function formatDayHeading(isoDate: string): string {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
+    new Date(Date.UTC(y!, m! - 1, d!)),
+  );
+}
+
+/** "RECEIVED" / "PARTIALLY_RECEIVED" -> "Received" / "Partially received". */
+export function statusLabel(status: string): string {
+  const s = status.toLowerCase().replace(/_/g, ' ');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}

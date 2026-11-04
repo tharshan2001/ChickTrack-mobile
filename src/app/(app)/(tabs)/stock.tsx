@@ -149,13 +149,24 @@ export default function StockTab() {
       <ScrollView
         contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: space.xxl }}
         refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void query.refetch()} tintColor={colors.accent} />}>
-        <Text variant="largeTitle" accessibilityRole="header">
-          Warehouse stock
-        </Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text variant="largeTitle" accessibilityRole="header">
+            Warehouse stock
+          </Text>
+          <Pressable
+            accessibilityRole="link"
+            hitSlop={8}
+            onPress={() => router.push('/purchases')}
+            style={{ height: 44, flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+            <Text variant="bodyMedium" style={{ color: colors.accent }}>
+              Purchases
+            </Text>
+            <Feather name="chevron-right" size={16} color={colors.accent} />
+          </Pressable>
+        </View>
         <View style={{ flexDirection: 'row', gap: space.md }}>
           <ActionButton icon="plus" title="Buy stock" primary onPress={() => router.push('/purchases/new')} />
-          {/* Dispatch to branches arrives in the next phase. */}
-          <ActionButton icon="truck" title="Send to branch" disabled onPress={() => {}} />
+          <ActionButton icon="truck" title="Send to branch" onPress={() => router.push('/dispatches/new')} />
         </View>
 
         <View style={{ flexDirection: 'row', gap: space.sm }}>

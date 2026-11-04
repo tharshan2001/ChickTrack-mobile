@@ -12,6 +12,11 @@ Owner app for ChickTrack, built with Expo SDK 58, React Native, TypeScript and E
   - warehouse batches oldest first, with free / held weight and landed cost — `/api/v1/stock-batches`
   - adjust a batch (damage, loss, return, recount) with its history — `/api/v1/stock-adjustments`, `/api/v1/inventory-movements`
   - new purchase with several chicken types, commission and shared costs; stock is added on save — `POST /api/v1/procurements`
+  - purchases by day / week / month and each purchase's cost breakdown — `GET /api/v1/procurements`
+- **Dispatch** — `/api/v1/distributions`:
+  - send to branch: free stock oldest batch first, margin and delivery cost preview; saves a draft that holds the stock
+  - dispatch, cancel a draft or reverse a dispatch (with a reason)
+  - receive delivery line by line, with a reason for any shortfall
 - **Setup** (list, search, add, edit, active on/off):
   - Products (chicken types) — `/api/v1/chicken-types`
   - Suppliers — `/api/v1/suppliers`
@@ -83,7 +88,8 @@ src/
       products/ suppliers/ branches/ expense-categories/   list, new, [id]
       prices/           index, set, margin
       stock/[id]        adjust a batch
-      purchases/new     record a purchase
+      purchases/        list, new, [id]
+      dispatches/       new, [id], [id]/receive
     oauth2/callback.tsx catches the sign-in redirect deep link
   auth/                 OAuth config, token storage, refresh (single-flight)
   api/                  fetch client, types, createCrud() hooks for master data

@@ -1,12 +1,12 @@
-import Feather from '@expo/vector-icons/Feather';
 import { useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { expenseCategories, products, suppliers } from '@/api/resources';
+import { products, suppliers } from '@/api/resources';
 import type { CommissionMethod } from '@/api/types';
+import { AddRow, CostCard, costError, newCost, type Cost } from '@/components/cost-card';
 import { DateField } from '@/components/date-field';
 import { FormError, optional, useIdempotencyKey } from '@/components/form';
 import { DecimalField } from '@/components/money-field';
@@ -19,10 +19,9 @@ import { COMMISSION_OPTIONS, previewPurchase, type ItemDraft } from '@/features/
 import { useCreateProcurement } from '@/features/stock-api';
 import { formatKg, fromUnits, isDecimal, isPositiveDecimal, toFixedString } from '@/lib/decimal';
 import { formatRupees, toIsoDate } from '@/lib/format';
-import { colors, radius, space } from '@/theme/tokens';
+import { colors, space } from '@/theme/tokens';
 
 type Item = ItemDraft & { key: string; productId: string | null };
-type Cost = { key: string; categoryId: string | null; description: string; amount: string };
 
 const newItem = (): Item => ({
   key: randomUUID(),
@@ -33,7 +32,6 @@ const newItem = (): Item => ({
   method: 'PER_KG',
   commission: '',
 });
-const newCost = (): Cost => ({ key: randomUUID(), categoryId: null, description: '', amount: '' });
 
 function itemErrors(it: Item) {
   return {
@@ -49,7 +47,6 @@ export default function NewPurchase() {
   const qc = useQueryClient();
   const supplierList = suppliers.useList('', true);
   const productList = products.useList('', true);
-  const categoryList = expenseCategories.useList('', true);
   const productName = (id: string | null) => productList.data?.content.find((p) => p.id === id)?.name ?? 'Product';
 
   const [supplierId, setSupplierId] = useState<string | null>(null);
@@ -85,12 +82,11 @@ export default function NewPurchase() {
 
   const supplierError = supplierId ? undefined : 'Choose a supplier';
   const dateError = /^\d{4}-\d{2}-\d{2}$/.test(date) ? undefined : 'Enter a date as yyyy-mm-dd';
-  const costErrors = (c: Cost) => (isPositiveDecimal(c.amount) ? undefined : 'Enter the amount');
   const invalid =
     !!supplierError ||
     !!dateError ||
     items.some((it) => Object.values(itemErrors(it)).some(Boolean)) ||
-    costs.some((c) => costErrors(c));
+    costs.some((c) => costError(c));
 
   function save() {
     setTouched(true);
@@ -267,69 +263,18 @@ export default function NewPurchase() {
       />
 
       {costs.map((c) => (
-        <Card key={c.key} style={{ padding: space.lg, gap: space.md }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text variant="caption">Cost · shared across items by weight</Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Remove cost"
-              hitSlop={8}
-              onPress={() => setCosts((list) => list.filter((x) => x.key !== c.key))}>
-              <Feather name="x" size={18} color={colors.secondary} />
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', gap: space.sm }}>
-            <View style={{ flex: 1.3 }}>
-              <SelectField
-                label="Category"
-                value={c.categoryId}
-                onChange={(categoryId) => patchCost(c.key, { categoryId })}
-                placeholder="e.g. Transport"
-                options={(categoryList.data?.content ?? []).map((x) => ({ value: x.id, label: x.name }))}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <DecimalField
-                label="Amount Rs"
-                value={c.amount}
-                onChangeText={(amount) => patchCost(c.key, { amount })}
-                placeholder="0.00"
-                error={touched ? costErrors(c) : undefined}
-              />
-            </View>
-          </View>
-          <Field
-            label="Note (optional)"
-            value={c.description}
-            onChangeText={(description) => patchCost(c.key, { description })}
-            placeholder="e.g. Lorry"
-          />
-        </Card>
+        <CostCard
+          key={c.key}
+          cost={c}
+          onChange={(change) => patchCost(c.key, change)}
+          onRemove={() => setCosts((list) => list.filter((x) => x.key !== c.key))}
+          showErrors={touched}
+        />
       ))}
 
       <AddRow title="+ Add cost (transport, labour…)" onPress={() => setCosts((list) => [...list, newCost()])} />
 
       <Field label="Notes (optional)" value={notes} onChangeText={setNotes} multiline />
     </Screen>
-  );
-}
-
-function AddRow({ title, onPress }: { title: string; onPress: () => void }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => ({
-        height: 44,
-        borderRadius: radius.field,
-        backgroundColor: colors.field,
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: pressed ? 0.7 : 1,
-      })}>
-      <Text variant="bodyMedium" style={{ color: colors.accent, letterSpacing: 0.5 }}>
-        {title}
-      </Text>
-    </Pressable>
   );
 }

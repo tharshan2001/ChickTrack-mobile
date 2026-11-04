@@ -152,3 +152,48 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
     </View>
   );
 }
+
+/** Wrapping pill buttons for picking one of several reasons. */
+type ChipsProps<T extends string> = {
+  label: string;
+  options: { value: T; label: string }[];
+  value: T | null;
+  onChange: (value: T) => void;
+  error?: string;
+};
+
+export function Chips<T extends string>({ label, options, value, onChange, error }: ChipsProps<T>) {
+  return (
+    <View style={{ gap: 6 }}>
+      <Text variant="caption">{label}</Text>
+      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+        {options.map((o) => {
+          const on = o.value === value;
+          return (
+            <Pressable
+              key={o.value}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+              onPress={() => onChange(o.value)}
+              style={{
+                height: 36,
+                paddingHorizontal: 14,
+                borderRadius: 18,
+                justifyContent: 'center',
+                backgroundColor: on ? colors.ink : colors.field,
+              }}>
+              <Text style={{ fontFamily: on ? fonts.bodySemiBold : fonts.body, fontSize: 13, color: on ? colors.surface : colors.ink }}>
+                {o.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {error ? (
+        <Text variant="caption" style={{ color: colors.danger }}>
+          {error}
+        </Text>
+      ) : null}
+    </View>
+  );
+}

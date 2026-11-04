@@ -106,3 +106,20 @@ export function useCreateProcurement() {
       ]),
   });
 }
+
+export function useProcurements(from: string, to: string) {
+  return useQuery({
+    queryKey: [...keys.procurements, from, to],
+    queryFn: () =>
+      api<Page<Procurement>>('GET', '/api/v1/procurements', {
+        query: { from, to, size: 200, sort: 'procurementDate,desc' },
+      }),
+  });
+}
+
+export function useProcurement(id: string) {
+  return useQuery({
+    queryKey: [...keys.procurements, 'detail', id],
+    queryFn: () => api<Procurement>('GET', `/api/v1/procurements/${id}`),
+  });
+}

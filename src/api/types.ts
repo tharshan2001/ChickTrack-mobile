@@ -210,3 +210,63 @@ export type Procurement = {
   createdAt: string;
   updatedAt: string;
 };
+
+// ---- distribution ----
+
+export type DistributionStatus = 'DRAFT' | 'DISPATCHED' | 'RECEIVED' | 'CLOSED' | 'REVERSED';
+
+export type DistributionInput = {
+  branchId: string;
+  /** yyyy-mm-dd */
+  distributionDate: string;
+  notes: string | null;
+  items: { chickenTypeId: string; weightKg: string }[];
+  expenses: { categoryId: string | null; description: string | null; amount: string; allocationMethod: 'BY_WEIGHT' }[];
+};
+
+/** One line per stock batch the weight was taken from (oldest first). */
+export type DistributionItem = {
+  id: string;
+  stockBatchId: string;
+  chickenTypeId: string;
+  weightKg: string;
+  unitCost: string;
+  ourMarginPerKg: string;
+  distributionExpensePerKg: string;
+  transferPricePerKg: string;
+  lineCost: string;
+  lineTransferValue: string;
+};
+
+export type DiscrepancyReason = 'MELT_WATER' | 'DAMAGE' | 'WEIGHT_DIFFERENCE' | 'SHORT_DELIVERY' | 'OTHER';
+
+export type Distribution = {
+  id: string;
+  reference: string;
+  branchId: string;
+  distributionDate: string;
+  status: DistributionStatus;
+  totalWeightKg: string;
+  totalCost: string;
+  totalTransferValue: string;
+  totalOurMargin: string;
+  expenseAmount: string;
+  notes: string | null;
+  reversalReason: string | null;
+  items: DistributionItem[];
+  expenses: { id: string; categoryId: string | null; description: string | null; amount: string }[];
+  receipts: {
+    id: string;
+    receivedAt: string;
+    notes: string | null;
+    items: {
+      id: string;
+      distributionItemId: string;
+      receivedWeightKg: string;
+      discrepancyWeightKg: string;
+      discrepancyReason: DiscrepancyReason | null;
+    }[];
+  }[];
+  createdAt: string;
+  updatedAt: string;
+};
