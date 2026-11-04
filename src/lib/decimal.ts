@@ -85,3 +85,8 @@ export function formatKg(value: string): string {
   const grouped = w!.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return `${t.startsWith('-') ? '-' : ''}${grouped}${f ? `.${f}` : ''} kg`;
 }
+
+/** Whole kilograms for totals: "1,174 kg". */
+export function formatKgWhole(value: string): string {
+  return formatKg(fromUnits(divRound(toUnits(value, 3), 1000n) * 1000n, 3));
+}

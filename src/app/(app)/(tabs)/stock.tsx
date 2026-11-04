@@ -11,7 +11,7 @@ import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
 import { useOpenBatches } from '@/features/stock-api';
-import { formatKg, sum, toUnits } from '@/lib/decimal';
+import { formatKg, formatKgWhole, sum, toUnits } from '@/lib/decimal';
 import { formatRupees } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
 
@@ -56,8 +56,8 @@ function BatchCard({ b }: { b: StockBatch }) {
             <View style={{ width: `${pct(b.availableWeightKg, b.receivedWeightKg)}%`, backgroundColor: colors.ink }} />
             <View style={{ width: `${pct(b.reservedWeightKg, b.receivedWeightKg)}%`, backgroundColor: colors.warningBorder }} />
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text variant="caption">
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: space.sm }}>
+            <Text variant="caption" style={{ flex: 1 }} numberOfLines={1}>
               <Text variant="mono" style={{ fontSize: 13 }}>
                 {formatKg(b.availableWeightKg)}
               </Text>{' '}
@@ -74,11 +74,11 @@ function BatchCard({ b }: { b: StockBatch }) {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
+function Stat({ label, value, tone, flex = 1 }: { label: string; value: string; tone?: string; flex?: number }) {
   return (
-    <View style={{ flex: 1, gap: 2 }}>
+    <View style={{ flex, gap: 2 }}>
       <Text variant="caption">{label}</Text>
-      <Text variant="mono" style={{ fontSize: 18, color: tone ?? colors.ink }}>
+      <Text variant="mono" numberOfLines={1} adjustsFontSizeToFit style={{ fontSize: 18, color: tone ?? colors.ink }}>
         {value}
       </Text>
     </View>
@@ -176,9 +176,9 @@ export default function StockTab() {
         </View>
 
         <View style={{ flexDirection: 'row', gap: space.sm }}>
-          <Stat label="On hand" value={formatKg(onHand)} />
-          <Stat label="Held" value={formatKg(held)} tone={toUnits(held, W) > 0n ? colors.warning : undefined} />
-          <Stat label="Value" value={formatRupees(value, 0)} />
+          <Stat label="On hand" value={formatKgWhole(onHand)} />
+          <Stat label="Held" value={formatKgWhole(held)} tone={toUnits(held, W) > 0n ? colors.warning : undefined} />
+          <Stat label="Value" value={formatRupees(value, 0)} flex={1.5} />
         </View>
 
         {productTabs.length > 1 ? (

@@ -142,7 +142,9 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
                 backgroundColor: on ? colors.surface : 'transparent',
                 boxShadow: on ? '0 1px 4px rgba(0, 0, 0, 0.12)' : undefined,
               }}>
-              <Text style={{ fontFamily: on ? fonts.bodySemiBold : fonts.body, fontSize: 13, color: colors.ink }}>
+              <Text
+                numberOfLines={1}
+                style={{ fontFamily: on ? fonts.bodySemiBold : fonts.body, fontSize: 13, color: colors.ink, paddingHorizontal: 4 }}>
                 {o.label}
               </Text>
             </Pressable>
