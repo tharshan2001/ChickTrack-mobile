@@ -6,6 +6,7 @@ import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { User } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
+import { AppearList, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, IconButton, Notice, SearchField, Separator } from '@/components/ui';
@@ -23,6 +24,7 @@ export default function UsersScreen() {
   const { user: me } = useAuth();
   const [search, setSearch] = useState('');
   const users = useUsers(search);
+  const firstLoad = useFirstBatch(users.isSuccess);
   const branchList = branches.useList('');
   const branchName = (id: string) => branchList.data?.content.find((b) => b.id === id)?.name;
   const list = [...(users.data?.content ?? [])].sort((a, b) => rank(a) - rank(b) || a.fullName.localeCompare(b.fullName));
@@ -46,7 +48,8 @@ export default function UsersScreen() {
       ) : null}
       {list.length ? (
         <Card>
-          {list.map((u, i) => {
+          <AppearList still={firstLoad}>
+            {list.map((u, i) => {
             const mine = u.id === me?.id;
             const owner = isOwnerAccount(u.roles);
             const where = owner
@@ -95,6 +98,7 @@ export default function UsersScreen() {
               </Fragment>
             );
           })}
+          </AppearList>
         </Card>
       ) : null}
       <Notice

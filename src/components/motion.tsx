@@ -288,6 +288,16 @@ export function GrowBar({ pct, color, height = 6, delay = 0 }: { pct: number; co
   return <Animated.View style={[{ height, backgroundColor: color }, style]} />;
 }
 
+/** A block whose height grows to `height` px (column charts). */
+export function GrowHeight({ height, style }: { height: number; style?: StyleProp<ViewStyle> }) {
+  const h = useSharedValue(reduceMotion ? height : 0);
+  useEffect(() => {
+    h.set(reduceMotion ? height : withTiming(height, { duration: 450, easing: Easing.out(Easing.cubic) }));
+  }, [height, h]);
+  const anim = useAnimatedStyle(() => ({ height: h.value }));
+  return <Animated.View style={[style, anim]} />;
+}
+
 // ---------- Misc ----------
 
 /** Softly greys its content when `dim` is on (e.g. a branch switched to inactive). */

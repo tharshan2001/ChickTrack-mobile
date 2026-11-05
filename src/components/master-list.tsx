@@ -4,6 +4,7 @@ import { Fragment, useDeferredValue, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
 import { errorMessage, type Page } from '@/api/client';
+import { AppearList, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, IconButton, ListRow, Notice, SearchField, Separator } from '@/components/ui';
@@ -34,6 +35,7 @@ export function MasterList<T extends Item>(p: Props<T>) {
   const deferred = useDeferredValue(search);
   const query = p.useList(deferred);
   const items = query.data?.content ?? [];
+  const firstLoad = useFirstBatch(query.isSuccess);
 
   return (
     <Screen
@@ -57,7 +59,8 @@ export function MasterList<T extends Item>(p: Props<T>) {
       ) : items.length ? (
         <>
           <Card>
-            {items.map((item, i) => (
+            <AppearList still={firstLoad}>
+              {items.map((item, i) => (
               <Fragment key={item.id}>
                 {i > 0 ? <Separator /> : null}
                 <ListRow
@@ -71,6 +74,7 @@ export function MasterList<T extends Item>(p: Props<T>) {
                 />
               </Fragment>
             ))}
+            </AppearList>
           </Card>
           <Notice text={p.note} icon={false} />
         </>

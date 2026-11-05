@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Share, View } from 'react-native';
 
 import { API_URL } from '@/auth/config';
+import { Rise } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Button, Card, Notice, Separator, TextLink } from '@/components/ui';
@@ -67,9 +68,11 @@ export default function Credentials() {
         <Separator />
         <View style={{ minHeight: 72, paddingHorizontal: space.lg, paddingVertical: space.sm, justifyContent: 'center', gap: 2 }}>
           <Text variant="caption">{issued.generated ? 'Temporary password' : 'Password you typed'}</Text>
-          <Text variant="monoTitle" selectable style={{ letterSpacing: 1.2 }}>
-            {grouped(issued.password)}
-          </Text>
+          <Rise index={1}>
+            <Text variant="monoTitle" selectable style={{ letterSpacing: 1.2 }}>
+              {grouped(issued.password)}
+            </Text>
+          </Rise>
         </View>
       </Card>
       <View

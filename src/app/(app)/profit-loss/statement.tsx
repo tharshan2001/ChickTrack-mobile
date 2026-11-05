@@ -3,6 +3,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
+import { CountText } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, IconButton } from '@/components/ui';
@@ -100,9 +101,7 @@ export default function Statement() {
                 </Text>
               ) : null}
             </View>
-            <Text variant="num" style={{ color: netColor(s.netProfit) }}>
-              {amount(s.netProfit)}
-            </Text>
+            <CountText variant="num" style={{ color: netColor(s.netProfit) }} value={s.netProfit} format={amount} />
           </View>
           <Text variant="caption" style={{ paddingHorizontal: space.xs, lineHeight: 19 }}>
             Our margin counts when stock is dispatched, so stock a branch still holds already carries it. Purchase commission

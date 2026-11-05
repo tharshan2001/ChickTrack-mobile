@@ -4,6 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { errorMessage } from '@/api/client';
 import { branches, products } from '@/api/resources';
+import { CountText } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Button, Card, ErrorBanner, IconButton, Separator } from '@/components/ui';
@@ -32,7 +33,7 @@ function Row({ label, value, muted }: { label: string; value: React.ReactNode; m
 }
 
 const notSet = <Badge label="Not set" tone="warning" />;
-const money = (v: string) => <Text variant="mono">{formatRupees(v)}</Text>;
+const money = (v: string) => <CountText variant="mono" value={v} format={formatRupees} />;
 
 export default function Prices() {
   const productList = products.useList('', true);

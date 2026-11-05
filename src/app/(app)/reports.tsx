@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
 import { Segmented } from '@/components/pickers';
+import { CountText, GrowBar } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, IconButton, ListRow, Separator } from '@/components/ui';
@@ -123,12 +124,15 @@ export default function Reports() {
                   <Text variant="caption" style={{ color: colors.ink }}>
                     {r.branchName}
                   </Text>
-                  <Text variant="monoSmall" style={{ color: value > 0 ? colors.success : colors.secondary }}>
-                    {formatRupees(r.branchProfit, 0)}
-                  </Text>
+                  <CountText
+                    variant="monoSmall"
+                    style={{ color: value > 0 ? colors.success : colors.secondary }}
+                    value={r.branchProfit}
+                    format={(v) => formatRupees(v, 0)}
+                  />
                 </View>
                 <View style={{ height: 8, borderRadius: 4, backgroundColor: colors.field, overflow: 'hidden' }}>
-                  <View style={{ width: `${width}%`, height: 8, backgroundColor: colors.ink }} />
+                  <GrowBar pct={width} color={colors.ink} height={8} />
                 </View>
               </View>
             );

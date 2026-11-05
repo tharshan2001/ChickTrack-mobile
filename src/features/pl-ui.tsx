@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { Pressable, View } from 'react-native';
 
 import type { ProfitLoss, ProfitLossStatement } from '@/api/types';
+import { CountText, GrowHeight } from '@/components/motion';
 import { Text } from '@/components/text';
 import { colors, fonts, space } from '@/theme/tokens';
 
@@ -51,9 +52,7 @@ export function StatementRow({
         </Text>
         {detail ? <Text variant="footnote">{detail}</Text> : null}
       </View>
-      <Text variant={strong ? 'num' : 'mono'} style={{ color: color ?? colors.ink, fontSize: strong ? 16 : 15 }}>
-        {amount(value)}
-      </Text>
+      <CountText variant={strong ? 'num' : 'mono'} style={{ color: color ?? colors.ink, fontSize: strong ? 16 : 15 }} value={value} format={amount} />
       {onPress ? <Feather name="chevron-right" size={14} color="#AEAEB2" /> : null}
     </Pressable>
   );
@@ -99,9 +98,9 @@ export function Bars({
               onPress={() => onPick(b)}
               style={{ flex: 1, height, justifyContent: 'flex-start' }}>
               <View style={{ height: upSpace, justifyContent: 'flex-end' }}>
-                <View
+                <GrowHeight
+                  height={up}
                   style={{
-                    height: up,
                     borderTopLeftRadius: 2,
                     borderTopRightRadius: 2,
                     backgroundColor: v === best && v > 0 ? colors.success : colors.ink,
@@ -109,7 +108,7 @@ export function Bars({
                 />
               </View>
               <View style={{ height: 1, backgroundColor: '#C7C7CC' }} />
-              <View style={{ height: down, borderBottomLeftRadius: 2, borderBottomRightRadius: 2, backgroundColor: '#C0504A' }} />
+              <GrowHeight height={down} style={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2, backgroundColor: '#C0504A' }} />
             </Pressable>
           );
         })}

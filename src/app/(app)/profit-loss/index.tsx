@@ -7,6 +7,7 @@ import { branches } from '@/api/resources';
 import type { ProfitLoss } from '@/api/types';
 import { DateField } from '@/components/date-field';
 import { Segmented, SelectField } from '@/components/pickers';
+import { CountText } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, IconButton, Separator } from '@/components/ui';
@@ -200,9 +201,12 @@ export default function ProfitLossScreen() {
         <>
           <View style={{ gap: 2 }}>
             <Text variant="caption">Net profit · {periodLabel(data)}</Text>
-            <Text variant="numDisplay" style={{ color: netColor(s.netProfit) }}>
-              {`${s.netProfit.startsWith('-') ? '−' : ''}Rs ${amount(s.netProfit).replace('−', '')}`}
-            </Text>
+            <CountText
+              variant="numDisplay"
+              style={{ color: netColor(s.netProfit) }}
+              value={s.netProfit}
+              format={(v) => `${v.startsWith('-') ? '−' : ''}Rs ${amount(v).replace('−', '')}`}
+            />
             <Text variant="caption">
               {s.netMarginPercent ? `${trimZeros(s.netMarginPercent)}% of branch sales · ` : ''}
               {`branch sales Rs ${amount(s.branches.sales).replace(/\.00$/, '')}`}
