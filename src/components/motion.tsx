@@ -290,6 +290,16 @@ export function GrowBar({ pct, color, height = 6, delay = 0 }: { pct: number; co
 
 // ---------- Misc ----------
 
+/** Softly greys its content when `dim` is on (e.g. a branch switched to inactive). */
+export function Dim({ dim, children }: { dim: boolean; children: ReactNode }) {
+  const o = useSharedValue(dim ? 0.45 : 1);
+  useEffect(() => {
+    o.set(withTiming(dim ? 0.45 : 1, { duration: 250, reduceMotion: ReduceMotion.System }));
+  }, [dim, o]);
+  const style = useAnimatedStyle(() => ({ opacity: o.value }));
+  return <Animated.View style={style}>{children}</Animated.View>;
+}
+
 /** Fade + rise for a block when a screen opens (sign-in fields). `index` staggers them. */
 export function Rise({ index = 0, children, style }: { index?: number; children: ReactNode; style?: StyleProp<ViewStyle> }) {
   return (

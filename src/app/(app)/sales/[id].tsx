@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { branches, products } from '@/api/resources';
 import type { BranchSale } from '@/api/types';
 import { EditLoader } from '@/components/form';
+import { GrowBar } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Button, Card, IconButton, SectionHeader, Separator, TextLink } from '@/components/ui';
@@ -143,7 +144,7 @@ function Sale({ s }: { s: BranchSale }) {
           </View>
           <Card style={{ padding: space.lg, gap: 10 }}>
             <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.field, overflow: 'hidden' }}>
-              <View style={{ width: `${Math.min(100, Math.max(0, paidPct))}%`, height: 6, backgroundColor: colors.success }} />
+              <GrowBar pct={Math.min(100, Math.max(0, paidPct))} color={colors.success} />
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <View style={{ gap: 2 }}>

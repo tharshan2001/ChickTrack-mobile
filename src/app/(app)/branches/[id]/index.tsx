@@ -14,7 +14,7 @@ import { useDispatch, useDistributions } from '@/features/distribution-api';
 import { formatKgShort, sum, toUnits } from '@/lib/decimal';
 import { BusinessDate, colomboToday, formatRupees, formatRupeesCompact, weekStart } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
-import { showSaved } from '@/components/motion';
+import { AppearList, CountText, showSaved, useFirstBatch } from '@/components/motion';
 
 export default function BranchHomeRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -98,6 +98,7 @@ function BranchHome({ b }: { b: Branch }) {
   const productName = (id: string) => productList.data?.content.find((p) => p.id === id)?.name ?? 'Product';
   const arriving = useDistributions('', '', 'DISPATCHED', b.id);
   const drafts = useDistributions('', '', 'DRAFT', b.id);
+  const firstLoad = useFirstBatch(drafts.isSuccess && arriving.isSuccess);
   const sales = useBranchSales(b.id, today, today);
   const week = useBranchSales(b.id, weekStart(today), today);
   const weekTotal = sum((week.data ?? []).map((s) => s.totalSales), 2);
@@ -122,11 +123,14 @@ function BranchHome({ b }: { b: Branch }) {
       }>
       {!b.active ? <Badge label="Inactive · no new dispatches or sales" tone="neutral" /> : null}
 
-      {(drafts.data?.content ?? []).map((d) => (
+      <AppearList still={firstLoad}>
+        {(drafts.data?.content ?? []).map((d) => (
         <DraftCard key={d.id} d={d} productName={productName} />
       ))}
+      </AppearList>
 
-      {(arriving.data?.content ?? []).map((d) => (
+      <AppearList still={firstLoad}>
+        {(arriving.data?.content ?? []).map((d) => (
         <Section key={d.id}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text variant="headline">Arriving today</Text>
@@ -148,6 +152,7 @@ function BranchHome({ b }: { b: Branch }) {
           />
         </Section>
       ))}
+      </AppearList>
 
       <Card>
         <View style={{ padding: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md }}>
@@ -229,7 +234,7 @@ function BranchHome({ b }: { b: Branch }) {
           onPress={() => router.push({ pathname: '/branches/[id]/money', params: { id: b.id } })}
           style={({ pressed }) => ({ flex: 1, gap: 2, opacity: pressed ? 0.6 : 1 })}>
           <Text variant="caption">Owes head office ›</Text>
-          <Text variant="numMoney">{owes.data ? formatRupees(owes.data) : '…'}</Text>
+          <CountText variant="numMoney" value={owes.data} format={formatRupees} />
         </Pressable>
         <ActionLink
           title="Record payment"

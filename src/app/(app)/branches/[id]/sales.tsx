@@ -16,7 +16,7 @@ import { useCurrentPriceGrid } from '@/features/prices-api';
 import { divRound, formatKg, fromUnits, isDecimal, toFixedString, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
-import { savedAndBack } from '@/components/motion';
+import { CountText, savedAndBack } from '@/components/motion';
 
 export default function DailySalesRoute() {
   const params = useLocalSearchParams<{ id: string; date?: string }>();
@@ -221,20 +221,24 @@ function SalesForm({
             <Text variant="body" style={{ color: colors.secondary }}>
               Sales
             </Text>
-            <Text variant="mono">{formatRupees(fromUnits(total, 2))}</Text>
+            <CountText variant="mono" value={fromUnits(total, 2)} format={formatRupees} />
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <Text variant="body" style={{ color: colors.secondary }}>
               Owed to head office
             </Text>
-            <Text variant="mono">{existing ? formatRupees(existing.transferValue) : '—'}</Text>
+            {existing ? <CountText variant="mono" value={existing.transferValue} format={formatRupees} /> : <Text variant="mono">—</Text>}
           </View>
           <Separator inset={0} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <Text variant="headline">Branch profit</Text>
-            <Text variant="numLarge" style={{ color: existing ? colors.success : colors.secondary }}>
-              {existing ? formatRupees(existing.branchProfit) : '—'}
-            </Text>
+            {existing ? (
+              <CountText variant="numLarge" style={{ color: colors.success }} value={existing.branchProfit} format={formatRupees} />
+            ) : (
+              <Text variant="numLarge" style={{ color: colors.secondary }}>
+                —
+              </Text>
+            )}
           </View>
         </View>
       )}

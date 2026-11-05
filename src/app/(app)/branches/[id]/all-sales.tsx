@@ -6,6 +6,7 @@ import { errorMessage } from '@/api/client';
 import { branches, products } from '@/api/resources';
 import { DateField } from '@/components/date-field';
 import { Segmented } from '@/components/pickers';
+import { AppearList, CountText, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, IconButton, Separator, TextLink } from '@/components/ui';
@@ -26,13 +27,23 @@ function rangeFor(period: Period, custom: { from: string; to: string }) {
   return custom;
 }
 
-function Tile({ label, value, color }: { label: string; value: string; color?: string }) {
+function Tile({
+  label,
+  value,
+  format,
+  decimals = 2,
+  color,
+}: {
+  label: string;
+  value: string;
+  format: (v: string) => string;
+  decimals?: number;
+  color?: string;
+}) {
   return (
     <Card style={{ flex: 1, padding: space.md, gap: space.xs }}>
       <Text variant="footnote">{label}</Text>
-      <Text variant="mono" numberOfLines={1} style={color ? { color } : undefined}>
-        {value}
-      </Text>
+      <CountText value={value} decimals={decimals} format={format} variant="mono" numberOfLines={1} style={color ? { color } : undefined} />
     </Card>
   );
 }
@@ -46,6 +57,7 @@ export default function BranchSales() {
   const [custom, setCustom] = useState(() => ({ from: addDays(colomboToday(), -30), to: colomboToday() }));
   const range = rangeFor(period, custom);
   const sales = useBranchSales(id, range.from, range.to);
+  const firstLoad = useFirstBatch(sales.isSuccess);
   const open = useOpenSales(id);
   const list = sales.data ?? [];
   const today = colomboToday();
@@ -98,9 +110,9 @@ export default function BranchSales() {
       {sales.isError ? <ErrorBanner message={errorMessage(sales.error)} onRetry={sales.refetch} /> : null}
 
       <View style={{ flexDirection: 'row', gap: space.sm }}>
-        <Tile label="Sales" value={formatRupeesCompact(sum(list.map((s) => s.totalSales), 2))} />
-        <Tile label="Profit" value={formatRupeesCompact(sum(list.map((s) => s.branchProfit), 2))} color={colors.success} />
-        <Tile label="Sold" value={formatKgShort(kg)} />
+        <Tile label="Sales" value={sum(list.map((s) => s.totalSales), 2)} format={formatRupeesCompact} />
+        <Tile label="Profit" value={sum(list.map((s) => s.branchProfit), 2)} format={formatRupeesCompact} color={colors.success} />
+        <Tile label="Sold" value={kg} decimals={3} format={formatKgShort} />
       </View>
 
       {missingToday ? (
@@ -137,7 +149,8 @@ export default function BranchSales() {
 
       {list.length ? (
         <Card>
-          {list.map((s, i) => {
+          <AppearList still={firstLoad}>
+            {list.map((s, i) => {
             const status = paymentState(s, open.data);
             const names = [...new Set(s.items.map((it) => productName(it.chickenTypeId)))].join(', ');
             const saleKg = sum(
@@ -176,6 +189,7 @@ export default function BranchSales() {
               </Fragment>
             );
           })}
+          </AppearList>
         </Card>
       ) : null}
     </Screen>

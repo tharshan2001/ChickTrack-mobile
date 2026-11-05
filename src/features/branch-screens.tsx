@@ -16,7 +16,7 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Button, Card, Field, Notice, TextLink } from '@/components/ui';
 import { colors, space, type } from '@/theme/tokens';
-import { savedAndBack } from '@/components/motion';
+import { Dim, savedAndBack } from '@/components/motion';
 
 type Values = { code: string; name: string; phone: string; address: string };
 
@@ -165,7 +165,9 @@ function EditBranch({ branch }: { branch: Branch }) {
       title="Edit branch"
       left={<TextLink title="Cancel" onPress={() => router.back()} />}
       footer={<Button title="Save changes" onPress={save} loading={update.isPending} />}>
-      <BranchForm form={form} error={update.error} lockedCode={branch.code} />
+      <Dim dim={!branch.active}>
+        <BranchForm form={form} error={update.error} lockedCode={branch.code} />
+      </Dim>
       <ActiveSwitch
         active={branch.active}
         mutation={setActive}

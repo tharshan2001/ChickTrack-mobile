@@ -5,7 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { Branch } from '@/api/types';
-import { PressScale } from '@/components/motion';
+import { AppearList, PressScale, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { ChevronRightIcon } from '@/components/icons';
@@ -81,6 +81,7 @@ export default function BranchesTab() {
   const [search, setSearch] = useState('');
   const deferred = useDeferredValue(search);
   const query = branches.useList(deferred);
+  const firstLoad = useFirstBatch(query.isSuccess);
   const all = query.data?.content ?? [];
   const list = all.filter((b) => b.active);
   const closed = all.filter((b) => !b.active);
@@ -104,17 +105,21 @@ export default function BranchesTab() {
           </Text>
         </Card>
       ) : null}
-      {list.map((b) => (
+      <AppearList still={firstLoad}>
+        {list.map((b) => (
         <BranchCard key={b.id} b={b} />
       ))}
+      </AppearList>
       {closed.length ? (
         <Text variant="labelSmall" style={{ marginTop: space.md, marginHorizontal: space.xs }}>
           Inactive
         </Text>
       ) : null}
-      {closed.map((b) => (
+      <AppearList still={firstLoad}>
+        {closed.map((b) => (
         <BranchCard key={b.id} b={b} />
       ))}
+      </AppearList>
     </Screen>
   );
 }

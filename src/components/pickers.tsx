@@ -1,8 +1,10 @@
 import Feather from '@expo/vector-icons/Feather';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
+import Animated, { Easing, ReduceMotion, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { haptic, PressScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Separator, TextLink } from '@/components/ui';
 import { colors, fonts, radius, space, type } from '@/theme/tokens';
@@ -136,13 +138,41 @@ type SegmentProps<T extends string> = {
 
 /** iOS-style segmented control used for small either/or choices. */
 export function Segmented<T extends string>({ label, options, value, onChange, hideLabel, compact }: SegmentProps<T>) {
+  // The white highlight slides to the chosen option instead of jumping.
+  const [width, setWidth] = useState(0);
+  const index = Math.max(0, options.findIndex((o) => o.value === value));
+  const seg = width > 0 ? (width - 6) / options.length : 0;
+  const x = useSharedValue(index * seg);
+  useEffect(() => {
+    x.set(withTiming(index * seg, { duration: 220, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.System }));
+  }, [index, seg, x]);
+  const slide = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   return (
     <View style={{ gap: 6 }}>
       {hideLabel ? null : <Text variant="caption">{label}</Text>}
       <View
         accessibilityRole="radiogroup"
         accessibilityLabel={label}
+        onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
         style={{ flexDirection: 'row', backgroundColor: colors.field, borderRadius: radius.field, padding: 3 }}>
+        {seg > 0 ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              {
+                position: 'absolute',
+                top: 3,
+                bottom: 3,
+                left: 3,
+                width: seg,
+                borderRadius: 8,
+                backgroundColor: colors.surface,
+                boxShadow: '0 1px 4px rgba(0, 0, 0, 0.12)',
+              },
+              slide,
+            ]}
+          />
+        ) : null}
         {options.map((o) => {
           const on = o.value === value;
           return (
@@ -150,15 +180,18 @@ export function Segmented<T extends string>({ label, options, value, onChange, h
               key={o.value}
               accessibilityRole="radio"
               accessibilityState={{ selected: on }}
-              onPress={() => onChange(o.value)}
+              onPress={() => {
+                if (!on) haptic.select();
+                onChange(o.value);
+              }}
               style={{
                 flex: 1,
                 height: compact ? 36 : 38,
                 borderRadius: 8,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: on ? colors.surface : 'transparent',
-                boxShadow: on ? '0 1px 4px rgba(0, 0, 0, 0.12)' : undefined,
+                backgroundColor: on && seg === 0 ? colors.surface : 'transparent',
+                boxShadow: on && seg === 0 ? '0 1px 4px rgba(0, 0, 0, 0.12)' : undefined,
               }}>
               <Text
                 numberOfLines={1}
@@ -190,11 +223,15 @@ export function Chips<T extends string>({ label, options, value, onChange, error
         {options.map((o) => {
           const on = o.value === value;
           return (
-            <Pressable
+            <PressScale
+              scaleTo={0.94}
               key={o.value}
               accessibilityRole="radio"
               accessibilityState={{ selected: on }}
-              onPress={() => onChange(o.value)}
+              onPress={() => {
+                haptic.select();
+                onChange(o.value);
+              }}
               style={{
                 height: 40,
                 paddingHorizontal: 14,
@@ -206,7 +243,7 @@ export function Chips<T extends string>({ label, options, value, onChange, error
               <Text style={{ fontFamily: on ? fonts.bodyMedium : fonts.body, fontSize: 15, lineHeight: 20, color: on ? colors.accentPressed : colors.ink }}>
                 {o.label}
               </Text>
-            </Pressable>
+            </PressScale>
           );
         })}
       </View>
@@ -236,11 +273,15 @@ export function MultiChips<T extends string>({ label, options, value, onChange, 
         {options.map((o) => {
           const on = value.includes(o.value);
           return (
-            <Pressable
+            <PressScale
+              scaleTo={0.94}
               key={o.value}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: on }}
-              onPress={() => onChange(on ? value.filter((v) => v !== o.value) : [...value, o.value])}
+              onPress={() => {
+                haptic.select();
+                onChange(on ? value.filter((v) => v !== o.value) : [...value, o.value]);
+              }}
               style={{
                 height: 40,
                 paddingHorizontal: 14,
@@ -252,7 +293,7 @@ export function MultiChips<T extends string>({ label, options, value, onChange, 
               <Text style={{ fontFamily: on ? fonts.bodyMedium : fonts.body, fontSize: 15, lineHeight: 20, color: on ? colors.accentPressed : colors.ink }}>
                 {o.label}
               </Text>
-            </Pressable>
+            </PressScale>
           );
         })}
       </View>
