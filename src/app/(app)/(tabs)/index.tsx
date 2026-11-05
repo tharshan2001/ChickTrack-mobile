@@ -12,6 +12,7 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, SectionHeader, Separator } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
+import { Appear, CountText, haptic, PressScale, useFirstBatch } from '@/components/motion';
 import { BannerDate, WelcomeBanner } from '@/features/welcome-banner';
 import { formatKgShort, formatKgWhole, sum, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
@@ -41,11 +42,15 @@ function QuickAction({
   primary?: boolean;
 }) {
   return (
-    <Pressable
+    <PressScale
       accessibilityRole="button"
       accessibilityLabel={label}
-      onPress={() => router.push(href)}
-      style={({ pressed }) => ({ flex: 1, alignItems: 'center', gap: 4, opacity: pressed ? 0.6 : 1 })}>
+      onPress={() => {
+        haptic.tap();
+        router.push(href);
+      }}
+      scaleTo={0.92}
+      style={{ flex: 1, alignItems: 'center', gap: 4 }}>
       <View
         style={{
           width: 40,
@@ -61,7 +66,7 @@ function QuickAction({
       <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, fontSize: 12, lineHeight: 16, color: colors.ink }}>
         {label}
       </Text>
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -102,13 +107,23 @@ function Task({ title, detail, onPress, tone }: { title: string; detail: ReactNo
  * a judgement — margin earned, weight lost — and leave the rest ink, so the pair
  * can be read without looking at the labels.
  */
-function Tile({ label, value, tone }: { label: string; value: string; tone?: string }) {
+function Tile({
+  label,
+  value,
+  decimals,
+  format,
+  tone,
+}: {
+  label: string;
+  value: string | null;
+  decimals: number;
+  format: (v: string) => string;
+  tone?: string;
+}) {
   return (
     <Card style={{ flexBasis: '47%', flexGrow: 1, paddingVertical: 14, paddingHorizontal: space.lg, gap: 4 }}>
       <Text variant="caption">{label}</Text>
-      <Text variant="numTile" numberOfLines={1} style={tone ? { color: tone } : undefined}>
-        {value}
-      </Text>
+      <CountText value={value} decimals={decimals} format={format} variant="numTile" numberOfLines={1} style={tone ? { color: tone } : undefined} />
     </Card>
   );
 }
@@ -195,6 +210,8 @@ export default function Home() {
       : []),
   ];
 
+  // Tasks on screen when Home opens just appear; ones that come or go later animate.
+  const firstTasks = useFirstBatch(arriving.isSuccess && drafts.isSuccess);
   const d = dashboard.data;
   const firstName = user?.fullName.split(' ')[0];
 
@@ -223,10 +240,10 @@ export default function Home() {
           <SectionHeader title="Needs you" />
           <Card>
             {tasks.map((t, i) => (
-              <Fragment key={i}>
+              <Appear key={t.key ?? i} still={firstTasks}>
                 {i > 0 ? <Separator inset={36} /> : null}
                 {t}
-              </Fragment>
+              </Appear>
             ))}
           </Card>
         </View>
@@ -238,12 +255,14 @@ export default function Home() {
         {dashboard.isPending ? <ActivityIndicator color={colors.accent} /> : null}
         {d ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
-            <Tile label="Our margin" value={formatRupees(d.ourMargin, 0)} tone={colors.success} />
-            <Tile label="Branches owe" value={owedTotal ? formatRupees(owedTotal, 0) : '…'} />
-            <Tile label="In warehouse" value={formatKgWhole(d.stockWeightKg)} />
+            <Tile label="Our margin" value={d.ourMargin} decimals={2} format={(v) => formatRupees(v, 0)} tone={colors.success} />
+            <Tile label="Branches owe" value={owedTotal} decimals={2} format={(v) => formatRupees(v, 0)} />
+            <Tile label="In warehouse" value={d.stockWeightKg} decimals={3} format={formatKgWhole} />
             <Tile
               label="Shrinkage"
-              value={formatKgShort(d.shrinkageWeightKg)}
+              value={d.shrinkageWeightKg}
+              decimals={3}
+              format={formatKgShort}
               tone={toUnits(d.shrinkageWeightKg, 3) > 0n ? colors.warning : undefined}
             />
           </View>

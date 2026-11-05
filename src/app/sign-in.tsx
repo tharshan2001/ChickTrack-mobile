@@ -1,9 +1,11 @@
-import { useRef, useState, type ComponentRef } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/auth/auth-context';
 import { ChickLogo } from '@/components/icons';
+import { Rise, useShake } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Button, Card, ErrorBanner, Field } from '@/components/ui';
 import { colors, space } from '@/theme/tokens';
@@ -14,10 +16,20 @@ export default function SignIn() {
   const [password, setPassword] = useState('');
   const [touched, setTouched] = useState(false);
   const passwordRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const { style: shakeStyle, shake } = useShake();
+
+  // A wrong username or password shakes the form, like a head shake.
+  useEffect(() => {
+    if (signInError) shake();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signInError]);
 
   function submit() {
     setTouched(true);
-    if (!username.trim() || !password) return;
+    if (!username.trim() || !password) {
+      shake();
+      return;
+    }
     signIn(username.trim(), password);
   }
 
@@ -27,7 +39,7 @@ export default function SignIn() {
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ flexGrow: 1, paddingHorizontal: space.lg, paddingTop: 49, paddingBottom: 40 }}>
-          <View style={{ gap: space.md, paddingHorizontal: space.sm }}>
+          <Rise index={0} style={{ gap: space.md, paddingHorizontal: space.sm }}>
             <View
               style={{
                 width: 52,
@@ -46,8 +58,10 @@ export default function SignIn() {
             <Text style={{ color: colors.secondary, lineHeight: 22 }}>
               Procurement, stock and branch sales in one place.
             </Text>
-          </View>
+          </Rise>
 
+          <Rise index={2}>
+          <Animated.View style={shakeStyle}>
           <Card style={{ marginTop: 48, paddingHorizontal: space.lg, paddingVertical: 20, gap: space.lg }}>
             {signInError ? <ErrorBanner message={signInError} /> : null}
             <Field
@@ -81,6 +95,8 @@ export default function SignIn() {
               <Button title="Sign in" onPress={submit} loading={signingIn} />
             </View>
           </Card>
+          </Animated.View>
+          </Rise>
 
           <View style={{ flexGrow: 1 }} />
           <Text variant="caption" style={{ textAlign: 'center', marginTop: space.xl }}>

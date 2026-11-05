@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { Easing, ReduceMotion, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 
 import { Text } from '@/components/text';
@@ -22,9 +24,17 @@ function dateParts() {
   return { weekday: get('weekday'), date: `${get('day')} ${get('month')} ${get('year')}` };
 }
 
+/** The rooster bobs once when Home opens: a small hello, then it stays still. */
 function Rooster() {
+  const y = useSharedValue(0);
+  useEffect(() => {
+    const cfg = { duration: 220, easing: Easing.out(Easing.quad), reduceMotion: ReduceMotion.System };
+    y.set(withDelay(350, withSequence(withTiming(-7, cfg), withTiming(0, cfg), withTiming(-3, cfg), withTiming(0, cfg))));
+  }, [y]);
+  const bob = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   return (
-    <Svg width={92} height={98} viewBox="46 12 112 150" style={styles.rooster}>
+    <Animated.View style={[styles.rooster, bob]}>
+      <Svg width={92} height={98} viewBox="46 12 112 150">
       <G stroke={INK} strokeWidth={4.5} strokeLinejoin="round" strokeLinecap="round">
         <Path d="M70 62 C58 40 76 26 88 40 C88 18 116 14 116 38 C126 24 146 34 134 58 Z" fill={RED} />
         <Ellipse cx={100} cy={100} rx={50} ry={48} fill="#F28C28" />
@@ -39,7 +49,8 @@ function Rooster() {
         <Path d="M82 108 Q100 96 120 106 Q112 118 100 117 Q88 117 82 108 Z" fill={SUN} />
         <Path d="M94 134 C86 144 92 156 100 150 C108 156 114 144 106 134 Z" fill={RED} />
       </G>
-    </Svg>
+      </Svg>
+    </Animated.View>
   );
 }
 
