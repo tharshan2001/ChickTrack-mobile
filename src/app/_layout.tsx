@@ -10,12 +10,12 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
 import { AuthProvider, useAuth } from '@/auth/auth-context';
+import { LaunchOverlay } from '@/components/launch-screen';
 import { colors } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
@@ -39,10 +39,6 @@ const queryClient = new QueryClient({
 function RootNavigator() {
   const { status } = useAuth();
 
-  useEffect(() => {
-    if (status !== 'loading') SplashScreen.hideAsync();
-  }, [status]);
-
   if (status === 'loading') return null;
   const signedIn = status === 'signedIn';
 
@@ -56,6 +52,11 @@ function RootNavigator() {
       </Stack.Protected>
     </Stack>
   );
+}
+
+function LaunchGate() {
+  const { status } = useAuth();
+  return <LaunchOverlay ready={status !== 'loading'} />;
 }
 
 export default function RootLayout() {
@@ -74,6 +75,7 @@ export default function RootLayout() {
         <AuthProvider>
           <StatusBar style="dark" />
           <RootNavigator />
+          <LaunchGate />
         </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
