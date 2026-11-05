@@ -24,7 +24,21 @@ function greeting() {
   return hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 }
 
-function QuickAction({ icon, label, href }: { icon: keyof typeof Feather.glyphMap; label: string; href: Href }) {
+/**
+ * One action is primary and filled; the rest are neutral. Tinting all four made
+ * the row decorative and left no first move for the eye to land on.
+ */
+function QuickAction({
+  icon,
+  label,
+  href,
+  primary,
+}: {
+  icon: keyof typeof Feather.glyphMap;
+  label: string;
+  href: Href;
+  primary?: boolean;
+}) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -33,14 +47,15 @@ function QuickAction({ icon, label, href }: { icon: keyof typeof Feather.glyphMa
       style={({ pressed }) => ({ flex: 1, alignItems: 'center', gap: 6, opacity: pressed ? 0.6 : 1 })}>
       <View
         style={{
-          width: 52,
-          height: 52,
-          borderRadius: 16,
-          backgroundColor: colors.tint,
+          width: 56,
+          height: 56,
+          borderRadius: 14,
+          backgroundColor: primary ? colors.accent : colors.field,
           alignItems: 'center',
           justifyContent: 'center',
+          ...(primary ? { boxShadow: '0 4px 16px rgba(162, 8, 12, 0.22)' } : null),
         }}>
-        <Feather name={icon} size={22} color={colors.accentPressed} />
+        <Feather name={icon} size={22} color={primary ? colors.surface : colors.ink} />
       </View>
       <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, color: colors.ink }}>
         {label}
@@ -181,10 +196,10 @@ export default function Home() {
   return (
     <Screen title={firstName ? `${greeting()}, ${firstName}` : greeting()} subtitle={BusinessDate.today()}>
       <View style={{ flexDirection: 'row', paddingVertical: space.xs }}>
-        <QuickAction icon="plus-circle" label="Buy" href="/purchases/new" />
+        <QuickAction icon="shopping-cart" label="Buy" href="/purchases/new" primary />
         <QuickAction icon="truck" label="Send" href="/dispatches/new" />
         <QuickAction
-          icon="shopping-bag"
+          icon="bar-chart-2"
           label="Sales"
           href={firstMissing ? { pathname: '/branches/[id]/sales', params: { id: firstMissing.id } } : '/branches'}
         />

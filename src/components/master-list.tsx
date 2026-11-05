@@ -61,7 +61,7 @@ export function MasterList<T extends Item>(p: Props<T>) {
                   subtitle={p.describe(item)}
                   muted={!item.active}
                   right={
-                    <Badge label={item.active ? 'Active' : 'Inactive'} tone={item.active ? 'success' : 'neutral'} />
+                    <Badge label={item.active ? 'Active' : 'Inactive'} tone={item.active ? 'success' : 'danger'} />
                   }
                   onPress={() => router.push(p.itemHref(item))}
                 />

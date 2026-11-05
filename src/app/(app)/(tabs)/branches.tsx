@@ -57,7 +57,7 @@ function BranchCard({ b }: { b: Branch }) {
                 {b.code}
               </Text>
             </View>
-            {!b.active ? <Badge label="Inactive" tone="neutral" /> : badge ? <Badge {...badge} /> : null}
+            {!b.active ? <Badge label="Inactive" tone="danger" /> : badge ? <Badge {...badge} /> : null}
           </View>
           {b.active ? (
             <View style={{ flexDirection: 'row', gap: space.sm }}>

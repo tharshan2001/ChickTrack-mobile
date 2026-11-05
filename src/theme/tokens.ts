@@ -16,6 +16,8 @@ export const colors = {
   warningBg: '#FBEBD3',
   warningBorder: '#C97F1E',
   danger: '#8E2A20',
+  dangerBg: '#F3E2DE',
+  dangerBorder: '#E3BFB7',
 } as const;
 
 export const fonts = {

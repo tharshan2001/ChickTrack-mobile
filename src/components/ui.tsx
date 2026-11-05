@@ -56,13 +56,14 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
   );
 }
 
-type Tone = 'success' | 'neutral' | 'warning' | 'brand';
+type Tone = 'success' | 'neutral' | 'warning' | 'brand' | 'danger';
 
 const badgeTones: Record<Tone, { bg: string; fg: string; border: string }> = {
   success: { bg: colors.successBg, fg: colors.success, border: colors.successBorder },
   neutral: { bg: colors.field, fg: colors.secondary, border: colors.separator },
   warning: { bg: colors.warningBg, fg: colors.warning, border: colors.warningBorder },
   brand: { bg: colors.tint, fg: colors.accentPressed, border: colors.tintBorder },
+  danger: { bg: colors.dangerBg, fg: colors.danger, border: colors.dangerBorder },
 };
 
 export function Badge({ label, tone = 'neutral' }: { label: string; tone?: Tone }) {
@@ -215,9 +216,14 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
   );
 }
 
+/**
+ * A section landmark, as in the mockups: 22px Space Grotesk, the middle level
+ * between the 28px page title and the 16px rows. Small grey capitals here left
+ * the screen with no landmark at all between title and content.
+ */
 export function SectionHeader({ title }: { title: string }) {
   return (
-    <Text variant="label" style={{ marginHorizontal: space.xs }}>
+    <Text variant="title" style={{ marginHorizontal: space.xs }}>
       {title}
     </Text>
   );
