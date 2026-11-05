@@ -44,3 +44,8 @@ example
 
 # env (keep .env.example)
 .env
+
+# build outputs
+*.apk
+*.aab
+*.ipa
