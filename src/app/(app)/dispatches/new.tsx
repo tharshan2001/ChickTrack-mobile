@@ -20,7 +20,7 @@ import { useOpenBatches } from '@/features/stock-api';
 import { formatKg, formatPercent, fromUnits, isPositiveDecimal, toFixedString, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
-import { showSaved } from '@/components/motion';
+import { AppearList, CountText, showSaved } from '@/components/motion';
 
 type Line = { key: string; productId: string | null; kg: string };
 const newLine = (): Line => ({ key: randomUUID(), productId: null, kg: '' });
@@ -143,7 +143,7 @@ export default function SendToBranch() {
               <Text variant="caption">Branch will owe</Text>
               <Text variant="caption">Our margin {formatRupees(fromUnits(margin, 2))}</Text>
             </View>
-            <Text variant="numTitle">{formatRupees(fromUnits(owes, 2))}</Text>
+            <CountText variant="numTitle" value={fromUnits(owes, 2)} format={formatRupees} />
           </View>
           <Button
             title={totalKg > 0n ? `Save draft · holds ${formatKg(fromUnits(totalKg, 3))}` : 'Save draft'}
@@ -179,6 +179,7 @@ export default function SendToBranch() {
         </Card>
       ) : null}
 
+      <AppearList>
       {lines.map((l, i) => {
         const p = previews[i];
         const errs = touched ? lineErrors(l, i) : ({} as ReturnType<typeof lineErrors>);
@@ -255,6 +256,9 @@ export default function SendToBranch() {
         <AddRow title="+ Add chicken type" onPress={() => setLines((ls) => [...ls, newLine()])} />
       ) : null}
 
+      </AppearList>
+
+      <AppearList>
       {costs.map((c) => (
         <CostCard
           key={c.key}
@@ -265,6 +269,7 @@ export default function SendToBranch() {
           subtitle="Split by weight"
         />
       ))}
+      </AppearList>
       <AddRow title="+ Add delivery cost" onPress={() => setCosts((cs) => [...cs, newCost()])} />
 
       <Text variant="caption" style={{ color: colors.secondary, paddingHorizontal: space.xs }}>

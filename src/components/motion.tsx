@@ -6,7 +6,7 @@ import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import type React from 'react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { Children, isValidElement, useEffect, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
@@ -159,6 +159,22 @@ export function Appear({ children, style, still }: { children: ReactNode; style?
     <Animated.View entering={still ? undefined : enter} exiting={exit} layout={flow} style={style}>
       {children}
     </Animated.View>
+  );
+}
+
+/**
+ * Wraps each keyed child in <Appear>, so items added or removed animate and the
+ * rest re-flow. `<AppearList still={firstLoad}>{rows.map(...)}</AppearList>`
+ */
+export function AppearList({ children, still }: { children: ReactNode; still?: boolean }) {
+  return (
+    <>
+      {Children.toArray(children).map((c, i) => (
+        <Appear key={isValidElement(c) && c.key != null ? c.key : i} still={still}>
+          {c}
+        </Appear>
+      ))}
+    </>
   );
 }
 

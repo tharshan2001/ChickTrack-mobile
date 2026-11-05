@@ -8,7 +8,7 @@ import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { StockBatch } from '@/api/types';
 import { ChevronRightIcon, PlusIcon, TruckIcon } from '@/components/icons';
-import { PressScale } from '@/components/motion';
+import { Appear, CountText, GrowBar, PressScale, useFirstBatch } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, SearchField, Separator } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
@@ -65,8 +65,8 @@ function BatchCard({ b, heldFor }: { b: StockBatch; heldFor?: string }) {
           </View>
           <View
             style={{ height: 6, borderRadius: 3, backgroundColor: colors.field, flexDirection: 'row', overflow: 'hidden' }}>
-            <View style={{ width: `${pct(b.availableWeightKg, b.receivedWeightKg)}%`, backgroundColor: colors.ink }} />
-            <View style={{ width: `${pct(b.reservedWeightKg, b.receivedWeightKg)}%`, backgroundColor: colors.warningDot }} />
+            <GrowBar pct={pct(b.availableWeightKg, b.receivedWeightKg)} color={colors.ink} />
+            <GrowBar pct={pct(b.reservedWeightKg, b.receivedWeightKg)} color={colors.warningDot} delay={200} />
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: space.sm }}>
             <Text variant="caption" style={{ flex: 1 }} numberOfLines={1}>
@@ -86,7 +86,21 @@ function BatchCard({ b, heldFor }: { b: StockBatch; heldFor?: string }) {
   );
 }
 
-function Stat({ label, value, tone, first }: { label: string; value: string; tone?: string; first?: boolean }) {
+function Stat({
+  label,
+  value,
+  decimals,
+  format,
+  tone,
+  first,
+}: {
+  label: string;
+  value: string;
+  decimals: number;
+  format: (v: string) => string;
+  tone?: string;
+  first?: boolean;
+}) {
   return (
     <View
       style={{
@@ -100,9 +114,15 @@ function Stat({ label, value, tone, first }: { label: string; value: string; ton
       <Text variant="caption" style={{ fontSize: 12, lineHeight: 16 }}>
         {label}
       </Text>
-      <Text variant="num" numberOfLines={1} adjustsFontSizeToFit style={{ fontSize: 17, lineHeight: 22, color: tone ?? colors.ink }}>
-        {value}
-      </Text>
+      <CountText
+        value={value}
+        decimals={decimals}
+        format={format}
+        variant="num"
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={{ fontSize: 17, lineHeight: 22, color: tone ?? colors.ink }}
+      />
     </View>
   );
 }
@@ -156,6 +176,7 @@ export default function StockTab() {
   const draftCount = drafts.data?.totalElements ?? 0;
   const wayCount = onTheWay.data?.totalElements ?? 0;
   const [search, setSearch] = useState('');
+  const firstLoad = useFirstBatch(query.isSuccess);
   const batches = query.data ?? [];
 
   // Which branch each draft is holding stock for, so the badge can say who it is
@@ -229,9 +250,9 @@ export default function StockTab() {
 
           <Card style={{ borderWidth: 1, borderColor: 'rgba(162, 8, 12, 0.25)' }}>
             <View style={{ flexDirection: 'row', paddingVertical: 14 }}>
-              <Stat first label="On hand" value={formatKgWhole(onHand)} />
-              <Stat label="Held" value={formatKgWhole(held)} tone={toUnits(held, W) > 0n ? colors.warning : undefined} />
-              <Stat label="Value" value={formatRupeesCompact(value)} />
+              <Stat first label="On hand" value={onHand} decimals={3} format={formatKgWhole} />
+              <Stat label="Held" value={held} decimals={3} format={formatKgWhole} tone={toUnits(held, W) > 0n ? colors.warning : undefined} />
+              <Stat label="Value" value={value} decimals={2} format={formatRupeesCompact} />
             </View>
             <Separator inset={space.lg} />
             <Pressable
@@ -295,7 +316,9 @@ export default function StockTab() {
 
         {shown.length ? <Text variant="caption">Oldest first · issued in this order</Text> : null}
         {shown.map((b) => (
-          <BatchCard key={b.id} b={b} heldFor={heldFor.get(b.id)} />
+          <Appear key={b.id} still={firstLoad}>
+            <BatchCard b={b} heldFor={heldFor.get(b.id)} />
+          </Appear>
         ))}
 
         {shown.length ? (

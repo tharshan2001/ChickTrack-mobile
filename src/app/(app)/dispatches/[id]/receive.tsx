@@ -13,7 +13,7 @@ import { Button, Card, Field, IconButton } from '@/components/ui';
 import { useDistribution, useReceiveDistribution } from '@/features/distribution-api';
 import { formatKg, fromUnits, isDecimal, toFixedString, toUnits } from '@/lib/decimal';
 import { colors, radius, space } from '@/theme/tokens';
-import { savedAndBack } from '@/components/motion';
+import { Appear, CountText, savedAndBack } from '@/components/motion';
 
 const REASONS: { value: DiscrepancyReason; label: string }[] = [
   { value: 'MELT_WATER', label: 'Melt water' },
@@ -126,7 +126,7 @@ function Receive({ d }: { d: Distribution }) {
               error={touched ? c.weight : undefined}
             />
             {c.short > 0n && !c.weight ? (
-              <>
+              <Appear style={{ gap: 16 }}>
                 <View
                   style={{
                     flexDirection: 'row',
@@ -140,9 +140,7 @@ function Receive({ d }: { d: Distribution }) {
                   <Text variant="bodyMedium" style={{ color: colors.warning }}>
                     Shortfall
                   </Text>
-                  <Text variant="mono" style={{ color: colors.warning, fontSize: 16 }}>
-                    {formatKg(fromUnits(c.short, 3))}
-                  </Text>
+                  <CountText variant="mono" style={{ color: colors.warning, fontSize: 16 }} value={fromUnits(c.short, 3)} decimals={3} format={formatKg} />
                 </View>
                 <Chips
                   label="Reason for the shortfall"
@@ -151,7 +149,7 @@ function Receive({ d }: { d: Distribution }) {
                   onChange={(reason) => set({ reason })}
                   error={touched ? c.reason : undefined}
                 />
-              </>
+              </Appear>
             ) : null}
           </Card>
         );

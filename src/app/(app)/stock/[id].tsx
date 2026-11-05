@@ -13,7 +13,7 @@ import { Button, Card, ErrorBanner, Field, IconButton, SectionHeader, Separator 
 import { useAdjustStock, useBatch, useBatchHistory } from '@/features/stock-api';
 import { formatKg, fromUnits, isPositiveDecimal, toFixedString, toUnits } from '@/lib/decimal';
 import { colors, space } from '@/theme/tokens';
-import { savedAndBack } from '@/components/motion';
+import { AppearList, savedAndBack, useFirstBatch } from '@/components/motion';
 
 const W = 3;
 
@@ -41,6 +41,7 @@ function AdjustStock({ batch }: { batch: StockBatch }) {
   const [touched, setTouched] = useState(false);
   const adjust = useAdjustStock(batch.id);
   const history = useBatchHistory(batch.id);
+  const firstLoad = useFirstBatch(history.isSuccess);
   const idem = useIdempotencyKey();
 
   // Damage and loss remove stock, return adds it back, a recount goes either way.
@@ -145,7 +146,8 @@ function AdjustStock({ batch }: { batch: StockBatch }) {
         {history.isPending ? <ActivityIndicator color={colors.accent} /> : null}
         {history.data?.length ? (
           <Card>
-            {history.data.map((h, i) => (
+            <AppearList still={firstLoad}>
+              {history.data.map((h, i) => (
               <Fragment key={h.id}>
                 {i > 0 ? <Separator /> : null}
                 <View
@@ -176,6 +178,7 @@ function AdjustStock({ batch }: { batch: StockBatch }) {
                 </View>
               </Fragment>
             ))}
+            </AppearList>
           </Card>
         ) : null}
       </View>

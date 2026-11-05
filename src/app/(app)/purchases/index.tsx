@@ -6,6 +6,7 @@ import { errorMessage } from '@/api/client';
 import { suppliers } from '@/api/resources';
 import type { Procurement } from '@/api/types';
 import { Segmented } from '@/components/pickers';
+import { AppearList, CountText, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, IconButton, Separator } from '@/components/ui';
@@ -27,6 +28,7 @@ export default function Purchases() {
   const [period, setPeriod] = useState<Period>('week');
   const [from, to] = range(period);
   const query = useProcurements(from, to);
+  const firstLoad = useFirstBatch(query.isSuccess);
   const supplierList = suppliers.useList('');
   const supplierName = (id: string) => supplierList.data?.content.find((s) => s.id === id)?.name ?? 'Supplier';
 
@@ -56,15 +58,11 @@ export default function Purchases() {
       <View style={{ flexDirection: 'row', paddingHorizontal: space.xs, gap: space.sm }}>
         <View style={{ flex: 1, gap: 2 }}>
           <Text variant="caption">Bought</Text>
-          <Text variant="num">
-            {formatKgWhole(sum(list.map((p) => p.paidWeightKg), 3))}
-          </Text>
+          <CountText value={sum(list.map((p) => p.paidWeightKg), 3)} decimals={3} format={formatKgWhole} variant="num" />
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <Text variant="caption">Spent</Text>
-          <Text variant="num">
-            {formatRupees(sum(list.map((p) => p.totalCost), 2), 0)}
-          </Text>
+          <CountText value={sum(list.map((p) => p.totalCost), 2)} format={(v) => formatRupees(v, 0)} variant="num" />
         </View>
       </View>
 
@@ -80,7 +78,8 @@ export default function Purchases() {
         </Card>
       ) : null}
 
-      {[...byDay.entries()].map(([day, rows]) => (
+      <AppearList still={firstLoad}>
+        {[...byDay.entries()].map(([day, rows]) => (
         <View key={day} style={{ gap: space.sm }}>
           <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
             {formatDayHeading(day)}
@@ -122,6 +121,7 @@ export default function Purchases() {
           </Card>
         </View>
       ))}
+      </AppearList>
     </Screen>
   );
 }

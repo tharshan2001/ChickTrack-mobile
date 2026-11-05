@@ -20,7 +20,7 @@ import { useCreateProcurement } from '@/features/stock-api';
 import { formatKg, fromUnits, isDecimal, isPositiveDecimal, toFixedString } from '@/lib/decimal';
 import { formatRupees, toIsoDate } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
-import { savedAndBack } from '@/components/motion';
+import { AppearList, CountText, savedAndBack } from '@/components/motion';
 
 type Item = ItemDraft & { key: string; productId: string | null };
 
@@ -132,7 +132,7 @@ export default function NewPurchase() {
         <View style={{ gap: 10 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <Text variant="caption">Total cost · {formatKg(preview.totalKg)}</Text>
-            <Text variant="numTitle">{formatRupees(preview.total)}</Text>
+            <CountText variant="numTitle" value={preview.total} format={formatRupees} />
           </View>
           <Button title="Save purchase" onPress={save} loading={create.isPending} />
         </View>
@@ -159,6 +159,7 @@ export default function NewPurchase() {
         </View>
       </View>
 
+      <AppearList>
       {items.map((it, i) => {
         const p = preview.items[i]!;
         const landed = p.landedPerKg !== null && p.purchase > 0n ? `${formatRupees(fromUnits(p.landedPerKg, 2))}/kg` : null;
@@ -295,6 +296,9 @@ export default function NewPurchase() {
         }}
       />
 
+      </AppearList>
+
+      <AppearList>
       {costs.map((c) => (
         <CostCard
           key={c.key}
@@ -304,6 +308,7 @@ export default function NewPurchase() {
           showErrors={touched}
         />
       ))}
+      </AppearList>
 
       <AddRow title="+ Add cost (transport, labour…)" onPress={() => setCosts((list) => [...list, newCost()])} />
 

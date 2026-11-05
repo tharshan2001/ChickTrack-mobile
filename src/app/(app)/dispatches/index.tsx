@@ -6,6 +6,7 @@ import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { Distribution } from '@/api/types';
 import { Segmented } from '@/components/pickers';
+import { AppearList, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, IconButton, Notice, Separator } from '@/components/ui';
@@ -65,6 +66,7 @@ export default function Dispatches() {
   const dispatched = useDistributions('', '', 'DISPATCHED');
   const from = view === 'week' ? weekStart(today) : `${today.slice(0, 8)}01`;
   const period = useDistributions(from, today, undefined, undefined, view !== 'open');
+  const firstLoad = useFirstBatch(true);
   const branchList = branches.useList('');
   const branchName = (id: string) => branchList.data?.content.find((b) => b.id === id)?.name ?? 'Branch';
 
@@ -125,7 +127,8 @@ export default function Dispatches() {
           <Text variant="bodyMedium">No dispatches in this period</Text>
         </Card>
       ) : null}
-      {[...byDay.entries()].map(([day, list]) => (
+      <AppearList still={firstLoad}>
+        {[...byDay.entries()].map(([day, list]) => (
         <View key={day} style={{ gap: space.sm }}>
           <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
             {formatDayHeading(day)}
@@ -133,6 +136,7 @@ export default function Dispatches() {
           <Rows list={list} branchName={branchName} />
         </View>
       ))}
+      </AppearList>
     </Screen>
   );
 }
