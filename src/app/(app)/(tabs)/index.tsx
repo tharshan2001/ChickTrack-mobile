@@ -92,18 +92,18 @@ function Task({ title, detail, onPress, tone }: { title: string; detail: ReactNo
   );
 }
 
-function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
+/**
+ * Label and figure, nothing else. The mockups colour the two figures that carry
+ * a judgement — margin earned, weight lost — and leave the rest ink, so the pair
+ * can be read without looking at the labels.
+ */
+function Tile({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     <Card style={{ flexBasis: '47%', flexGrow: 1, padding: space.lg, gap: 4 }}>
       <Text variant="caption">{label}</Text>
-      <Text variant="num" numberOfLines={1}>
+      <Text variant="num" numberOfLines={1} style={tone ? { color: tone } : undefined}>
         {value}
       </Text>
-      {note ? (
-        <Text variant="footnote" numberOfLines={1}>
-          {note}
-        </Text>
-      ) : null}
     </Card>
   );
 }
@@ -194,7 +194,7 @@ export default function Home() {
   const firstName = user?.fullName.split(' ')[0];
 
   return (
-    <Screen title={firstName ? `${greeting()}, ${firstName}` : greeting()} subtitle={BusinessDate.today()}>
+    <Screen title={firstName ? `${greeting()}, ${firstName}` : greeting()} subtitle={BusinessDate.today()} subtitleAbove>
       <View style={{ flexDirection: 'row', paddingVertical: space.xs }}>
         <QuickAction icon="shopping-cart" label="Buy" href="/purchases/new" primary />
         <QuickAction icon="truck" label="Send" href="/dispatches/new" />
@@ -226,19 +226,13 @@ export default function Home() {
         {dashboard.isPending ? <ActivityIndicator color={colors.accent} /> : null}
         {d ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
-            <Tile label="Sales" value={formatRupeesCompact(d.totalSales)} note={`branch profit ${formatRupeesCompact(d.branchProfit)}`} />
-            <Tile label="Our margin" value={formatRupeesCompact(d.ourMargin)} note={`on ${formatKgWhole(d.distributionWeightKg)} sent`} />
-            <Tile
-              label="Branches owe"
-              value={owedTotal ? formatRupeesCompact(owedTotal) : '…'}
-              note={`${formatRupeesCompact(d.branchOutstanding)} from today`}
-            />
-            <Tile label="In warehouse" value={formatKgWhole(d.stockWeightKg)} note={formatRupeesCompact(d.stockValue)} />
-            <Tile label="Bought" value={formatKgWhole(d.procurementWeightKg)} note={formatRupeesCompact(d.procurementValue)} />
+            <Tile label="Our margin" value={formatRupeesCompact(d.ourMargin)} tone={colors.success} />
+            <Tile label="Branches owe" value={owedTotal ? formatRupeesCompact(owedTotal) : '…'} />
+            <Tile label="In warehouse" value={formatKgWhole(d.stockWeightKg)} />
             <Tile
               label="Shrinkage"
               value={formatKgShort(d.shrinkageWeightKg)}
-              note={toUnits(d.shrinkageWeightKg, 3) > 0n ? 'damage, loss, short deliveries' : 'none today'}
+              tone={toUnits(d.shrinkageWeightKg, 3) > 0n ? colors.warning : undefined}
             />
           </View>
         ) : null}

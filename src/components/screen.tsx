@@ -32,12 +32,39 @@ type ScreenProps = {
   footer?: ReactNode;
   /** Set false when the body is its own list (FlatList). */
   scroll?: boolean;
+  /**
+   * Put the actions on the same row as the large title, as Branches and Stock do
+   * in the mockups. Off by default, which is the Products/Purchases pattern: a
+   * bar of actions above, title below.
+   */
+  inlineActions?: boolean;
+  /** Show the subtitle above the title, as Home does in the mockups. */
+  subtitleAbove?: boolean;
   children: ReactNode;
 };
 
 /** Page shell matching the mockups: top bar, large title, padded body, optional pinned footer. */
-export function Screen({ title, subtitle, left, right, footer, scroll = true, children }: ScreenProps) {
-  const hasBar = !!(left || right);
+export function Screen({
+  title,
+  subtitle,
+  left,
+  right,
+  footer,
+  scroll = true,
+  inlineActions,
+  subtitleAbove,
+  children,
+}: ScreenProps) {
+  const hasBar = !!(left || right) && !inlineActions;
+  const titleBlock = (
+    <View style={{ flex: 1, gap: 2 }}>
+      {subtitleAbove && subtitle ? <Text variant="caption">{subtitle}</Text> : null}
+      <Text variant="largeTitle" accessibilityRole="header">
+        {title}
+      </Text>
+      {!subtitleAbove && subtitle ? <Text variant="caption">{subtitle}</Text> : null}
+    </View>
+  );
   const refreshControl = usePullToRefresh();
   const body = scroll ? (
     <ScrollView
@@ -66,11 +93,17 @@ export function Screen({ title, subtitle, left, right, footer, scroll = true, ch
             <View style={{ marginRight: space.sm }}>{right}</View>
           </View>
         ) : null}
-        <View style={{ paddingHorizontal: space.lg, paddingTop: hasBar ? 0 : space.lg, gap: 2 }}>
-          <Text variant="largeTitle" accessibilityRole="header">
-            {title}
-          </Text>
-          {subtitle ? <Text variant="caption">{subtitle}</Text> : null}
+        <View
+          style={{
+            paddingHorizontal: space.lg,
+            paddingTop: hasBar ? 0 : space.lg,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: space.md,
+          }}>
+          {inlineActions && left ? left : null}
+          {titleBlock}
+          {inlineActions && right ? right : null}
         </View>
         {body}
         {footer ? (

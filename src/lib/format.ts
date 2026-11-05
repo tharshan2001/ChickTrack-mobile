@@ -7,7 +7,7 @@ export const BusinessDate = {
       timeZone: BUSINESS_TZ,
       weekday: 'long',
       day: 'numeric',
-      month: 'short',
+      month: 'long',
     }).format(new Date());
   },
 };

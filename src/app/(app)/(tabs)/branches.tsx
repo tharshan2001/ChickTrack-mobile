@@ -86,7 +86,7 @@ export default function BranchesTab() {
   return (
     <Screen
       title="Branches"
-      left={<></>}
+      inlineActions
       right={<IconButton icon="plus" label="Add branch" filled onPress={() => router.push('/branches/new')} />}>
       {list.length > 5 || search ? (
         <SearchField placeholder="Search branches" accessibilityLabel="Search branches" value={search} onChangeText={setSearch} />

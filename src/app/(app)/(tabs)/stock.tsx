@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { errorMessage } from '@/api/client';
+import { branches } from '@/api/resources';
 import type { StockBatch } from '@/api/types';
 import { Segmented } from '@/components/pickers';
 import { Text } from '@/components/text';
@@ -33,7 +34,7 @@ function pct(part: string, of: string) {
   return Number((toUnits(part, W) * 1000n) / total) / 10;
 }
 
-function BatchCard({ b }: { b: StockBatch }) {
+function BatchCard({ b, heldFor }: { b: StockBatch; heldFor?: string }) {
   const held = toUnits(b.reservedWeightKg, W) > 0n;
   return (
     <Pressable
@@ -47,7 +48,10 @@ function BatchCard({ b }: { b: StockBatch }) {
               {b.chickenTypeName}
             </Text>
             {held ? (
-              <Badge label={`${formatKgShort(b.reservedWeightKg)} held`} tone="warning" />
+              <Badge
+                label={heldFor ? `${formatKgShort(b.reservedWeightKg)} held · ${heldFor}` : `${formatKgShort(b.reservedWeightKg)} held`}
+                tone="warning"
+              />
             ) : (
               <Text variant="caption">{receivedLabel(b)}</Text>
             )}
@@ -137,6 +141,15 @@ export default function StockTab() {
   const heldByDrafts = sum((drafts.data?.content ?? []).map((d) => d.totalWeightKg), W);
   const [filter, setFilter] = useState('all');
   const batches = query.data ?? [];
+
+  // Which branch each draft is holding stock for, so the badge can say who it is
+  // for rather than only how much. Drafts are already loaded above.
+  const branchList = branches.useList('', true);
+  const heldFor = new Map<string, string>();
+  for (const d of drafts.data?.content ?? []) {
+    const name = branchList.data?.content.find((x) => x.id === d.branchId)?.name;
+    if (name) for (const it of d.items) heldFor.set(it.stockBatchId, name);
+  }
 
   const productTabs = [...new Map(batches.map((b) => [b.chickenTypeId, b.chickenTypeName])).entries()];
   const shown = filter === 'all' ? batches : batches.filter((b) => b.chickenTypeId === filter);
@@ -235,7 +248,7 @@ export default function StockTab() {
 
         {shown.length ? <Text variant="caption">Oldest first · issued in this order</Text> : null}
         {shown.map((b) => (
-          <BatchCard key={b.id} b={b} />
+          <BatchCard key={b.id} b={b} heldFor={heldFor.get(b.id)} />
         ))}
 
         {shown.length ? (
