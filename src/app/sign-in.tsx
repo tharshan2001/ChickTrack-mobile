@@ -68,7 +68,7 @@ export default function SignIn() {
               label="Password"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
+              password
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="current-password"

@@ -99,6 +99,7 @@ type FieldProps = TextInputProps & {
   mono?: boolean;
   /** Hide the visible label but keep it as the accessibility label. */
   hideLabel?: boolean;
+  password?: boolean;
   ref?: Ref<ComponentRef<typeof TextInput>>;
 };
 
@@ -114,50 +115,66 @@ export function Field({
   huge,
   mono,
   hideLabel,
+  password,
   onFocus,
   onBlur,
   ...rest
 }: FieldProps) {
   const [focused, setFocused] = useState(false);
+  const [shown, setShown] = useState(false);
   return (
     <View style={{ gap: 6 }}>
       {hideLabel ? null : <Text variant="caption">{label}</Text>}
-      <TextInput
-        {...rest}
-        accessibilityLabel={rest.accessibilityLabel ?? label}
-        maxFontSizeMultiplier={MAX_FONT_SCALE}
-        multiline={multiline}
-        placeholderTextColor={colors.secondary}
-        onFocus={(e) => {
-          setFocused(true);
-          onFocus?.(e);
-        }}
-        onBlur={(e) => {
-          setFocused(false);
-          onBlur?.(e);
-        }}
-        style={[
-          styles.input,
-          compact && styles.inputCompact,
-          large && styles.inputLarge,
-          mid && styles.inputMid,
-          huge && styles.inputHuge,
-          mono &&
-            (compact
-              ? type.inputMonoSmall
-              : large
-                ? type.inputMonoLarge
-                : mid
-                  ? type.inputMonoMid
-                  : huge
-                    ? type.inputMonoHuge
-                    : type.inputMono),
-          multiline && styles.inputMultiline,
-          focused && !error && { borderColor: colors.accent },
-          !!error && { borderColor: colors.danger },
-          style,
-        ]}
-      />
+      <View>
+        <TextInput
+          {...rest}
+          {...(password ? { secureTextEntry: !shown, autoCapitalize: 'none', autoCorrect: false } : null)}
+          accessibilityLabel={rest.accessibilityLabel ?? label}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          multiline={multiline}
+          placeholderTextColor={colors.secondary}
+          onFocus={(e) => {
+            setFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
+          style={[
+            styles.input,
+            compact && styles.inputCompact,
+            large && styles.inputLarge,
+            mid && styles.inputMid,
+            huge && styles.inputHuge,
+            mono &&
+              (compact
+                ? type.inputMonoSmall
+                : large
+                  ? type.inputMonoLarge
+                  : mid
+                    ? type.inputMonoMid
+                    : huge
+                      ? type.inputMonoHuge
+                      : type.inputMono),
+            multiline && styles.inputMultiline,
+            focused && !error && { borderColor: colors.accent },
+            !!error && { borderColor: colors.danger },
+            password && { paddingRight: 48 },
+            style,
+          ]}
+        />
+        {password ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={shown ? 'Hide password' : 'Show password'}
+            onPress={() => setShown((v) => !v)}
+            hitSlop={4}
+            style={({ pressed }) => [styles.eye, pressed && { opacity: 0.6 }]}>
+            <Feather name={shown ? 'eye-off' : 'eye'} size={20} color={colors.secondary} />
+          </Pressable>
+        ) : null}
+      </View>
       {error ? (
         <Text variant="caption" style={{ color: colors.danger }}>
           {error}
@@ -371,4 +388,5 @@ const styles = StyleSheet.create({
   row: { minHeight: 64, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md },
   rowCompact: { minHeight: 52 },
   iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  eye: { position: 'absolute', right: 2, top: 0, bottom: 0, width: 44, alignItems: 'center', justifyContent: 'center' },
 });

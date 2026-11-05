@@ -83,7 +83,7 @@ export function PasswordScreen({ forced }: { forced?: boolean }) {
           label={forced ? 'Temporary password' : 'Current password'}
           value={current}
           onChangeText={setCurrent}
-          secureTextEntry
+          password
           autoCapitalize="none"
           autoComplete="current-password"
           error={touched ? errors.current : undefined}
@@ -93,7 +93,7 @@ export function PasswordScreen({ forced }: { forced?: boolean }) {
             label="New password"
             value={next}
             onChangeText={setNext}
-            secureTextEntry
+            password
             autoCapitalize="none"
             autoComplete="new-password"
             error={touched ? errors.next : undefined}
@@ -120,7 +120,7 @@ export function PasswordScreen({ forced }: { forced?: boolean }) {
           label="Type it again"
           value={again}
           onChangeText={setAgain}
-          secureTextEntry
+          password
           autoCapitalize="none"
           autoComplete="new-password"
           error={touched ? errors.again : undefined}

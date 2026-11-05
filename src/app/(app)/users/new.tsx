@@ -151,7 +151,7 @@ export default function AddUser() {
             value={v.password}
             onChangeText={form.set('password')}
             error={show(errors.password)}
-            secureTextEntry
+            password
             autoCapitalize="none"
           />
         ) : null}
