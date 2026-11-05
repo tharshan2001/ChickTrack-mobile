@@ -26,6 +26,9 @@ type Copy = {
   addTitle: string;
   editTitle: string;
   namePlaceholder: string;
+  nameHint?: string;
+  /** Forms use 4px below the title; list-adjacent forms use 8px. */
+  titleGap?: number;
   addNote?: string;
   activeOn: string;
   activeOff: string;
@@ -52,7 +55,7 @@ function NameDescriptionForm({
           placeholder={copy.namePlaceholder}
           maxLength={100}
           autoCapitalize="words"
-          hint="Must be unique."
+          hint={copy.nameHint ?? 'Must be unique.'}
           error={errs.name ?? (form.touched && !form.values.name.trim() ? 'Enter a name' : undefined)}
         />
         <Field
@@ -88,6 +91,7 @@ export function AddSimpleEntity({ crud, copy }: { crud: Crud; copy: Copy }) {
     <Screen
       title={copy.addTitle}
       left={<TextLink title="Cancel" onPress={() => router.back()} />}
+      titleGap={copy.titleGap}
       footer={<Button title={`Save ${copy.noun}`} onPress={save} loading={create.isPending} />}>
       <NameDescriptionForm form={form} error={create.error} copy={copy} />
       {copy.addNote ? <Notice text={copy.addNote} /> : null}
@@ -120,6 +124,7 @@ function EditForm({ crud, copy, item }: { crud: Crud; copy: Copy; item: ChickenT
     <Screen
       title={copy.editTitle}
       left={<TextLink title="Cancel" onPress={() => router.back()} />}
+      titleGap={copy.titleGap}
       footer={<Button title="Save changes" onPress={save} loading={update.isPending} />}>
       <NameDescriptionForm form={form} error={update.error} copy={copy} />
       <ActiveSwitch active={item.active} mutation={setActive} onText={copy.activeOn} offText={copy.activeOff} />

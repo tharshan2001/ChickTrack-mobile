@@ -1,5 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
-import type { ComponentRef, ReactNode, Ref } from 'react';
+import { useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -10,6 +10,7 @@ import {
   type ViewProps,
 } from 'react-native';
 
+import { ChevronLeftIcon, ChevronRightIcon, InfoIcon, PlusIcon } from '@/components/icons';
 import { MAX_FONT_SCALE, Text, androidText } from '@/components/text';
 import { cardShadow, colors, radius, space, type } from '@/theme/tokens';
 
@@ -17,20 +18,21 @@ export function Card({ style, ...rest }: ViewProps) {
   return <View {...rest} style={[styles.card, style]} />;
 }
 
-export function Separator() {
-  return <View style={styles.separator} />;
+export function Separator({ inset = space.lg }: { inset?: number }) {
+  return <View style={[styles.separator, { marginLeft: inset }]} />;
 }
 
 type ButtonProps = {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'danger';
   loading?: boolean;
   disabled?: boolean;
 };
 
 export function Button({ title, onPress, variant = 'primary', loading, disabled }: ButtonProps) {
   const primary = variant === 'primary';
+  const danger = variant === 'danger';
   const inactive = disabled || loading;
   return (
     <Pressable
@@ -40,15 +42,19 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        primary ? styles.buttonPrimary : styles.buttonSecondary,
+        primary ? styles.buttonPrimary : danger ? styles.buttonDanger : styles.buttonSecondary,
+        danger && { height: 48 },
         pressed && primary && { backgroundColor: colors.accentPressed },
         pressed && !primary && { opacity: 0.7 },
         inactive && { opacity: 0.5 },
       ]}>
       {loading ? (
-        <ActivityIndicator color={primary ? colors.surface : colors.accent} />
+        <ActivityIndicator color={primary ? colors.surface : danger ? colors.danger : colors.accent} />
       ) : (
-        <Text variant="bodyMedium" numberOfLines={1} style={{ color: primary ? colors.surface : colors.accent, letterSpacing: 0.5 }}>
+        <Text
+          variant="bodyMedium"
+          numberOfLines={1}
+          style={{ color: primary ? colors.surface : danger ? colors.danger : colors.ink, letterSpacing: 0.5 }}>
           {title}
         </Text>
       )}
@@ -77,21 +83,77 @@ export function Badge({ label, tone = 'neutral' }: { label: string; tone?: Tone 
   );
 }
 
-type FieldProps = TextInputProps & { label: string; hint?: string; error?: string; ref?: Ref<ComponentRef<typeof TextInput>> };
+type FieldProps = TextInputProps & {
+  label: string;
+  hint?: string;
+  error?: string;
+  /** 44px fields used in two-column grids. */
+  compact?: boolean;
+  /** 52px monospace field for headline weights. */
+  large?: boolean;
+  /** 50px monospace field for daily sales weights. */
+  mid?: boolean;
+  /** 56px monospace field for the biggest weights (delivery receipts). */
+  huge?: boolean;
+  /** Monospace text, for codes and references. */
+  mono?: boolean;
+  /** Hide the visible label but keep it as the accessibility label. */
+  hideLabel?: boolean;
+  ref?: Ref<ComponentRef<typeof TextInput>>;
+};
 
-export function Field({ label, hint, error, style, multiline, ...rest }: FieldProps) {
+export function Field({
+  label,
+  hint,
+  error,
+  style,
+  multiline,
+  compact,
+  large,
+  mid,
+  huge,
+  mono,
+  hideLabel,
+  onFocus,
+  onBlur,
+  ...rest
+}: FieldProps) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={{ gap: 6 }}>
-      <Text variant="caption">{label}</Text>
+      {hideLabel ? null : <Text variant="caption">{label}</Text>}
       <TextInput
         {...rest}
         accessibilityLabel={rest.accessibilityLabel ?? label}
         maxFontSizeMultiplier={MAX_FONT_SCALE}
         multiline={multiline}
         placeholderTextColor={colors.secondary}
+        onFocus={(e) => {
+          setFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          onBlur?.(e);
+        }}
         style={[
           styles.input,
+          compact && styles.inputCompact,
+          large && styles.inputLarge,
+          mid && styles.inputMid,
+          huge && styles.inputHuge,
+          mono &&
+            (compact
+              ? type.inputMonoSmall
+              : large
+                ? type.inputMonoLarge
+                : mid
+                  ? type.inputMonoMid
+                  : huge
+                    ? type.inputMonoHuge
+                    : type.inputMono),
           multiline && styles.inputMultiline,
+          focused && !error && { borderColor: colors.accent },
           !!error && { borderColor: colors.danger },
           style,
         ]}
@@ -107,19 +169,16 @@ export function Field({ label, hint, error, style, multiline, ...rest }: FieldPr
   );
 }
 
-export function SearchField(props: TextInputProps) {
+export function SearchField({ style, ...props }: TextInputProps) {
   return (
-    <View style={styles.search}>
-      <Feather name="search" size={16} color={colors.secondary} />
-      <TextInput
-        placeholderTextColor={colors.secondary}
-        maxFontSizeMultiplier={MAX_FONT_SCALE}
-        autoCorrect={false}
-        clearButtonMode="while-editing"
-        {...props}
-        style={styles.searchInput}
-      />
-    </View>
+    <TextInput
+      placeholderTextColor={colors.secondary}
+      maxFontSizeMultiplier={MAX_FONT_SCALE}
+      autoCorrect={false}
+      clearButtonMode="while-editing"
+      {...props}
+      style={[styles.search, style]}
+    />
   );
 }
 
@@ -130,15 +189,17 @@ type RowProps = {
   onPress?: () => void;
   muted?: boolean;
   chevron?: boolean;
+  /** 52px row used by the More menu. */
+  compact?: boolean;
 };
 
-export function ListRow({ title, subtitle, right, onPress, muted, chevron }: RowProps) {
+export function ListRow({ title, subtitle, right, onPress, muted, chevron, compact }: RowProps) {
   return (
     <Pressable
       disabled={!onPress}
       onPress={onPress}
       accessibilityRole={onPress ? 'button' : undefined}
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.field }]}>
+      style={({ pressed }) => [styles.row, compact && styles.rowCompact, pressed && { backgroundColor: colors.field }]}>
       <View style={{ flex: 1, gap: 2 }}>
         <Text variant="bodyMedium" style={muted && { color: colors.secondary }} numberOfLines={1}>
           {title}
@@ -149,8 +210,12 @@ export function ListRow({ title, subtitle, right, onPress, muted, chevron }: Row
           </Text>
         ) : null}
       </View>
-      {right}
-      {chevron ? <Feather name="chevron-right" size={16} color={colors.secondary} /> : null}
+      {right || chevron ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+          {right}
+          {chevron ? <ChevronRightIcon size={16} /> : null}
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -177,27 +242,61 @@ export function IconButton({
         filled && { backgroundColor: pressed ? colors.accentPressed : colors.accent },
         !filled && pressed && { opacity: 0.6 },
       ]}>
-      <Feather name={icon} size={filled ? 20 : 24} color={filled ? colors.surface : colors.accent} />
-    </Pressable>
-  );
-}
-
-export function TextLink({ title, onPress }: { title: string; onPress: () => void }) {
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} hitSlop={8} style={{ height: 44, justifyContent: 'center' }}>
-      {({ pressed }) => (
-        <Text variant="bodyMedium" style={{ color: pressed ? colors.accentPressed : colors.accent }}>
-          {title}
-        </Text>
+      {icon === 'chevron-left' ? (
+        <ChevronLeftIcon />
+      ) : icon === 'plus' ? (
+        <PlusIcon />
+      ) : (
+        <Feather name={icon} size={24} color={colors.accent} />
       )}
     </Pressable>
   );
 }
 
-export function Notice({ text }: { text: string }) {
+export function TextLink({
+  title,
+  onPress,
+  pill,
+}: {
+  title: string;
+  onPress: () => void;
+  /** Filled accent button, as Money's "+ Payment" link. */
+  pill?: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      hitSlop={8}
+      style={({ pressed }) => [
+        { height: 44, justifyContent: 'center', paddingHorizontal: space.sm },
+        pill && {
+          height: 40,
+          borderRadius: radius.field,
+          paddingHorizontal: 14,
+          backgroundColor: pressed ? colors.accentPressed : colors.accent,
+        },
+      ]}>
+      <Text
+        variant="bodyMedium"
+        style={{ color: pill ? colors.surface : colors.accent, letterSpacing: pill ? 0.5 : undefined }}>
+        {title}
+      </Text>
+    </Pressable>
+  );
+}
+
+export function Notice({ text, icon = true }: { text: string; icon?: boolean }) {
+  if (!icon) {
+    return (
+      <Text variant="caption" style={{ paddingHorizontal: space.xs, lineHeight: 19 }}>
+        {text}
+      </Text>
+    );
+  }
   return (
     <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: space.xs }}>
-      <Feather name="info" size={18} color={colors.secondary} style={{ marginTop: 1 }} />
+      <InfoIcon />
       <Text variant="caption" style={{ flex: 1, lineHeight: 19 }}>
         {text}
       </Text>
@@ -221,9 +320,9 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
  * between the 28px page title and the 16px rows. Small grey capitals here left
  * the screen with no landmark at all between title and content.
  */
-export function SectionHeader({ title }: { title: string }) {
+export function SectionHeader({ title, size = 'large' }: { title: string; size?: 'large' | 'small' }) {
   return (
-    <Text variant="title" style={{ marginHorizontal: space.xs }}>
+    <Text variant={size === 'small' ? 'labelSmall' : 'title'} style={size === 'small' ? { marginHorizontal: space.xs } : undefined}>
       {title}
     </Text>
   );
@@ -231,14 +330,15 @@ export function SectionHeader({ title }: { title: string }) {
 
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radius.card, ...cardShadow },
-  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginLeft: space.lg },
+  separator: { height: 1, backgroundColor: colors.separator },
   button: { height: 50, borderRadius: radius.field, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.lg },
   buttonPrimary: { backgroundColor: colors.accent },
   buttonSecondary: { backgroundColor: colors.field },
+  buttonDanger: { backgroundColor: 'transparent' },
   badge: {
     flexShrink: 1,
     paddingHorizontal: 8,
-    paddingVertical: 5,
+    paddingVertical: 4,
     borderRadius: radius.pill,
     borderWidth: 1,
   },
@@ -253,17 +353,22 @@ const styles = StyleSheet.create({
     ...androidText,
     color: colors.ink,
   },
-  inputMultiline: { minHeight: 72, paddingTop: 12, paddingBottom: 12, textAlignVertical: 'top' },
+  inputCompact: { height: 44, minHeight: 44, paddingHorizontal: 10, ...type.inputCompact },
+  inputLarge: { minHeight: 52, paddingHorizontal: 14 },
+  inputMid: { minHeight: 50, paddingHorizontal: 14 },
+  inputHuge: { minHeight: 56, paddingHorizontal: 14 },
+  inputMultiline: { minHeight: 72, paddingTop: 12, paddingBottom: 12, textAlignVertical: 'top', ...type.textarea },
   search: {
     height: 40,
     borderRadius: radius.field,
     backgroundColor: colors.field,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingHorizontal: space.md,
+    paddingHorizontal: 14,
+    ...type.search,
+    ...androidText,
+    color: colors.ink,
+    paddingVertical: 0,
   },
-  searchInput: { flex: 1, ...type.input, ...androidText, color: colors.ink, paddingVertical: 0 },
   row: { minHeight: 64, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md },
+  rowCompact: { minHeight: 52 },
   iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });

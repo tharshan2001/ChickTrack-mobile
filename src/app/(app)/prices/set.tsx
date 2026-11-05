@@ -8,7 +8,8 @@ import { DecimalField } from '@/components/money-field';
 import { Segmented, SelectField } from '@/components/pickers';
 import { Screen } from '@/components/screen';
 import { StartsField, useStarts } from '@/components/starts-field';
-import { Button, Card, Notice, TextLink } from '@/components/ui';
+import { Text } from '@/components/text';
+import { Button, Card, TextLink } from '@/components/ui';
 import { useCurrentPrice, useSetPrice } from '@/features/prices-api';
 import { isDecimal, toFixedString } from '@/lib/decimal';
 import { formatRupees } from '@/lib/format';
@@ -63,11 +64,13 @@ export default function SetPrice() {
     <Screen
       title="Set price"
       left={<TextLink title="Cancel" onPress={() => router.back()} />}
+      bodyGap={16}
       footer={<Button title="Save price" onPress={submit} loading={save.isPending} />}>
       <FormError error={save.error} />
-      <Card style={{ padding: space.lg, gap: space.lg }}>
+      <Card style={{ padding: space.lg, gap: 14 }}>
         <SelectField
           label="Product"
+          compact
           value={productId}
           onChange={setProductId}
           options={(productList.data?.content ?? []).map((p) => ({ value: p.id, label: p.name }))}
@@ -86,6 +89,7 @@ export default function SetPrice() {
           <SelectField
             label="Branch"
             hideLabel
+            compact
             value={branchId}
             onChange={setBranchId}
             placeholder="Choose a branch"
@@ -117,7 +121,9 @@ export default function SetPrice() {
         </View>
         <StartsField starts={starts} />
       </Card>
-      <Notice text="The new price is used for sales from when it starts. Earlier sales keep the price they were recorded at." />
+      <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
+        The new price is used for sales from when it starts. Earlier sales keep the price they were recorded at.
+      </Text>
     </Screen>
   );
 }

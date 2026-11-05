@@ -33,6 +33,7 @@ function Rows({ list, branchName }: { list: Distribution[]; branchName: (id: str
             accessibilityRole="button"
             onPress={() => router.push({ pathname: '/dispatches/[id]', params: { id: d.id } })}
             style={({ pressed }) => ({
+              minHeight: 72,
               paddingHorizontal: space.lg,
               paddingVertical: space.md,
               gap: 4,
@@ -48,9 +49,7 @@ function Rows({ list, branchName }: { list: Distribution[]; branchName: (id: str
               <Text variant="monoSmall" style={{ color: colors.secondary }}>
                 {d.reference} · {formatKgShort(d.totalWeightKg)}
               </Text>
-              <Text variant="monoSmall">
-                {formatRupees(d.totalTransferValue)}
-              </Text>
+              <Text variant="mono">{formatRupees(d.totalTransferValue)}</Text>
             </View>
           </Pressable>
         </Fragment>
@@ -86,6 +85,8 @@ export default function Dispatches() {
       right={<IconButton icon="plus" label="Send to branch" filled onPress={() => router.push('/dispatches/new')} />}>
       <Segmented
         label="Show"
+        hideLabel
+        compact
         value={view}
         onChange={setView}
         options={[
@@ -104,7 +105,10 @@ export default function Dispatches() {
               Waiting for you
             </Text>
             <Rows list={open} branchName={branchName} />
-            <Notice text="Drafts hold stock until you dispatch or cancel them. Dispatched loads wait for the branch to confirm what arrived." />
+            <Notice
+              text="Drafts hold stock until you dispatch or cancel them. Dispatched loads wait for the branch to confirm what arrived."
+              icon={false}
+            />
           </>
         ) : (
           <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>

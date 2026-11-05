@@ -12,7 +12,7 @@ import { Text } from '@/components/text';
 import { Button, Card, Field, IconButton } from '@/components/ui';
 import { useDistribution, useReceiveDistribution } from '@/features/distribution-api';
 import { formatKg, fromUnits, isDecimal, toFixedString, toUnits } from '@/lib/decimal';
-import { colors, space } from '@/theme/tokens';
+import { colors, radius, space } from '@/theme/tokens';
 
 const REASONS: { value: DiscrepancyReason; label: string }[] = [
   { value: 'MELT_WATER', label: 'Melt water' },
@@ -103,8 +103,8 @@ function Receive({ d }: { d: Distribution }) {
         const l = lines[item.id]!;
         const set = (change: Partial<LineState>) => setLines((s) => ({ ...s, [item.id]: { ...s[item.id]!, ...change } }));
         return (
-          <Card key={item.id} style={{ padding: space.lg, gap: space.md }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Card key={item.id} style={{ padding: space.lg, gap: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <Text variant="headline">
                 {productName(item.chickenTypeId)}
                 {sameProduct(item.chickenTypeId) ? <Text variant="caption"> · line {idx + 1}</Text> : null}
@@ -121,13 +121,25 @@ function Receive({ d }: { d: Distribution }) {
               value={l.received}
               onChangeText={(received) => set({ received })}
               scale={3}
+              huge
               error={touched ? c.weight : undefined}
             />
             {c.short > 0n && !c.weight ? (
               <>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text variant="caption">Shortfall</Text>
-                  <Text variant="monoSmall" style={{ color: colors.warning }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: colors.warningBg,
+                    borderRadius: radius.field,
+                    paddingVertical: 12,
+                    paddingHorizontal: 14,
+                  }}>
+                  <Text variant="bodyMedium" style={{ color: colors.warning }}>
+                    Shortfall
+                  </Text>
+                  <Text variant="mono" style={{ color: colors.warning, fontSize: 16 }}>
                     {formatKg(fromUnits(c.short, 3))}
                   </Text>
                 </View>

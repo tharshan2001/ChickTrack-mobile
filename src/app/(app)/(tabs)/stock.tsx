@@ -1,4 +1,3 @@
-import Feather from '@expo/vector-icons/Feather';
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { StockBatch } from '@/api/types';
+import { ChevronRightIcon, PlusIcon, TruckIcon } from '@/components/icons';
 import { Segmented } from '@/components/pickers';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner } from '@/components/ui';
@@ -59,7 +59,7 @@ function BatchCard({ b, heldFor }: { b: StockBatch; heldFor?: string }) {
           <View
             style={{ height: 6, borderRadius: 3, backgroundColor: colors.field, flexDirection: 'row', overflow: 'hidden' }}>
             <View style={{ width: `${pct(b.availableWeightKg, b.receivedWeightKg)}%`, backgroundColor: colors.ink }} />
-            <View style={{ width: `${pct(b.reservedWeightKg, b.receivedWeightKg)}%`, backgroundColor: colors.warningBorder }} />
+            <View style={{ width: `${pct(b.reservedWeightKg, b.receivedWeightKg)}%`, backgroundColor: colors.warningDot }} />
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: space.sm }}>
             <Text variant="caption" style={{ flex: 1 }} numberOfLines={1}>
@@ -97,7 +97,7 @@ function ActionButton({
   onPress,
   disabled,
 }: {
-  icon: keyof typeof Feather.glyphMap;
+  icon: 'plus' | 'truck';
   title: string;
   primary?: boolean;
   onPress: () => void;
@@ -123,7 +123,7 @@ function ActionButton({
         gap: space.sm,
         opacity: disabled ? 0.45 : 1,
       })}>
-      <Feather name={icon} size={18} color={fg} />
+      {icon === 'plus' ? <PlusIcon size={18} color={fg} /> : <TruckIcon size={18} color={fg} strokeWidth={1.8} />}
       <Text variant="bodyMedium" style={{ color: fg, letterSpacing: 0.5, flexShrink: 1, textAlign: 'center' }}>
         {title}
       </Text>
@@ -170,8 +170,9 @@ export default function StockTab() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={['top', 'left', 'right']}>
       <ScrollView
-        contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: space.xxl }}
+        contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxl }}
         refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void qc.refetchQueries({ type: 'active' })} tintColor={colors.accent} />}>
+        <View style={{ gap: 20 }}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', columnGap: space.md }}>
           <Text variant="largeTitle" accessibilityRole="header" style={{ flexShrink: 1 }}>
             Warehouse stock
@@ -184,7 +185,7 @@ export default function StockTab() {
             <Text variant="bodyMedium" style={{ color: colors.accent }}>
               Purchases
             </Text>
-            <Feather name="chevron-right" size={16} color={colors.accent} />
+            <ChevronRightIcon size={16} color={colors.accent} />
           </Pressable>
         </View>
         <View style={{ flexDirection: 'row', gap: space.md }}>
@@ -195,18 +196,22 @@ export default function StockTab() {
         <View style={{ flexDirection: 'row', gap: space.sm }}>
           <Stat label="On hand" value={formatKgWhole(onHand)} />
           <Stat label="Held" value={formatKgWhole(held)} tone={toUnits(held, W) > 0n ? colors.warning : undefined} />
-          <Stat label="Value" value={formatRupeesCompact(value)} flex={1.5} />
+          <Stat label="Value" value={formatRupeesCompact(value)} />
         </View>
 
         {productTabs.length > 1 ? (
           <Segmented
             label="Chicken type"
+            hideLabel
+            compact
             value={filter}
             onChange={setFilter}
             options={[{ value: 'all', label: 'All' }, ...productTabs.map(([id, name]) => ({ value: id, label: name }))]}
           />
         ) : null}
+        </View>
 
+        <View style={{ gap: space.md, marginTop: space.md }}>
         {query.isError ? <ErrorBanner message={errorMessage(query.error)} onRetry={query.refetch} /> : null}
         {query.isPending ? <ActivityIndicator color={colors.accent} /> : null}
 
@@ -222,7 +227,7 @@ export default function StockTab() {
         {draftCount + wayCount > 0 ? (
           <Pressable accessibilityRole="button" onPress={() => router.push('/dispatches')}>
             {({ pressed }) => (
-              <Card style={{ padding: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md, opacity: pressed ? 0.8 : 1 }}>
+              <Card style={{ paddingVertical: 14, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md, opacity: pressed ? 0.8 : 1 }}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text variant="bodyMedium">Open dispatches</Text>
                   <Text variant="caption">
@@ -234,7 +239,7 @@ export default function StockTab() {
                       .join(' · ')}
                   </Text>
                 </View>
-                <Feather name="chevron-right" size={16} color={colors.secondary} />
+                <ChevronRightIcon size={16} color={colors.secondary} />
               </Card>
             )}
           </Pressable>
@@ -254,9 +259,10 @@ export default function StockTab() {
         {shown.length ? (
           <View style={{ flexDirection: 'row', gap: space.lg }}>
             <Legend color={colors.ink} text="Free" />
-            <Legend color={colors.warningBorder} text="Held for draft" />
+            <Legend color={colors.warningDot} text="Held for draft" />
           </View>
         ) : null}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

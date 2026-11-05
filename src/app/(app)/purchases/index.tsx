@@ -11,7 +11,7 @@ import { Text } from '@/components/text';
 import { Card, ErrorBanner, IconButton, Separator } from '@/components/ui';
 import { useProcurements } from '@/features/stock-api';
 import { formatKgShort, formatKgWhole, sum } from '@/lib/decimal';
-import { colomboToday, formatDayHeading, formatRupees, weekStart } from '@/lib/format';
+import { colomboToday, formatDayHeading, formatRupees, formatShortDate, weekStart } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
 
 type Period = 'today' | 'week' | 'month';
@@ -42,6 +42,8 @@ export default function Purchases() {
       right={<IconButton icon="plus" label="New purchase" filled onPress={() => router.push('/purchases/new')} />}>
       <Segmented
         label="Period"
+        hideLabel
+        compact
         value={period}
         onChange={setPeriod}
         options={[
@@ -51,7 +53,7 @@ export default function Purchases() {
         ]}
       />
 
-      <View style={{ flexDirection: 'row', paddingHorizontal: space.xs }}>
+      <View style={{ flexDirection: 'row', paddingHorizontal: space.xs, gap: space.sm }}>
         <View style={{ flex: 1, gap: 2 }}>
           <Text variant="caption">Bought</Text>
           <Text variant="num">
@@ -91,6 +93,7 @@ export default function Purchases() {
                   accessibilityRole="button"
                   onPress={() => router.push({ pathname: '/purchases/[id]', params: { id: p.id } })}
                   style={({ pressed }) => ({
+                    minHeight: 72,
                     paddingHorizontal: space.lg,
                     paddingVertical: space.md,
                     gap: 4,
@@ -106,7 +109,8 @@ export default function Purchases() {
                     <Text variant="caption">
                       <Text variant="monoSmall" style={{ color: colors.secondary }}>
                         {p.reference}
-                      </Text>
+                      </Text>{' '}
+                      · {formatShortDate(p.procurementDate)}
                     </Text>
                     <Text variant="monoSmall" style={{ color: colors.secondary }}>
                       {formatKgShort(p.paidWeightKg)}

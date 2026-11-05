@@ -83,15 +83,26 @@ function AdjustStock({ batch }: { batch: StockBatch }) {
   return (
     <Screen
       title="Adjust stock"
-      subtitle={`${batch.chickenTypeName} · ${received} · ${formatKg(batch.availableWeightKg)} free of ${formatKg(batch.receivedWeightKg)}`}
+      subtitle={
+        <>
+          {batch.chickenTypeName} · {received} ·{' '}
+          <Text variant="monoSmall" style={{ color: colors.secondary }}>
+            {formatKg(batch.availableWeightKg)}
+          </Text>{' '}
+          free of {formatKg(batch.receivedWeightKg).replace(' kg', '')}
+        </>
+      }
       left={<IconButton icon="chevron-left" label="Back" onPress={() => router.back()} />}
+      bodyGap={32}
+      titleGap={4}
       footer={<Button title={TYPES.find((t) => t.value === type)!.verb} onPress={save} loading={adjust.isPending} />}>
       <FormError error={adjust.error} />
-      <Card style={{ padding: space.lg, gap: space.lg }}>
-        <Segmented label="What happened" value={type} onChange={setType} options={TYPES} />
+      <Card style={{ padding: space.lg, gap: 16 }}>
+        <Segmented label="What happened" hideLabel value={type} onChange={setType} options={TYPES} />
         {type === 'ADJUSTMENT' ? (
           <Segmented
             label="Counted"
+            hideLabel
             value={direction}
             onChange={setDirection}
             options={[
@@ -106,6 +117,7 @@ function AdjustStock({ batch }: { batch: StockBatch }) {
           onChangeText={setWeight}
           scale={W}
           placeholder="0.000"
+          large
           error={server.weightKg ?? (touched ? weightError : undefined)}
         />
         <Field
@@ -118,8 +130,8 @@ function AdjustStock({ batch }: { batch: StockBatch }) {
         />
         {w > 0n ? (
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text variant="caption">Free after this change</Text>
-            <Text variant="monoSmall" style={{ color: after < 0n ? colors.danger : colors.ink }}>
+            <Text variant="caption">After this change</Text>
+            <Text variant="mono" style={{ color: after < 0n ? colors.danger : colors.ink }}>
               {fromUnits(available, W)} → {fromUnits(after, W)} kg
             </Text>
           </View>
@@ -137,28 +149,24 @@ function AdjustStock({ batch }: { batch: StockBatch }) {
                 {i > 0 ? <Separator /> : null}
                 <View
                   style={{
-                    minHeight: 52,
+                    minHeight: 56,
                     paddingHorizontal: space.lg,
-                    paddingVertical: space.sm,
+                    paddingVertical: space.md,
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: space.md,
                   }}>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Text numberOfLines={1}>
-                      {h.label}
-                      {h.detail ? <Text variant="caption"> · {h.detail}</Text> : null}
-                    </Text>
-                    <Text variant="caption">
-                      {new Intl.DateTimeFormat('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        timeZone: 'Asia/Colombo',
-                      }).format(new Date(h.at))}
-                    </Text>
-                  </View>
+                  <Text numberOfLines={1} style={{ flex: 1 }}>
+                    {h.label}
+                    {h.detail ? (
+                      <Text
+                        variant={/^[A-Z]+-\d{4}-\d+$/.test(h.detail) ? 'monoSmall' : 'caption'}
+                        style={{ color: colors.secondary }}>
+                        {' · '}
+                        {h.detail}
+                      </Text>
+                    ) : null}
+                  </Text>
                   <Text
                     variant="monoSmall"
                     style={{ color: h.change.startsWith('-') ? colors.danger : colors.success }}>

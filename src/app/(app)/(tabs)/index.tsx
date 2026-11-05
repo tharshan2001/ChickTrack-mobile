@@ -1,4 +1,3 @@
-import Feather from '@expo/vector-icons/Feather';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { router, type Href } from 'expo-router';
 import { Fragment, type ReactNode } from 'react';
@@ -8,12 +7,13 @@ import { api, errorMessage, type Page } from '@/api/client';
 import { branches, products } from '@/api/resources';
 import type { BranchSale, Dashboard } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
+import { BarsIcon, CardIcon, CartIcon, ChevronRightIcon, TruckIcon } from '@/components/icons';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, SectionHeader, Separator } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
 import { formatKgShort, formatKgWhole, sum, toUnits } from '@/lib/decimal';
-import { BusinessDate, colomboToday, formatRupeesCompact } from '@/lib/format';
+import { BusinessDate, colomboToday, formatRupees } from '@/lib/format';
 import { colors, fonts, space } from '@/theme/tokens';
 
 /** Home refreshes on its own every minute while it is open. */
@@ -34,7 +34,7 @@ function QuickAction({
   href,
   primary,
 }: {
-  icon: keyof typeof Feather.glyphMap;
+  icon: ReactNode;
   label: string;
   href: Href;
   primary?: boolean;
@@ -55,7 +55,7 @@ function QuickAction({
           justifyContent: 'center',
           ...(primary ? { boxShadow: '0 4px 16px rgba(162, 8, 12, 0.22)' } : null),
         }}>
-        <Feather name={icon} size={22} color={primary ? colors.surface : colors.ink} />
+        {icon}
       </View>
       <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, color: colors.ink }}>
         {label}
@@ -64,22 +64,26 @@ function QuickAction({
   );
 }
 
-function Task({ title, detail, onPress, tone }: { title: string; detail: ReactNode; onPress: () => void; tone: 'warning' | 'accent' }) {
+function Task({ title, detail, onPress, tone }: { title: string; detail: ReactNode; onPress: () => void; tone: 'warning' | 'neutral' }) {
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => ({
-        minHeight: 60,
+        minHeight: 64,
         paddingHorizontal: space.lg,
-        paddingVertical: space.md,
         flexDirection: 'row',
         alignItems: 'center',
         gap: space.md,
         backgroundColor: pressed ? colors.field : 'transparent',
       })}>
       <View
-        style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: tone === 'warning' ? colors.warningBorder : colors.accent }}
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: tone === 'warning' ? colors.warningDot : colors.secondary,
+        }}
       />
       <View style={{ flex: 1, gap: 2 }}>
         <Text variant="bodyMedium">{title}</Text>
@@ -87,7 +91,7 @@ function Task({ title, detail, onPress, tone }: { title: string; detail: ReactNo
           {detail}
         </Text>
       </View>
-      <Feather name="chevron-right" size={16} color={colors.secondary} />
+      <ChevronRightIcon size={18} />
     </Pressable>
   );
 }
@@ -99,9 +103,9 @@ function Task({ title, detail, onPress, tone }: { title: string; detail: ReactNo
  */
 function Tile({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <Card style={{ flexBasis: '47%', flexGrow: 1, padding: space.lg, gap: 4 }}>
+    <Card style={{ flexBasis: '47%', flexGrow: 1, paddingVertical: 14, paddingHorizontal: space.lg, gap: 4 }}>
       <Text variant="caption">{label}</Text>
-      <Text variant="num" numberOfLines={1} style={tone ? { color: tone } : undefined}>
+      <Text variant="numTile" numberOfLines={1} style={tone ? { color: tone } : undefined}>
         {value}
       </Text>
     </Card>
@@ -171,7 +175,7 @@ export default function Home() {
     ...(drafts.data?.content ?? []).map((d) => (
       <Task
         key={d.id}
-        tone="warning"
+        tone="neutral"
         title={`Dispatch ${branchName(d.branchId)} draft`}
         detail={<>{kgStrong(d.totalWeightKg)} held in stock</>}
         onPress={() => router.push({ pathname: '/dispatches/[id]', params: { id: d.id } })}
@@ -181,7 +185,7 @@ export default function Home() {
       ? [
           <Task
             key="sales"
-            tone="accent"
+            tone="neutral"
             title="Enter today's sales"
             detail={missingSales.map((b) => b.name).join(' · ')}
             onPress={() => router.push({ pathname: '/branches/[id]/sales', params: { id: missingSales[0]!.id } })}
@@ -194,25 +198,29 @@ export default function Home() {
   const firstName = user?.fullName.split(' ')[0];
 
   return (
-    <Screen title={firstName ? `${greeting()}, ${firstName}` : greeting()} subtitle={BusinessDate.today()} subtitleAbove>
-      <View style={{ flexDirection: 'row', paddingVertical: space.xs }}>
-        <QuickAction icon="shopping-cart" label="Buy" href="/purchases/new" primary />
-        <QuickAction icon="truck" label="Send" href="/dispatches/new" />
+    <Screen
+      title={firstName ? `${greeting()}, ${firstName}` : greeting()}
+      subtitle={BusinessDate.today()}
+      subtitleAbove
+      bodyGap={space.xl}>
+      <View style={{ flexDirection: 'row', gap: space.sm }}>
+        <QuickAction icon={<CartIcon color={colors.surface} strokeWidth={1.8} />} label="Buy" href="/purchases/new" primary />
+        <QuickAction icon={<TruckIcon />} label="Send" href="/dispatches/new" />
         <QuickAction
-          icon="bar-chart-2"
+          icon={<BarsIcon />}
           label="Sales"
           href={firstMissing ? { pathname: '/branches/[id]/sales', params: { id: firstMissing.id } } : '/branches'}
         />
-        <QuickAction icon="credit-card" label="Payment" href="/payments/new" />
+        <QuickAction icon={<CardIcon />} label="Payment" href="/payments/new" />
       </View>
 
       {tasks.length ? (
-        <View style={{ gap: space.sm }}>
+        <View style={{ gap: space.md }}>
           <SectionHeader title="Needs you" />
           <Card>
             {tasks.map((t, i) => (
               <Fragment key={i}>
-                {i > 0 ? <Separator /> : null}
+                {i > 0 ? <Separator inset={36} /> : null}
                 {t}
               </Fragment>
             ))}
@@ -220,14 +228,14 @@ export default function Home() {
         </View>
       ) : null}
 
-      <View style={{ gap: space.sm }}>
+      <View style={{ gap: space.md }}>
         <SectionHeader title="Today" />
         {dashboard.isError ? <ErrorBanner message={errorMessage(dashboard.error)} onRetry={dashboard.refetch} /> : null}
         {dashboard.isPending ? <ActivityIndicator color={colors.accent} /> : null}
         {d ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
-            <Tile label="Our margin" value={formatRupeesCompact(d.ourMargin)} tone={colors.success} />
-            <Tile label="Branches owe" value={owedTotal ? formatRupeesCompact(owedTotal) : '…'} />
+            <Tile label="Our margin" value={formatRupees(d.ourMargin, 0)} tone={colors.success} />
+            <Tile label="Branches owe" value={owedTotal ? formatRupees(owedTotal, 0) : '…'} />
             <Tile label="In warehouse" value={formatKgWhole(d.stockWeightKg)} />
             <Tile
               label="Shrinkage"
@@ -237,10 +245,6 @@ export default function Home() {
           </View>
         ) : null}
       </View>
-
-      <Text variant="caption" style={{ textAlign: 'center' }}>
-        Pull down to refresh · updates every minute
-      </Text>
     </Screen>
   );
 }

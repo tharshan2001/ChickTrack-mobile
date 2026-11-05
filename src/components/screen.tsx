@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Text } from '@/components/text';
+import { Text, type Variant } from '@/components/text';
 import { colors, space } from '@/theme/tokens';
 
 /** Pull down on any screen to reload everything it shows from the server. */
@@ -23,7 +23,9 @@ function usePullToRefresh() {
 
 type ScreenProps = {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
+  /** Type style for the title. Dispatch references use the mono title. */
+  titleVariant?: Variant;
   /** Left side of the top bar: a back icon or a "Cancel" link. */
   left?: ReactNode;
   /** Right side of the top bar: usually an add button. */
@@ -40,6 +42,20 @@ type ScreenProps = {
   inlineActions?: boolean;
   /** Show the subtitle above the title, as Home does in the mockups. */
   subtitleAbove?: boolean;
+  /** Space around the scroll body. Defaults to 16 on all sides. */
+  bodyPadding?: number;
+  bodyPaddingTop?: number;
+  bodyPaddingBottom?: number;
+  /** Gap between body children (12, 16, 24 or 32, depending on the screen). */
+  bodyGap?: number;
+  /** Space between the title block and the body. Defaults to 8 (4 on forms). */
+  titleGap?: number;
+  /** Content that belongs to the header, below the title (Money's total, Stock's filters). */
+  headerExtra?: ReactNode;
+  /** Gap inside the pinned footer. Defaults to 10. */
+  footerGap?: number;
+  /** Forms that sit over a list cast a shadow above the footer. */
+  footerShadow?: boolean;
   children: ReactNode;
 };
 
@@ -47,19 +63,28 @@ type ScreenProps = {
 export function Screen({
   title,
   subtitle,
+  titleVariant = 'largeTitle',
   left,
   right,
   footer,
   scroll = true,
   inlineActions,
   subtitleAbove,
+  bodyPadding = space.lg,
+  bodyPaddingTop,
+  bodyPaddingBottom = space.xxl,
+  bodyGap = space.lg,
+  titleGap = space.sm,
+  headerExtra,
+  footerGap = 10,
+  footerShadow,
   children,
 }: ScreenProps) {
   const hasBar = !!(left || right) && !inlineActions;
   const titleBlock = (
     <View style={{ flex: 1, gap: 2 }}>
       {subtitleAbove && subtitle ? <Text variant="caption">{subtitle}</Text> : null}
-      <Text variant="largeTitle" accessibilityRole="header">
+      <Text variant={titleVariant} accessibilityRole="header">
         {title}
       </Text>
       {!subtitleAbove && subtitle ? <Text variant="caption">{subtitle}</Text> : null}
@@ -70,7 +95,12 @@ export function Screen({
     <ScrollView
       refreshControl={refreshControl}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: space.xxl }}>
+      contentContainerStyle={{
+        padding: bodyPadding,
+        paddingTop: bodyPaddingTop ?? bodyPadding,
+        paddingBottom: bodyPaddingBottom,
+        gap: bodyGap,
+      }}>
       {children}
     </ScrollView>
   ) : (
@@ -85,6 +115,7 @@ export function Screen({
             style={{
               minHeight: 44,
               paddingHorizontal: space.sm,
+              paddingTop: 4,
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -96,7 +127,8 @@ export function Screen({
         <View
           style={{
             paddingHorizontal: space.lg,
-            paddingTop: hasBar ? 0 : space.lg,
+            paddingTop: hasBar ? 0 : 12,
+            paddingBottom: titleGap,
             flexDirection: 'row',
             alignItems: 'center',
             gap: space.md,
@@ -105,16 +137,20 @@ export function Screen({
           {titleBlock}
           {inlineActions && right ? right : null}
         </View>
+        {headerExtra ? (
+          <View style={{ paddingHorizontal: space.lg, paddingBottom: space.sm, gap: space.xs }}>{headerExtra}</View>
+        ) : null}
         {body}
         {footer ? (
           <SafeAreaView
             edges={['bottom']}
             style={{
               paddingHorizontal: space.lg,
-              paddingTop: space.md,
-              paddingBottom: space.md,
+              paddingTop: space.sm,
+              paddingBottom: 0,
+              gap: footerGap,
               backgroundColor: colors.surface,
-              boxShadow: '0 -2px 12px rgba(0, 0, 0, 0.06)',
+              ...(footerShadow ? { boxShadow: '0 -2px 12px rgba(0, 0, 0, 0.06)' } : null),
             }}>
             {footer}
           </SafeAreaView>

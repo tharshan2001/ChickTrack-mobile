@@ -6,6 +6,7 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Card, ListRow, SectionHeader, Separator } from '@/components/ui';
 import { branches, expenseCategories, products, suppliers } from '@/api/resources';
+import { useCurrentPriceGrid } from '@/features/prices-api';
 import { colors, space } from '@/theme/tokens';
 
 function initials(name: string) {
@@ -26,16 +27,27 @@ const count = (n: number | undefined) =>
 
 export default function More() {
   const { user, isOwner, signOut } = useAuth();
+  const productList = products.useList('', true);
+  const branchList = branches.useList('', true);
   const counts = {
-    products: products.useList('', true).data?.totalElements,
-    branches: branches.useList('', true).data?.totalElements,
+    products: productList.data?.totalElements,
+    branches: branchList.data?.totalElements,
     suppliers: suppliers.useList('', true).data?.totalElements,
     categories: expenseCategories.useList('', true).data?.totalElements,
   };
 
+  // A branch can only sell a chicken type once its selling price is set.
+  const priceGrid = useCurrentPriceGrid(
+    (productList.data?.content ?? []).map((p) => p.id),
+    (branchList.data?.content ?? []).map((b) => b.id),
+  );
+  const pricesToSet = (productList.data?.content ?? []).filter((p) =>
+    (branchList.data?.content ?? []).some((b) => !priceGrid.get(p.id, b.id)?.data?.sellingPricePerKg),
+  ).length;
+
   return (
-    <Screen title="More">
-      <Card style={{ padding: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+    <Screen title="More" bodyGap={space.xl}>
+      <Card style={{ paddingVertical: 14, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
         <View
           style={{
             width: 48,
@@ -58,28 +70,52 @@ export default function More() {
       </Card>
 
       <View style={{ gap: space.sm }}>
-        <SectionHeader title="Setup" />
+        <SectionHeader title="Setup" size="small" />
         <Card>
-          <ListRow title="Prices & margins" chevron onPress={() => router.push('/prices')} />
+          <ListRow
+            title="Prices & margins"
+            right={
+              pricesToSet > 0 ? (
+                <Text variant="caption" style={{ color: colors.warning }}>
+                  {pricesToSet} to set
+                </Text>
+              ) : null
+            }
+            chevron
+            compact
+            onPress={() => router.push('/prices')}
+          />
           <Separator />
-          <ListRow title="Branches" right={count(counts.branches)} chevron onPress={() => router.push('/branches')} />
+          <ListRow title="Branches" right={count(counts.branches)} chevron compact onPress={() => router.push('/branches')} />
           <Separator />
-          <ListRow title="Suppliers" right={count(counts.suppliers)} chevron onPress={() => router.push('/suppliers')} />
+          <ListRow title="Suppliers" right={count(counts.suppliers)} chevron compact onPress={() => router.push('/suppliers')} />
           <Separator />
-          <ListRow title="Products" right={count(counts.products)} chevron onPress={() => router.push('/products')} />
+          <ListRow title="Products" right={count(counts.products)} chevron compact onPress={() => router.push('/products')} />
           <Separator />
           <ListRow
             title="Expense categories"
             right={count(counts.categories)}
             chevron
+            compact
             onPress={() => router.push('/expense-categories')}
           />
         </Card>
       </View>
 
       <View style={{ gap: space.sm }}>
-        <SectionHeader title="Account" />
+        <SectionHeader title="Insights" size="small" />
         <Card>
+          <ListRow title="Reports & exports" chevron compact onPress={() => router.push('/reports')} />
+        </Card>
+      </View>
+
+      <View style={{ gap: space.sm }}>
+        <SectionHeader title="Account" size="small" />
+        <Card>
+          <ListRow title="Users & roles" right={<Text variant="caption">Only you</Text>} chevron compact onPress={() => router.push('/users')} />
+          <Separator />
+          <ListRow title="Change password" chevron compact onPress={() => router.push('/change-password')} />
+          <Separator />
           <Pressable
             accessibilityRole="button"
             onPress={signOut}

@@ -44,7 +44,7 @@ function BranchForm({
   return (
     <>
       <FormError error={error} />
-      <Card style={{ padding: space.lg, gap: space.lg }}>
+      <Card style={{ padding: space.lg, gap: 14 }}>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ width: 110 }}>
             {lockedCode ? (

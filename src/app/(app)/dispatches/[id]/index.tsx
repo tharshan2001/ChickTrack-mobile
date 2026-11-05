@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 
 import { branches, products } from '@/api/resources';
@@ -9,9 +9,10 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Button, Card, Field, IconButton, Notice, Separator } from '@/components/ui';
 import { useDispatch, useDistribution as useDistributionQuery, useReverseDistribution } from '@/features/distribution-api';
+import { useBatches } from '@/features/stock-api';
 import { divRound, formatKg, fromUnits, sum, toUnits } from '@/lib/decimal';
 import { formatIsoDate, formatRupees, statusLabel } from '@/lib/format';
-import { colors, fonts, space } from '@/theme/tokens';
+import { colors, fonts, radius, space } from '@/theme/tokens';
 
 export default function DispatchDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,43 +26,57 @@ export default function DispatchDetailRoute() {
 const STEPS = [
   { status: 'DRAFT', title: 'Draft', note: (kg: string) => `${kg} held` },
   { status: 'DISPATCHED', title: 'Dispatched', note: () => 'Leaves warehouse' },
-  { status: 'RECEIVED', title: 'Received', note: () => 'Branch confirms' },
+  { status: 'RECEIVED', title: 'Received', note: () => 'You confirm' },
 ] as const;
 
 function Progress({ d }: { d: Distribution }) {
   const at = d.status === 'CLOSED' ? 2 : STEPS.findIndex((s) => s.status === d.status);
   return (
-    <Card style={{ padding: space.lg, flexDirection: 'row', gap: space.sm }} accessibilityLabel={`Progress: ${statusLabel(d.status)}`}>
+    <View
+      style={{ flexDirection: 'row', gap: space.sm, paddingTop: space.xs, paddingBottom: space.md }}
+      accessibilityLabel={`Progress: ${statusLabel(d.status)}`}>
       {STEPS.map((s, i) => {
         const done = i <= at;
         return (
-          <View key={s.status} style={{ flex: 1, gap: 6 }}>
-            <View style={{ height: 4, borderRadius: 2, backgroundColor: done ? colors.accent : colors.field }} />
-            <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, color: done ? colors.ink : colors.secondary }}>
+          <View key={s.status} style={{ flex: 1, gap: space.sm }}>
+            <View style={{ height: 4, borderRadius: 2, backgroundColor: done ? colors.accent : colors.separator }} />
+            <Text variant="bodyMedium" style={{ color: done ? colors.ink : colors.secondary }}>
               {s.title}
             </Text>
-            <Text variant="footnote">
-              {s.note(formatKg(d.totalWeightKg))}
-            </Text>
+            <Text variant="caption">{s.note(formatKg(d.totalWeightKg))}</Text>
           </View>
         );
       })}
-    </Card>
+    </View>
   );
 }
 
-function Line({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+function SummaryRow({
+  label,
+  value,
+  tone,
+  strong,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+  strong?: boolean;
+}) {
   return (
-    <View
-      style={{ minHeight: 44, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Text variant={strong ? 'bodyMedium' : 'body'} style={strong ? undefined : { color: colors.secondary }}>
+    <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: space.md }}>
+      <Text variant={strong ? 'headline' : 'body'} style={strong ? undefined : { color: colors.secondary }}>
         {label}
       </Text>
-      <Text variant={strong ? 'headline' : 'mono'} style={strong ? { fontFamily: fonts.mono } : undefined}>
+      <Text variant={strong ? 'headline' : 'mono'} style={[strong && { fontFamily: fonts.mono }, tone ? { color: tone } : null]}>
         {value}
       </Text>
     </View>
   );
+}
+
+function formatBatchDate(receivedAt: string | undefined) {
+  if (!receivedAt) return 'batch';
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(new Date(receivedAt));
 }
 
 /** Lines are per stock batch; show one row per product. */
@@ -121,7 +136,7 @@ function DispatchDetail({ d }: { d: Distribution }) {
       </View>
     </View>
   ) : canReverse ? (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 6 }}>
       {isDraft ? (
         <Button
           title="Dispatch now"
@@ -135,26 +150,31 @@ function DispatchDetail({ d }: { d: Distribution }) {
           onPress={() => router.push({ pathname: '/dispatches/[id]/receive', params: { id: d.id } })}
         />
       ) : null}
-      <Button title={reverseTitle} variant="secondary" onPress={() => setConfirming(true)} />
+      <Button title={reverseTitle} variant="danger" onPress={() => setConfirming(true)} />
     </View>
   ) : undefined;
 
   const groups = groupByProduct(d.items);
+  const batchIds = [...new Set(d.items.map((it) => it.stockBatchId))];
+  const batches = useBatches(batchIds);
   const receipt = d.receipts[0];
   const shortfall = receipt ? sum(receipt.items.map((r) => r.discrepancyWeightKg), 3) : '0';
 
   return (
     <Screen
       title={d.reference}
+      titleVariant="monoTitle"
       subtitle={`${branch} · ${formatIsoDate(d.distributionDate)}`}
+      bodyGap={space.md}
       left={<IconButton icon="chevron-left" label="Back" onPress={() => router.back()} />}
       right={
         <Badge
           label={statusLabel(d.status)}
-          tone={d.status === 'REVERSED' ? 'neutral' : d.status === 'DRAFT' ? 'warning' : 'success'}
+          tone={d.status === 'REVERSED' || d.status === 'DRAFT' || d.status === 'DISPATCHED' ? 'neutral' : 'success'}
         />
       }
-      footer={footer}>
+      footer={footer}
+      footerGap={6}>
       <FormError error={dispatch.error ?? reverse.error} />
       {d.status === 'REVERSED' ? (
         <Notice text={`Reversed: ${d.reversalReason ?? 'no reason given'}. Stock went back to the warehouse.`} />
@@ -162,43 +182,36 @@ function DispatchDetail({ d }: { d: Distribution }) {
         <Progress d={d} />
       )}
 
-      <Card>
-        {groups.map((g, i) => (
-          <Fragment key={g.productId}>
-            {i > 0 ? <Separator /> : null}
-            <View style={{ padding: space.lg, gap: 6 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text variant="headline">
-                  {productName(g.productId)}
-                </Text>
-                <Text variant="caption">
-                  {g.lines.length > 1 ? `From ${g.lines.length} batches` : 'From 1 batch'}
-                </Text>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text variant="mono">{formatKg(g.kg)}</Text>
-                <Text variant="mono" style={{ color: colors.secondary }}>
-                  {formatRupees(g.perKg)}/kg
-                </Text>
-              </View>
-            </View>
-          </Fragment>
-        ))}
-      </Card>
+      {groups.map((g) => (
+        <Card
+          key={g.productId}
+          style={{ padding: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text variant="headline">{productName(g.productId)}</Text>
+            <Text variant="caption">
+              {g.lines.length > 1
+                ? `From ${g.lines.length} batches`
+                : `From ${formatBatchDate(batches.byId.get(g.lines[0]!.stockBatchId)?.receivedAt)}`}
+            </Text>
+          </View>
+          <View style={{ alignItems: 'flex-end', gap: 2 }}>
+            <Text variant="mono">{formatKg(g.kg)}</Text>
+            <Text variant="monoSmall" style={{ color: colors.secondary }}>
+              {formatRupees(g.perKg)}/kg
+            </Text>
+          </View>
+        </Card>
+      ))}
 
-      <Card>
-        <Line label="Our cost" value={formatRupees(d.totalCost)} />
-        <Separator />
-        <Line label="Our margin" value={formatRupees(d.totalOurMargin)} />
+      <View style={{ backgroundColor: colors.field, borderRadius: radius.card, padding: space.lg, gap: 10 }}>
+        <SummaryRow label="Our cost" value={formatRupees(d.totalCost)} />
+        <SummaryRow label="Our margin" value={formatRupees(d.totalOurMargin)} tone={colors.success} />
         {toUnits(d.expenseAmount, 2) > 0n ? (
-          <>
-            <Separator />
-            <Line label="Delivery cost" value={formatRupees(d.expenseAmount)} />
-          </>
+          <SummaryRow label="Delivery cost" value={formatRupees(d.expenseAmount)} />
         ) : null}
-        <Separator />
-        <Line label={`${branch} owes`} value={formatRupees(d.totalTransferValue)} strong />
-      </Card>
+        <Separator inset={0} />
+        <SummaryRow label={`${branch} owes`} value={formatRupees(d.totalTransferValue)} strong />
+      </View>
 
       {receipt ? (
         <Card style={{ padding: space.lg, gap: 4 }}>

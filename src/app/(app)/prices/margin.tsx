@@ -9,7 +9,7 @@ import { Segmented, SelectField } from '@/components/pickers';
 import { Screen } from '@/components/screen';
 import { StartsField, useStarts } from '@/components/starts-field';
 import { Text } from '@/components/text';
-import { Button, Card, Notice, Separator, TextLink } from '@/components/ui';
+import { Button, Card, Separator, TextLink } from '@/components/ui';
 import { currentMargin, useMarginRules, useSetMargin } from '@/features/prices-api';
 import { formatPercent, isDecimal, toFixedString } from '@/lib/decimal';
 import { space } from '@/theme/tokens';
@@ -68,11 +68,13 @@ export default function SetMargin() {
     <Screen
       title="Change margin"
       left={<TextLink title="Cancel" onPress={() => router.back()} />}
+      bodyGap={16}
       footer={<Button title="Save margin" onPress={submit} loading={save.isPending} />}>
       <FormError error={save.error} />
-      <Card style={{ padding: space.lg, gap: space.lg }}>
+      <Card style={{ padding: space.lg, gap: 14 }}>
         <SelectField
           label="Product"
+          compact
           value={productId}
           onChange={setProductId}
           options={(productList.data?.content ?? []).map((p) => ({ value: p.id, label: p.name }))}
@@ -91,6 +93,7 @@ export default function SetMargin() {
           <SelectField
             label="Branch"
             hideLabel
+            compact
             value={branchId}
             onChange={setBranchId}
             placeholder="Choose a branch"
@@ -111,10 +114,8 @@ export default function SetMargin() {
       {productId ? (
         <Card>
           <View style={{ minHeight: 48, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text variant="subhead">
-              Margin now
-            </Text>
-            <Text variant="mono">{now ? formatPercent(now.markupPercent) : '0%'}</Text>
+            <Text variant="subhead">Margin now</Text>
+            <Text variant="mono">{now ? formatPercent(now.markupPercent) : '0.00%'}</Text>
           </View>
           {isDecimal(markup) ? (
             <>
@@ -127,7 +128,9 @@ export default function SetMargin() {
         </Card>
       ) : null}
 
-      <Notice text="Margin is added to the landed cost when you send stock to a branch. Dispatches already sent keep their price." />
+      <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
+        Margin is added to the landed cost when you send stock to a branch. Dispatches already sent keep their price.
+      </Text>
     </Screen>
   );
 }

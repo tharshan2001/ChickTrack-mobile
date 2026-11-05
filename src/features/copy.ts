@@ -4,6 +4,8 @@ export const productCopy = {
   addTitle: 'Add product',
   editTitle: 'Edit product',
   namePlaceholder: 'e.g. Broiler',
+  nameHint: 'Must be unique. Shown on purchases, stock and reports.',
+  titleGap: 4,
   addNote:
     'New products start active. Set its buying and selling prices in Prices & margins before branches can record sales.',
   activeOn: 'Shown in the purchase picker',

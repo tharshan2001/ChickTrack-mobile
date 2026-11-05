@@ -47,7 +47,7 @@ function BranchCard({ b }: { b: Branch }) {
       accessibilityRole="button"
       onPress={() => router.push({ pathname: '/branches/[id]', params: { id: b.id } })}>
       {({ pressed }) => (
-        <Card style={{ padding: space.lg, gap: space.md, opacity: pressed ? 0.8 : 1 }}>
+        <Card style={{ padding: space.lg, gap: 14, opacity: pressed ? 0.8 : 1 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md }}>
             <View style={{ flex: 1, gap: 2 }}>
               <Text variant="headline" style={{ color: b.active ? colors.ink : colors.secondary }}>
@@ -87,6 +87,7 @@ export default function BranchesTab() {
     <Screen
       title="Branches"
       inlineActions
+      bodyGap={12}
       right={<IconButton icon="plus" label="Add branch" filled onPress={() => router.push('/branches/new')} />}>
       {list.length > 5 || search ? (
         <SearchField placeholder="Search branches" accessibilityLabel="Search branches" value={search} onChangeText={setSearch} />

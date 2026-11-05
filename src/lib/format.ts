@@ -44,6 +44,14 @@ export function formatIsoDate(isoDate: string): string {
   );
 }
 
+/** "2026-11-04" -> "4 Nov". */
+export function formatShortDate(isoDate: string): string {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
+    new Date(Date.UTC(y!, m! - 1, d!)),
+  );
+}
+
 /** Today's calendar date in Colombo (yyyy-mm-dd), whatever the phone's time zone. */
 export function colomboToday(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(new Date());
@@ -78,8 +86,8 @@ export function statusLabel(status: string): string {
 }
 
 /**
- * Short rupee amount for tight tiles, in the lakh/crore style used in Sri Lanka:
- * 1,071,894.20 -> "Rs 10.7 lakh", 25,500,000 -> "Rs 2.55 crore", 84,300 -> "Rs 84,300".
+ * Short rupee amount for tight tiles: 379,600 -> "Rs 379.6k", 2,400,000 -> "Rs 2.4M".
+ * Big figures get one decimal so they never overflow a narrow tile.
  */
 export function formatRupeesCompact(amount: string): string {
   const negative = amount.trim().startsWith('-');
@@ -92,7 +100,7 @@ export function formatRupeesCompact(amount: string): string {
     const frac = (v % factor).toString().padStart(digits, '0').replace(/0+$/, '');
     return `${whole}${frac ? `.${frac}` : ''}`;
   };
-  if (rupees >= 10_000_000n) return `${sign}Rs ${scaled(rupees, 10_000_000n, 2)} crore`;
-  if (rupees >= 100_000n) return `${sign}Rs ${scaled(rupees, 100_000n, 1)} lakh`;
+  if (rupees >= 1_000_000n) return `${sign}Rs ${scaled(rupees, 1_000_000n, 1)}M`;
+  if (rupees >= 1_000n) return `${sign}Rs ${scaled(rupees, 1_000n, 1)}k`;
   return formatRupees(amount, 0);
 }

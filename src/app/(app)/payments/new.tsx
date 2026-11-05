@@ -13,7 +13,7 @@ import { DecimalField } from '@/components/money-field';
 import { Segmented, SelectField } from '@/components/pickers';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Button, Card, Field, SectionHeader, Separator, TextLink } from '@/components/ui';
+import { Badge, Button, Card, Field, SectionHeader, Separator, TextLink } from '@/components/ui';
 import { useOpenSales, useRecordPayment } from '@/features/money-api';
 import { fromUnits, isPositiveDecimal, toUnits } from '@/lib/decimal';
 import { colomboToday, formatIsoDate, formatRupees } from '@/lib/format';
@@ -118,6 +118,9 @@ export default function RecordPayment() {
     <Screen
       title="Record payment"
       left={<TextLink title="Cancel" onPress={() => router.back()} />}
+      bodyPaddingTop={12}
+      bodyGap={24}
+      titleGap={4}
       footer={
         <View style={{ gap: 10 }}>
           {after !== null && amountUnits > 0n && !errors.amount ? (
@@ -129,9 +132,10 @@ export default function RecordPayment() {
         </View>
       }>
       <FormError error={record.error} />
-      <Card style={{ padding: space.lg, gap: space.lg }}>
+      <Card style={{ padding: space.lg, gap: 14 }}>
         <SelectField
           label="Branch"
+          compact
           value={branchId}
           onChange={pickBranch}
           options={list.map((b) => ({
@@ -149,6 +153,7 @@ export default function RecordPayment() {
             setAmount(v);
           }}
           placeholder="0.00"
+          large
           error={touched || amountTouched ? errors.amount : undefined}
         />
         <Segmented
@@ -161,20 +166,16 @@ export default function RecordPayment() {
             { value: 'CHEQUE', label: 'Cheque' },
           ]}
         />
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ flex: 1 }}>
-            <Field
-              label="Reference (optional)"
-              value={reference}
-              onChangeText={setReference}
-              autoCapitalize="characters"
-              placeholder={method === 'CHEQUE' ? 'Cheque no.' : method === 'BANK' ? 'Transfer ref.' : 'Receipt no.'}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <DateField label="Date" value={date} onChange={setDate} />
-          </View>
-        </View>
+        <Field
+          label="Reference"
+          value={reference}
+          onChangeText={setReference}
+          autoCapitalize="characters"
+          mono
+          compact
+          placeholder={method === 'CHEQUE' ? 'Cheque no.' : method === 'BANK' ? 'Transfer ref.' : 'Receipt no.'}
+        />
+        <DateField label="Date" value={date} onChange={setDate} compact />
       </Card>
 
       {branchId ? (
@@ -199,6 +200,7 @@ export default function RecordPayment() {
                       accessibilityState={{ checked: on }}
                       onPress={() => toggle(s.branchSaleId)}
                       style={({ pressed }) => ({
+                        minHeight: 64,
                         paddingHorizontal: space.lg,
                         paddingVertical: space.md,
                         flexDirection: 'row',
@@ -220,13 +222,12 @@ export default function RecordPayment() {
                         {on ? <Feather name="check" size={14} color={colors.surface} /> : null}
                       </View>
                       <View style={{ flex: 1, gap: 2 }}>
-                        <Text>{formatIsoDate(s.saleDate)}</Text>
+                        <Text variant="bodyMedium">
+                          {formatIsoDate(s.saleDate)} ·{' '}
+                          <Text variant="monoSmall">{s.reference}</Text>
+                        </Text>
                         <Text variant="caption" numberOfLines={1}>
-                          <Text variant="monoSmall" style={{ color: colors.secondary }}>
-                            {s.reference}
-                          </Text>
-                          {' · '}
-                          {formatRupees(s.outstandingAmount)} left
+                          {formatRupees(s.outstandingAmount)} left to pay
                         </Text>
                       </View>
                       <Text variant="mono" style={{ color: part > 0n ? colors.ink : colors.secondary }}>
@@ -239,13 +240,19 @@ export default function RecordPayment() {
             </Card>
           ) : null}
           {sales.length && amountUnits > 0n ? (
-            <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
-              {unallocated > 0n
-                ? `${formatRupees(fromUnits(unallocated, 2))} more than the ticked sales owe`
-                : amountUnits === chosenTotal
-                  ? 'Allocated in full'
-                  : 'Paid oldest sale first; the rest stays owed'}
-            </Text>
+            unallocated > 0n ? (
+              <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
+                {formatRupees(fromUnits(unallocated, 2))} more than the ticked sales owe
+              </Text>
+            ) : amountUnits === chosenTotal ? (
+              <View style={{ alignSelf: 'flex-start' }}>
+                <Badge label="Allocated in full" tone="success" />
+              </View>
+            ) : (
+              <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
+                Paid oldest sale first; the rest stays owed
+              </Text>
+            )
           ) : null}
         </View>
       ) : null}

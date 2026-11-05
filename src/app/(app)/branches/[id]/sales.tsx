@@ -10,12 +10,12 @@ import { DecimalField } from '@/components/money-field';
 import { SelectField } from '@/components/pickers';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Button, Card, Field, IconButton, Notice, Separator } from '@/components/ui';
+import { Badge, Button, Card, Field, IconButton, Notice, Separator } from '@/components/ui';
 import { useBranchSales, useBranchStock, useRecordSale } from '@/features/branch-api';
 import { useCurrentPriceGrid } from '@/features/prices-api';
 import { divRound, formatKg, fromUnits, isDecimal, toFixedString, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
-import { colors, space } from '@/theme/tokens';
+import { colors, radius, space } from '@/theme/tokens';
 
 export default function DailySalesRoute() {
   const params = useLocalSearchParams<{ id: string }>();
@@ -123,21 +123,25 @@ function SalesForm({
     <Screen
       title="Daily sales"
       left={<IconButton icon="chevron-left" label="Back" onPress={() => router.back()} />}
+      bodyGap={12}
+      headerExtra={
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <SelectField
+              label="Branch"
+              compact
+              value={branchId}
+              onChange={setBranchId}
+              options={branchList.map((b) => ({ value: b.id, label: b.name, detail: b.code }))}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <DateField label="Date" value={date} onChange={setDate} compact />
+          </View>
+        </View>
+      }
       footer={<Button title={`Save ${branchName} sales`} onPress={save} loading={record.isPending} />}>
       <FormError error={record.error} />
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <View style={{ flex: 1 }}>
-          <SelectField
-            label="Branch"
-            value={branchId}
-            onChange={setBranchId}
-            options={branchList.map((b) => ({ value: b.id, label: b.name, detail: b.code }))}
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <DateField label="Date" value={date} onChange={setDate} />
-        </View>
-      </View>
 
       {existing ? (
         <Notice text={`Sales for this day were saved already (${existing.reference}). Saving again replaces them.`} />
@@ -148,8 +152,8 @@ function SalesForm({
         const kg = sold[pid] ?? '';
         const line = p && toUnits(kg, 3) > 0n ? divRound(toUnits(kg, 3) * toUnits(p, 2), 1000n) : null;
         return (
-          <Card key={pid} style={{ padding: space.lg, gap: space.md }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Card key={pid} style={{ padding: space.lg, gap: 14 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <Text variant="headline">
                 {allProducts.find((x) => x.id === pid)?.name ?? 'Product'}
               </Text>
@@ -160,7 +164,7 @@ function SalesForm({
                 in branch
               </Text>
             </View>
-            <View style={{ flexDirection: 'row', gap: space.md, alignItems: 'flex-start' }}>
+            <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
               <View style={{ flex: 1 }}>
                 <DecimalField
                   label="Sold (kg)"
@@ -169,13 +173,14 @@ function SalesForm({
                   onChangeText={(v) => setSold((s) => ({ ...s, [pid]: v }))}
                   scale={3}
                   placeholder="0.000"
+                  mid
                   error={touched || kg ? lineError(pid) : undefined}
                 />
               </View>
               <View style={{ flex: 1, gap: 6 }}>
                 <Text variant="caption">Price per kg</Text>
-                <View style={{ height: 48, justifyContent: 'center' }}>
-                  <Text variant="mono" style={{ color: p ? colors.ink : colors.warning }}>
+                <View style={{ height: 50, justifyContent: 'center' }}>
+                  <Text variant="num" style={{ color: p ? colors.ink : colors.warning }}>
                     {p ? formatRupees(p) : 'Not set'}
                   </Text>
                 </View>
@@ -194,36 +199,43 @@ function SalesForm({
       })}
 
       {emptyProducts.map((p) => (
-        <Card key={p.id} style={{ padding: space.lg, flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text variant="headline" style={{ color: colors.secondary }}>
-            {p.name}
-          </Text>
-          <Text variant="caption">No stock in branch</Text>
+        <Card
+          key={p.id}
+          style={{ paddingVertical: 14, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ gap: 2 }}>
+            <Text variant="headline" style={{ color: colors.secondary }}>
+              {p.name}
+            </Text>
+            <Text variant="caption">No stock in branch</Text>
+          </View>
+          <Badge label="Empty" tone="neutral" />
         </Card>
       ))}
 
       {productIds.length === 0 ? (
         <Notice text="This branch has no stock to sell. Confirm a delivery first." />
       ) : (
-        <Card>
-          <View style={{ minHeight: 48, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text variant="bodyMedium">Sales</Text>
-            <Text variant="mono">
-              {formatRupees(fromUnits(total, 2))}
+        <View style={{ backgroundColor: colors.field, borderRadius: radius.card, padding: space.lg, gap: 10 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <Text variant="body" style={{ color: colors.secondary }}>
+              Sales
+            </Text>
+            <Text variant="mono">{formatRupees(fromUnits(total, 2))}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <Text variant="body" style={{ color: colors.secondary }}>
+              Owed to head office
+            </Text>
+            <Text variant="mono">{existing ? formatRupees(existing.transferValue) : '—'}</Text>
+          </View>
+          <Separator inset={0} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <Text variant="headline">Branch profit</Text>
+            <Text variant="numLarge" style={{ color: existing ? colors.success : colors.secondary }}>
+              {existing ? formatRupees(existing.branchProfit) : '—'}
             </Text>
           </View>
-          {existing ? (
-            <>
-              <Separator />
-              <View style={{ paddingHorizontal: space.lg, paddingVertical: space.md, gap: 4 }}>
-                <Text variant="caption">
-                  Last saved: owed to head office {formatRupees(existing.transferValue)} · branch profit{' '}
-                  {formatRupees(existing.branchProfit)}
-                </Text>
-              </View>
-            </>
-          ) : null}
-        </Card>
+        </View>
       )}
 
       <Card style={{ padding: space.lg }}>

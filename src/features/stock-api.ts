@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api, type Page } from '@/api/client';
 import type {
@@ -36,6 +36,18 @@ export function useOpenBatches() {
 
 export function useBatch(id: string) {
   return useQuery({ queryKey: keys.batch(id), queryFn: () => api<StockBatch>('GET', `/api/v1/stock-batches/${id}`) });
+}
+
+/** Several batches at once, keyed by id, for screens that list batch names. */
+export function useBatches(ids: string[]) {
+  const results = useQueries({
+    queries: ids.map((id) => ({
+      queryKey: keys.batch(id),
+      queryFn: () => api<StockBatch>('GET', `/api/v1/stock-batches/${id}`),
+    })),
+  });
+  const byId = new Map(ids.map((id, i) => [id, results[i]?.data] as const));
+  return { byId, isPending: results.some((r) => r.isPending) };
 }
 
 export type HistoryEntry = { id: string; label: string; detail: string | null; change: string; at: string };

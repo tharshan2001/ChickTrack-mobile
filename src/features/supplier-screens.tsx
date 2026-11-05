@@ -61,13 +61,14 @@ function SupplierForm({ form, error }: { form: ReturnType<typeof useFormValues<V
   return (
     <>
       <FormError error={error} />
-      <Card style={{ padding: space.lg, gap: space.lg }}>
+      <Card style={{ padding: space.lg, gap: 14 }}>
         <Field
           label="Name"
           value={form.values.name}
           onChangeText={form.set('name')}
           maxLength={150}
           autoCapitalize="words"
+          hint="Must be unique."
           error={err('name')}
         />
         <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -98,6 +99,7 @@ function SupplierForm({ form, error }: { form: ReturnType<typeof useFormValues<V
           onChangeText={form.set('email')}
           maxLength={150}
           inputMode="email"
+          placeholder="name@example.com"
           autoCapitalize="none"
           autoCorrect={false}
           error={err('email')}

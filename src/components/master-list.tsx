@@ -24,6 +24,8 @@ type Props<T extends Item> = {
   emptyText: string;
   /** Hide the back button when the list is a tab. */
   isTab?: boolean;
+  /** Expense categories have no search field in the mockups. */
+  searchable?: boolean;
 };
 
 /** Searchable list of a master-data resource with Active/Inactive badges (Products, Suppliers, …). */
@@ -39,12 +41,14 @@ export function MasterList<T extends Item>(p: Props<T>) {
       subtitle={p.subtitle}
       left={p.isTab ? <></> : <IconButton icon="chevron-left" label="Back" onPress={() => router.back()} />}
       right={<IconButton icon="plus" label={`Add ${p.noun}`} filled onPress={() => router.push(p.addHref)} />}>
-      <SearchField
-        placeholder={`Search ${p.plural}`}
-        accessibilityLabel={`Search ${p.plural}`}
-        value={search}
-        onChangeText={setSearch}
-      />
+      {p.searchable === false ? null : (
+        <SearchField
+          placeholder={`Search ${p.plural}`}
+          accessibilityLabel={`Search ${p.plural}`}
+          value={search}
+          onChangeText={setSearch}
+        />
+      )}
 
       {query.isError ? <ErrorBanner message={errorMessage(query.error)} onRetry={query.refetch} /> : null}
 
@@ -61,14 +65,14 @@ export function MasterList<T extends Item>(p: Props<T>) {
                   subtitle={p.describe(item)}
                   muted={!item.active}
                   right={
-                    <Badge label={item.active ? 'Active' : 'Inactive'} tone={item.active ? 'success' : 'danger'} />
+                    <Badge label={item.active ? 'Active' : 'Inactive'} tone={item.active ? 'success' : 'neutral'} />
                   }
                   onPress={() => router.push(p.itemHref(item))}
                 />
               </Fragment>
             ))}
           </Card>
-          <Notice text={p.note} />
+          <Notice text={p.note} icon={false} />
         </>
       ) : query.isSuccess ? (
         <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>

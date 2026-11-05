@@ -1,5 +1,6 @@
 import Feather from '@expo/vector-icons/Feather';
 import { randomUUID } from 'expo-crypto';
+import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { expenseCategories } from '@/api/resources';
@@ -21,17 +22,56 @@ export function CostCard({
   onChange,
   onRemove,
   showErrors,
+  subtitle = 'Split across items by weight',
 }: {
   cost: Cost;
   onChange: (change: Partial<Cost>) => void;
   onRemove: () => void;
   showErrors: boolean;
+  subtitle?: string;
 }) {
   const categories = expenseCategories.useList('', true);
+  const [open, setOpen] = useState(!cost.categoryId && !cost.amount);
+  const category = categories.data?.content.find((c) => c.id === cost.categoryId)?.name;
+  const title = [category ?? 'Cost', cost.description.trim()].filter(Boolean).join(' · ');
+
+  if (!open) {
+    return (
+      <Pressable accessibilityRole="button" accessibilityLabel={`Edit ${title}`} onPress={() => setOpen(true)}>
+        {({ pressed }) => (
+          <Card
+            style={{
+              paddingVertical: 14,
+              paddingHorizontal: space.lg,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: space.md,
+              opacity: pressed ? 0.8 : 1,
+            }}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text variant="headline">{title}</Text>
+              <Text variant="caption">{subtitle}</Text>
+            </View>
+            <Text variant="mono">{cost.amount ? `Rs ${cost.amount}` : 'Rs —'}</Text>
+          </Card>
+        )}
+      </Pressable>
+    );
+  }
+
   return (
     <Card style={{ padding: space.lg, gap: space.md }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text variant="caption">Cost · shared across items by weight</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Collapse cost"
+          hitSlop={8}
+          onPress={() => setOpen(false)}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text variant="caption">Cost · shared across items by weight</Text>
+          <Feather name="chevron-up" size={16} color={colors.secondary} />
+        </Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="Remove cost" hitSlop={8} onPress={onRemove}>
           <Feather name="x" size={18} color={colors.secondary} />
         </Pressable>

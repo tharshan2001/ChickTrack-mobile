@@ -84,8 +84,8 @@ function PurchaseDetail({ p }: { p: Procurement }) {
           <View
             style={{
               paddingHorizontal: space.lg,
-              paddingTop: space.md,
-              paddingBottom: space.xs,
+              paddingTop: 14,
+              paddingBottom: 6,
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -113,7 +113,11 @@ function PurchaseDetail({ p }: { p: Procurement }) {
                 />
               ) : null,
               nonZero(it.allocatedExpenseAmount) ? (
-                <Line key="e" label="Costs share" value={formatRupees(it.allocatedExpenseAmount)} />
+                <Line
+                  key="e"
+                  label={`${category(p.expenses.find((e) => e.categoryId)?.categoryId ?? null) ?? 'Cost'} share`}
+                  value={formatRupees(it.allocatedExpenseAmount)}
+                />
               ) : null,
             ]}
           </Lines>
@@ -142,7 +146,10 @@ function PurchaseDetail({ p }: { p: Procurement }) {
         </Card>
       ) : null}
 
-      <Notice text="Stock was added to the warehouse when this purchase was saved. Costs are shared across items by weight." />
+      <Notice
+        text="Stock was added to the warehouse when this purchase was saved. Costs are shared across items by weight."
+        icon={false}
+      />
     </Screen>
   );
 }

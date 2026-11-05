@@ -14,6 +14,7 @@ export default function ExpenseCategories() {
       itemHref={(c) => ({ pathname: '/expense-categories/[id]', params: { id: c.id } })}
       note="Categories group the costs on purchases, like transport, so reports can show where money goes."
       emptyText="Add the costs you track, like Transport or Labour."
+      searchable={false}
     />
   );
 }

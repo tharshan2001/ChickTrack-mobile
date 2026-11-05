@@ -1,15 +1,30 @@
-import Feather from '@expo/vector-icons/Feather';
 import { useQueryClient } from '@tanstack/react-query';
 import { Tabs } from 'expo-router/js-tabs';
+import type { ReactNode } from 'react';
 
-import { colors, type } from '@/theme/tokens';
+import {
+  BranchesTabIcon,
+  HomeTabIcon,
+  MoneyTabIcon,
+  MoreTabIcon,
+  StockTabIcon,
+} from '@/components/icons';
+import { Text } from '@/components/text';
+import { colors, space, type as typography } from '@/theme/tokens';
 
-type IconName = keyof typeof Feather.glyphMap;
+type TabIcon = (props: { color: string; focused: boolean }) => ReactNode;
 
-const tab = (title: string, icon: IconName) => ({
+const tab = (title: string, Icon: TabIcon) => ({
   title,
-  tabBarIcon: ({ focused, size }: { focused: boolean; size: number }) => (
-    <Feather name={icon} size={size} color={focused ? colors.accent : colors.secondary} />
+  tabBarIcon: ({ focused, color }: { focused: boolean; color: unknown }) => (
+    <Icon color={String(color)} focused={focused} />
+  ),
+  tabBarLabel: ({ focused }: { focused: boolean }) => (
+    <Text
+      variant="bodyMedium"
+      style={{ ...(focused ? typography.tabActive : typography.tab), color: focused ? colors.ink : colors.secondary }}>
+      {title}
+    </Text>
   ),
 });
 
@@ -24,15 +39,22 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.secondary,
-        tabBarLabelStyle: type.tab,
         tabBarAllowFontScaling: false,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.separator },
+        tabBarStyle: {
+          height: 84,
+          paddingTop: 6,
+          paddingBottom: 24,
+          backgroundColor: colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: colors.separator,
+        },
+        tabBarItemStyle: { gap: space.xs },
       }}>
-      <Tabs.Screen name="index" options={tab('Home', 'home')} />
-      <Tabs.Screen name="stock" options={tab('Stock', 'layers')} />
-      <Tabs.Screen name="branches" options={tab('Branches', 'map-pin')} />
-      <Tabs.Screen name="money" options={tab('Money', 'credit-card')} />
-      <Tabs.Screen name="more" options={tab('More', 'grid')} />
+      <Tabs.Screen name="index" options={tab('Home', HomeTabIcon)} />
+      <Tabs.Screen name="stock" options={tab('Stock', StockTabIcon)} />
+      <Tabs.Screen name="branches" options={tab('Branches', BranchesTabIcon)} />
+      <Tabs.Screen name="money" options={tab('Money', MoneyTabIcon)} />
+      <Tabs.Screen name="more" options={tab('More', MoreTabIcon)} />
     </Tabs>
   );
 }

@@ -123,6 +123,10 @@ export default function NewPurchase() {
     <Screen
       title="New purchase"
       left={<TextLink title="Cancel" onPress={() => router.back()} />}
+      bodyPaddingTop={12}
+      bodyGap={12}
+      titleGap={4}
+      footerShadow
       footer={
         <View style={{ gap: 10 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -146,10 +150,11 @@ export default function NewPurchase() {
               detail: s.paymentTerms ?? undefined,
             }))}
             error={touched ? supplierError : undefined}
+            compact
           />
         </View>
         <View style={{ flex: 1 }}>
-          <DateField label="Date" value={date} onChange={setDate} />
+          <DateField label="Date" value={date} onChange={setDate} compact />
         </View>
       </View>
 
@@ -159,7 +164,7 @@ export default function NewPurchase() {
         if (it.key !== open) {
           return (
             <Pressable key={it.key} accessibilityRole="button" onPress={() => setOpen(it.key)}>
-              <Card style={{ padding: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+              <Card style={{ paddingVertical: 14, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text variant="headline">
                     {productName(it.productId)}
@@ -181,30 +186,34 @@ export default function NewPurchase() {
         const errs = touched ? itemErrors(it) : ({} as ReturnType<typeof itemErrors>);
         const unit = COMMISSION_OPTIONS.find((o) => o.value === it.method)!.unit;
         return (
-          <Card key={it.key} style={{ padding: space.lg, gap: space.md }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text variant="caption">Item {i + 1}</Text>
-              <View style={{ flexDirection: 'row', gap: space.lg }}>
-                <TextLink title="Manage products" onPress={() => router.push('/products')} />
-                {items.length > 1 ? (
-                  <TextLink
-                    title="Remove"
-                    onPress={() => {
-                      const rest = items.filter((x) => x.key !== it.key);
-                      setItems(rest);
-                      setOpen(rest[0]!.key);
-                    }}
-                  />
-                ) : null}
+          <Card key={it.key} style={{ padding: space.lg, gap: 12 }}>
+            <View style={{ gap: 6 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: space.md }}>
+                <Text variant="caption">Product</Text>
+                <View style={{ flexDirection: 'row', gap: space.lg }}>
+                  <TextLink title="Manage products" onPress={() => router.push('/products')} />
+                  {items.length > 1 ? (
+                    <TextLink
+                      title="Remove"
+                      onPress={() => {
+                        const rest = items.filter((x) => x.key !== it.key);
+                        setItems(rest);
+                        setOpen(rest[0]!.key);
+                      }}
+                    />
+                  ) : null}
+                </View>
               </View>
+              <SelectField
+                label="Product"
+                hideLabel
+                compact
+                value={it.productId}
+                onChange={(v) => chooseProduct(it.key, v)}
+                options={(productList.data?.content ?? []).map((x) => ({ value: x.id, label: x.name }))}
+                error={errs.product}
+              />
             </View>
-            <SelectField
-              label="Product"
-              value={it.productId}
-              onChange={(v) => chooseProduct(it.key, v)}
-              options={(productList.data?.content ?? []).map((x) => ({ value: x.id, label: x.name }))}
-              error={errs.product}
-            />
             {landed ? (
               <View style={{ alignItems: 'flex-start' }}>
                 <Badge label={`${landed} landed`} tone="success" />
@@ -212,14 +221,31 @@ export default function NewPurchase() {
             ) : null}
             <View style={{ flexDirection: 'row', gap: space.sm }}>
               <View style={{ flex: 1 }}>
-                <DecimalField label="Paid kg" value={it.kg} onChangeText={(kg) => patch(it.key, { kg })} scale={3} placeholder="0.000" error={errs.kg} />
+                <DecimalField
+                  label="Paid kg"
+                  compact
+                  value={it.kg}
+                  onChangeText={(kg) => patch(it.key, { kg })}
+                  scale={3}
+                  placeholder="0.000"
+                  error={errs.kg}
+                />
               </View>
               <View style={{ flex: 1 }}>
-                <DecimalField label="Rs / kg" value={it.price} onChangeText={(price) => patch(it.key, { price })} placeholder="0.00" error={errs.price} />
+                <DecimalField
+                  label="Rs / kg"
+                  compact
+                  value={it.price}
+                  onChangeText={(price) => patch(it.key, { price })}
+                  placeholder="0.00"
+                  error={errs.price}
+                />
               </View>
-              <View style={{ flex: 0.8 }}>
+              <View style={{ flex: 1 }}>
                 <Field
                   label="Birds"
+                  compact
+                  mono
                   value={it.birds}
                   onChangeText={(birds) => /^\d{0,7}$/.test(birds) && patch(it.key, { birds })}
                   inputMode="numeric"
@@ -229,24 +255,30 @@ export default function NewPurchase() {
                 />
               </View>
             </View>
-            <View style={{ flexDirection: 'row', gap: space.sm, alignItems: 'flex-end' }}>
-              <View style={{ flex: 1 }}>
-                <Segmented
-                  label="Commission"
-                  value={it.method}
-                  onChange={(method: CommissionMethod) => patch(it.key, { method })}
-                  options={COMMISSION_OPTIONS}
-                />
-              </View>
-              <View style={{ width: 88 }}>
-                <DecimalField
-                  label={unit}
-                  accessibilityLabel={`Commission, ${unit}`}
-                  value={it.commission}
-                  onChangeText={(commission) => patch(it.key, { commission })}
-                  placeholder="0.00"
-                  error={errs.commission}
-                />
+            <View style={{ gap: 6 }}>
+              <Text variant="caption">Commission</Text>
+              <View style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center' }}>
+                <View style={{ flex: 1 }}>
+                  <Segmented
+                    label="Commission"
+                    hideLabel
+                    value={it.method}
+                    onChange={(method: CommissionMethod) => patch(it.key, { method })}
+                    options={COMMISSION_OPTIONS}
+                  />
+                </View>
+                <View style={{ width: 72 }}>
+                  <DecimalField
+                    label={unit}
+                    hideLabel
+                    compact
+                    accessibilityLabel={`Commission, ${unit}`}
+                    value={it.commission}
+                    onChangeText={(commission) => patch(it.key, { commission })}
+                    placeholder="0.00"
+                    error={errs.commission}
+                  />
+                </View>
               </View>
             </View>
           </Card>

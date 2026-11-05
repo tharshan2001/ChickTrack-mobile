@@ -19,7 +19,7 @@ import { currentMargin, useMarginRulesFor } from '@/features/prices-api';
 import { useOpenBatches } from '@/features/stock-api';
 import { formatKg, formatPercent, fromUnits, isPositiveDecimal, toFixedString, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
-import { colors, space } from '@/theme/tokens';
+import { colors, radius, space } from '@/theme/tokens';
 
 type Line = { key: string; productId: string | null; kg: string };
 const newLine = (): Line => ({ key: randomUUID(), productId: null, kg: '' });
@@ -128,6 +128,10 @@ export default function SendToBranch() {
     <Screen
       title="Send to branch"
       left={<TextLink title="Cancel" onPress={() => router.back()} />}
+      bodyPaddingTop={12}
+      bodyGap={12}
+      titleGap={4}
+      footerShadow
       footer={
         <View style={{ gap: 10 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -154,10 +158,11 @@ export default function SendToBranch() {
             onChange={setBranchId}
             options={(branchList.data?.content ?? []).map((b) => ({ value: b.id, label: b.name, detail: b.code }))}
             error={touched ? branchError : undefined}
+            compact
           />
         </View>
         <View style={{ flex: 1 }}>
-          <DateField label="Date" value={date} onChange={setDate} />
+          <DateField label="Date" value={date} onChange={setDate} compact />
         </View>
       </View>
 
@@ -177,26 +182,24 @@ export default function SendToBranch() {
         const product = l.productId ? byProduct.get(l.productId) : undefined;
         const showMath = p && toUnits(l.kg, 3) > 0n && p.enough;
         return (
-          <Card key={l.key} style={{ padding: space.lg, gap: space.md }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text variant="caption">
-                {product ? (
-                  <>
-                    <Text variant="monoSmall">
-                      {formatKg(fromUnits(p!.freeKg, 3))}
-                    </Text>{' '}
-                    free
-                  </>
-                ) : (
-                  `Item ${i + 1}`
-                )}
-              </Text>
+          <Card key={l.key} style={{ padding: space.lg, gap: 14 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: space.md }}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text variant="headline">{product?.name ?? `Item ${i + 1}`}</Text>
+                {product && p ? (
+                  <Text variant="caption">
+                    <Text variant="monoSmall">{formatKg(fromUnits(p.freeKg, 3))}</Text> free
+                  </Text>
+                ) : null}
+              </View>
               {lines.length > 1 ? (
                 <TextLink title="Remove" onPress={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} />
               ) : null}
             </View>
             <SelectField
               label="Product"
+              hideLabel
+              compact
               value={l.productId}
               onChange={(productId) => patch(l.key, { productId })}
               options={productIds
@@ -214,28 +217,31 @@ export default function SendToBranch() {
               onChangeText={(kg) => patch(l.key, { kg })}
               scale={3}
               placeholder="0.000"
+              large
               error={errs.kg}
             />
             {showMath ? (
-              <View style={{ gap: 2 }}>
+              <View style={{ backgroundColor: colors.field, borderRadius: radius.card, padding: 14, gap: 8 }}>
                 <Row label="Landed cost" value={fromUnits(p.landedPerKg, 2)} />
                 <Row
                   label={`Our margin · ${m ? formatPercent(m.markupPercent) : '0%'}`}
                   value={`+ ${fromUnits(p.marginPerKg, 2)}`}
                 />
                 {deliveryPerKg > 0n ? <Row label="Delivery cost" value={`+ ${fromUnits(deliveryPerKg, 2)}`} /> : null}
-                <Separator />
+                <Separator inset={0} />
                 <Row
                   label="Transfer price / kg"
                   value={formatRupees(fromUnits(p.landedPerKg + p.marginPerKg + deliveryPerKg, 2))}
                   strong
                 />
-                <Text variant="caption" style={{ marginTop: 4 }}>
-                  {p.batchCount > 1
-                    ? `From ${p.batchCount} batches, oldest first.`
-                    : `From the ${shortDate(p.oldestBatch!.receivedAt)} batch, oldest first.`}
-                </Text>
               </View>
+            ) : null}
+            {showMath ? (
+              <Text variant="caption">
+                {p.batchCount > 1
+                  ? `From ${p.batchCount} batches, oldest first.`
+                  : `From the ${shortDate(p.oldestBatch!.receivedAt)} batch, oldest first.`}
+              </Text>
             ) : null}
           </Card>
         );
@@ -252,6 +258,7 @@ export default function SendToBranch() {
           onChange={(change) => setCosts((cs) => cs.map((x) => (x.key === c.key ? { ...x, ...change } : x)))}
           onRemove={() => setCosts((cs) => cs.filter((x) => x.key !== c.key))}
           showErrors={touched}
+          subtitle="Split by weight"
         />
       ))}
       <AddRow title="+ Add delivery cost" onPress={() => setCosts((cs) => [...cs, newCost()])} />

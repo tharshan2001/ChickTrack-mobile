@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/text';
 import { Separator, TextLink } from '@/components/ui';
-import { colors, radius, space, type } from '@/theme/tokens';
+import { colors, fonts, radius, space, type } from '@/theme/tokens';
 
 export type Option = { value: string; label: string; detail?: string };
 
@@ -18,10 +18,21 @@ type SelectProps = {
   error?: string;
   /** Hide the visible label (e.g. when a segmented control above already says it). */
   hideLabel?: boolean;
+  /** 44px control used in compact forms. */
+  compact?: boolean;
 };
 
 /** Field that opens a sheet with a list of options (React Native has no <select>). */
-export function SelectField({ label, value, options, onChange, placeholder = 'Choose…', error, hideLabel }: SelectProps) {
+export function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+  placeholder = 'Choose…',
+  error,
+  hideLabel,
+  compact,
+}: SelectProps) {
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.value === value);
 
@@ -33,10 +44,10 @@ export function SelectField({ label, value, options, onChange, placeholder = 'Ch
         accessibilityLabel={`${label}: ${selected?.label ?? 'not chosen'}`}
         onPress={() => setOpen(true)}
         style={({ pressed }) => ({
-          height: 48,
+          height: compact ? 44 : 48,
           borderRadius: radius.field,
           backgroundColor: colors.field,
-          paddingHorizontal: 14,
+          paddingHorizontal: compact ? 10 : 14,
           flexDirection: 'row',
           alignItems: 'center',
           borderWidth: 2,
@@ -44,11 +55,15 @@ export function SelectField({ label, value, options, onChange, placeholder = 'Ch
           opacity: pressed ? 0.7 : 1,
         })}>
         <Text
-          style={{ flex: 1, ...type.inputMedium, color: selected ? colors.ink : colors.secondary }}
+          style={{
+            flex: 1,
+            ...(compact ? type.inputCompact : type.inputMedium),
+            color: selected ? colors.ink : colors.secondary,
+          }}
           numberOfLines={1}>
           {selected?.label ?? placeholder}
         </Text>
-        <Feather name="chevron-down" size={18} color={colors.secondary} />
+        <Feather name="chevron-down" size={compact ? 16 : 18} color={colors.secondary} />
       </Pressable>
       {error ? (
         <Text variant="caption" style={{ color: colors.danger }}>
@@ -113,13 +128,17 @@ type SegmentProps<T extends string> = {
   options: { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
+  /** Lists put the segmented control directly under the title, without a label. */
+  hideLabel?: boolean;
+  /** 36px control used as a filter under a title. */
+  compact?: boolean;
 };
 
 /** iOS-style segmented control used for small either/or choices. */
-export function Segmented<T extends string>({ label, options, value, onChange }: SegmentProps<T>) {
+export function Segmented<T extends string>({ label, options, value, onChange, hideLabel, compact }: SegmentProps<T>) {
   return (
     <View style={{ gap: 6 }}>
-      <Text variant="caption">{label}</Text>
+      {hideLabel ? null : <Text variant="caption">{label}</Text>}
       <View
         accessibilityRole="radiogroup"
         accessibilityLabel={label}
@@ -134,7 +153,7 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
               onPress={() => onChange(o.value)}
               style={{
                 flex: 1,
-                height: 38,
+                height: compact ? 36 : 38,
                 borderRadius: 8,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -177,13 +196,14 @@ export function Chips<T extends string>({ label, options, value, onChange, error
               accessibilityState={{ selected: on }}
               onPress={() => onChange(o.value)}
               style={{
-                height: 36,
+                height: 40,
                 paddingHorizontal: 14,
-                borderRadius: 18,
+                borderRadius: radius.field,
                 justifyContent: 'center',
-                backgroundColor: on ? colors.ink : colors.field,
+                backgroundColor: on ? colors.tint : colors.field,
+                boxShadow: on ? `inset 0 0 0 1.5px ${colors.accent}` : undefined,
               }}>
-              <Text style={{ ...(on ? type.controlActive : type.control), color: on ? colors.surface : colors.ink }}>
+              <Text style={{ fontFamily: on ? fonts.bodyMedium : fonts.body, fontSize: 15, lineHeight: 20, color: on ? colors.accentPressed : colors.ink }}>
                 {o.label}
               </Text>
             </Pressable>

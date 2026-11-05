@@ -8,7 +8,7 @@ import { branches } from '@/api/resources';
 import type { Settlement } from '@/api/types';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Card, ErrorBanner, SectionHeader, Separator, TextLink } from '@/components/ui';
+import { Badge, Card, ErrorBanner, SectionHeader, Separator, TextLink } from '@/components/ui';
 import { METHOD_LABEL, useSettlements } from '@/features/money-api';
 import { sum, toUnits } from '@/lib/decimal';
 import { formatRupees } from '@/lib/format';
@@ -45,12 +45,24 @@ export default function MoneyTab() {
   const loading = branchList.isPending || balances.some((q) => q.isPending);
 
   return (
-    <Screen title="Money" left={<></>} right={<TextLink title="+ Payment" onPress={() => router.push('/payments/new')} />}>
-      <View style={{ gap: 2, paddingHorizontal: space.xs }}>
-        <Text variant="caption">Branches owe you</Text>
-        {loading ? <ActivityIndicator color={colors.accent} style={{ alignSelf: 'flex-start' }} /> : <Text variant="numLarge">{formatRupees(total)}</Text>}
-      </View>
-
+    <Screen
+      title="Money"
+      left={<></>}
+      right={<TextLink title="+ Payment" pill onPress={() => router.push('/payments/new')} />}
+      inlineActions
+      titleGap={20}
+      bodyPaddingTop={24}
+      bodyGap={32}
+      headerExtra={
+        <View style={{ gap: 4 }}>
+          <Text variant="caption">Branches owe you</Text>
+          {loading ? (
+            <ActivityIndicator color={colors.accent} style={{ alignSelf: 'flex-start' }} />
+          ) : (
+            <Text variant="numDisplay">{formatRupees(total)}</Text>
+          )}
+        </View>
+      }>
       {branchList.isError ? <ErrorBanner message={errorMessage(branchList.error)} onRetry={branchList.refetch} /> : null}
 
       <View style={{ gap: space.sm }}>
@@ -65,6 +77,7 @@ export default function MoneyTab() {
                   accessibilityRole="button"
                   onPress={() => router.push({ pathname: '/branches/[id]', params: { id: b.id } })}
                   style={({ pressed }) => ({
+                    minHeight: 64,
                     paddingHorizontal: space.lg,
                     paddingVertical: space.md,
                     flexDirection: 'row',
@@ -72,14 +85,16 @@ export default function MoneyTab() {
                     gap: space.md,
                     backgroundColor: pressed ? colors.field : 'transparent',
                   })}>
-                  <View style={{ flex: 1, gap: 6 }}>
+                  <View style={{ flex: 1, gap: 6, marginRight: space.md }}>
                     <Text variant="bodyMedium" style={{ color: b.active ? colors.ink : colors.secondary }}>
                       {b.name}
                       {!b.active ? <Text variant="caption"> · closed</Text> : null}
                     </Text>
-                    <View style={{ height: 4, borderRadius: 2, backgroundColor: colors.field, overflow: 'hidden' }}>
-                      <View style={{ width: `${pct}%`, height: 4, backgroundColor: colors.accent }} />
-                    </View>
+                    {toUnits(owes ?? '0', 2) > 0n ? (
+                      <View style={{ height: 4, borderRadius: 2, backgroundColor: colors.field, overflow: 'hidden' }}>
+                        <View style={{ width: `${pct}%`, height: 4, backgroundColor: colors.success }} />
+                      </View>
+                    ) : null}
                   </View>
                   <Text variant="mono" style={{ color: owes && toUnits(owes, 2) > 0n ? colors.ink : colors.secondary }}>
                     {owes ? formatRupees(owes).replace('Rs ', '') : '…'}
@@ -110,6 +125,7 @@ export default function MoneyTab() {
                     accessibilityRole="button"
                     onPress={() => router.push({ pathname: '/payments/[id]', params: { id: p.id } })}
                     style={({ pressed }) => ({
+                      minHeight: 64,
                       paddingHorizontal: space.lg,
                       paddingVertical: space.md,
                       flexDirection: 'row',
@@ -117,8 +133,8 @@ export default function MoneyTab() {
                       gap: space.md,
                       backgroundColor: pressed ? colors.field : 'transparent',
                     })}>
-                    <View style={{ flex: 1, gap: 2 }}>
-                      <Text numberOfLines={1}>
+                    <View style={{ flex: 1, gap: 4, alignItems: 'flex-start' }}>
+                      <Text numberOfLines={1} style={reversed ? { color: colors.secondary } : undefined}>
                         {branchName(p.branchId)} · {METHOD_LABEL[p.method] ?? p.method.toLowerCase()}
                         {p.reference ? (
                           <Text variant="monoSmall" style={{ color: colors.secondary }}>
@@ -127,9 +143,11 @@ export default function MoneyTab() {
                           </Text>
                         ) : null}
                       </Text>
-                      <Text variant="caption" style={reversed ? { color: colors.danger } : undefined}>
-                        {reversed ? `Reversed · ${p.reversalReason ?? ''}` : shortDate(p.settlementDate)}
-                      </Text>
+                      {reversed ? (
+                        <Badge label={`Reversed · ${p.reversalReason ?? 'bounced'}`} tone="danger" />
+                      ) : (
+                        <Text variant="caption">{shortDate(p.settlementDate)}</Text>
+                      )}
                     </View>
                     <Text
                       variant="mono"

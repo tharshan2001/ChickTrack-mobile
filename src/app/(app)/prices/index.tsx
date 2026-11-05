@@ -6,7 +6,7 @@ import { errorMessage } from '@/api/client';
 import { branches, products } from '@/api/resources';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Badge, Button, Card, ErrorBanner, IconButton, Notice, Separator } from '@/components/ui';
+import { Badge, Button, Card, ErrorBanner, IconButton, Separator } from '@/components/ui';
 import { currentMargin, useCurrentPriceGrid, useMarginRulesFor } from '@/features/prices-api';
 import { formatPercent } from '@/lib/decimal';
 import { formatRupees } from '@/lib/format';
@@ -53,6 +53,7 @@ export default function Prices() {
       title="Prices & margins"
       subtitle="In force today · changes never alter past documents"
       left={<IconButton icon="chevron-left" label="Back" onPress={() => router.back()} />}
+      bodyGap={24}
       footer={
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ flex: 1 }}>
@@ -146,7 +147,10 @@ export default function Prices() {
       })}
 
       {ps.length ? (
-        <Notice text="A branch can't record sales of a product until its selling price is set. Margin is added to landed cost when you dispatch." />
+        <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
+          A branch can&apos;t record sales of a chicken type until its selling price is set. Margin is added to landed cost when
+          you dispatch.
+        </Text>
       ) : null}
     </Screen>
   );
