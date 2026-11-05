@@ -8,14 +8,13 @@ import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { StockBatch } from '@/api/types';
 import { ChevronRightIcon, PlusIcon, TruckIcon } from '@/components/icons';
-import { Segmented } from '@/components/pickers';
 import { Text } from '@/components/text';
-import { Badge, Card, ErrorBanner } from '@/components/ui';
+import { Badge, Card, ErrorBanner, SearchField, Separator } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
 import { useOpenBatches } from '@/features/stock-api';
 import { formatKg, formatKgShort, formatKgWhole, sum, toUnits } from '@/lib/decimal';
 import { formatRupees, formatRupeesCompact } from '@/lib/format';
-import { colors, radius, space } from '@/theme/tokens';
+import { colors, fonts, radius, space } from '@/theme/tokens';
 
 const W = 3; // weight scale
 
@@ -23,6 +22,13 @@ function receivedLabel(b: StockBatch) {
   if (b.ageDays === 0) return 'Today';
   if (b.ageDays === 1) return 'Yesterday';
   return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'Asia/Colombo' }).format(
+    new Date(b.receivedAt),
+  );
+}
+
+/** Full received date for search, e.g. "2 Nov 2026". */
+function searchDate(b: StockBatch) {
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Colombo' }).format(
     new Date(b.receivedAt),
   );
 }
@@ -79,11 +85,21 @@ function BatchCard({ b, heldFor }: { b: StockBatch; heldFor?: string }) {
   );
 }
 
-function Stat({ label, value, tone, flex = 1 }: { label: string; value: string; tone?: string; flex?: number }) {
+function Stat({ label, value, tone, first }: { label: string; value: string; tone?: string; first?: boolean }) {
   return (
-    <View style={{ flex, gap: 2 }}>
-      <Text variant="caption">{label}</Text>
-      <Text variant="num" numberOfLines={1} style={{ color: tone ?? colors.ink }}>
+    <View
+      style={{
+        flex: 1,
+        gap: 2,
+        paddingLeft: first ? space.lg : space.md,
+        paddingRight: space.md,
+        borderLeftWidth: first ? 0 : 1,
+        borderLeftColor: colors.separator,
+      }}>
+      <Text variant="caption" style={{ fontSize: 12, lineHeight: 16 }}>
+        {label}
+      </Text>
+      <Text variant="num" numberOfLines={1} adjustsFontSizeToFit style={{ fontSize: 17, lineHeight: 22, color: tone ?? colors.ink }}>
         {value}
       </Text>
     </View>
@@ -138,8 +154,7 @@ export default function StockTab() {
   const onTheWay = useDistributions('', '', 'DISPATCHED');
   const draftCount = drafts.data?.totalElements ?? 0;
   const wayCount = onTheWay.data?.totalElements ?? 0;
-  const heldByDrafts = sum((drafts.data?.content ?? []).map((d) => d.totalWeightKg), W);
-  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const batches = query.data ?? [];
 
   // Which branch each draft is holding stock for, so the badge can say who it is
@@ -151,71 +166,124 @@ export default function StockTab() {
     if (name) for (const it of d.items) heldFor.set(it.stockBatchId, name);
   }
 
-  const productTabs = [...new Map(batches.map((b) => [b.chickenTypeId, b.chickenTypeName])).entries()];
-  const shown = filter === 'all' ? batches : batches.filter((b) => b.chickenTypeId === filter);
+  // Search matches the chicken type or the received date ("today", "2 nov", "nov").
+  const q = search.trim().toLowerCase();
+  const shown = q
+    ? batches.filter((b) =>
+        [b.chickenTypeName, receivedLabel(b), searchDate(b)].some((t) => t.toLowerCase().includes(q)),
+      )
+    : batches;
 
+  // The summary is the whole warehouse; search only narrows the list.
   const onHand = sum(
-    shown.map((b) => b.remainingWeightKg),
+    batches.map((b) => b.remainingWeightKg),
     W,
   );
   const held = sum(
-    shown.map((b) => b.reservedWeightKg),
+    batches.map((b) => b.reservedWeightKg),
     W,
   );
   const value = sum(
-    shown.map((b) => b.remainingValue),
+    batches.map((b) => b.remainingValue),
     2,
   );
+  const dispatchLine = [
+    draftCount ? `${draftCount} ${draftCount === 1 ? 'draft' : 'drafts'}` : null,
+    wayCount ? `${wayCount} on the way` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={['top', 'left', 'right']}>
       <ScrollView
         contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxl }}
         refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void qc.refetchQueries({ type: 'active' })} tintColor={colors.accent} />}>
-        <View style={{ gap: 20 }}>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', columnGap: space.md }}>
-          <Text variant="largeTitle" accessibilityRole="header" style={{ flexShrink: 1 }}>
-            Warehouse stock
-          </Text>
-          <Pressable
-            accessibilityRole="link"
-            hitSlop={8}
-            onPress={() => router.push('/purchases')}
-            style={{ height: 44, flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <Text variant="bodyMedium" style={{ color: colors.accent }}>
-              Purchases
+        <View style={{ gap: space.lg }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', columnGap: space.md }}>
+            <Text variant="largeTitle" accessibilityRole="header" style={{ flexShrink: 1 }}>
+              Warehouse stock
             </Text>
-            <ChevronRightIcon size={16} color={colors.accent} />
-          </Pressable>
-        </View>
-        <View style={{ flexDirection: 'row', gap: space.md }}>
-          <ActionButton icon="plus" title="Buy stock" primary onPress={() => router.push('/purchases/new')} />
-          <ActionButton icon="truck" title="Send to branch" onPress={() => router.push('/dispatches/new')} />
-        </View>
+            <Pressable
+              accessibilityRole="link"
+              hitSlop={8}
+              onPress={() => router.push('/purchases')}
+              style={({ pressed }) => ({
+                height: 32,
+                paddingLeft: space.md,
+                paddingRight: 10,
+                borderRadius: 16,
+                backgroundColor: colors.field,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 2,
+                opacity: pressed ? 0.6 : 1,
+              })}>
+              <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, color: colors.ink, letterSpacing: 0 }}>
+                Purchases
+              </Text>
+              <ChevronRightIcon size={14} color={colors.secondary} />
+            </Pressable>
+          </View>
 
-        <View style={{ flexDirection: 'row', gap: space.sm }}>
-          <Stat label="On hand" value={formatKgWhole(onHand)} />
-          <Stat label="Held" value={formatKgWhole(held)} tone={toUnits(held, W) > 0n ? colors.warning : undefined} />
-          <Stat label="Value" value={formatRupeesCompact(value)} />
-        </View>
+          <Card>
+            <View style={{ flexDirection: 'row', paddingVertical: 14 }}>
+              <Stat first label="On hand" value={formatKgWhole(onHand)} />
+              <Stat label="Held" value={formatKgWhole(held)} tone={toUnits(held, W) > 0n ? colors.warning : undefined} />
+              <Stat label="Value" value={formatRupeesCompact(value)} />
+            </View>
+            <Separator inset={space.lg} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={dispatchLine ? `Open dispatches, ${dispatchLine}` : 'All dispatches'}
+              onPress={() => router.push('/dispatches')}
+              style={({ pressed }) => ({
+                minHeight: 44,
+                paddingLeft: space.lg,
+                paddingRight: space.md,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: space.sm,
+                opacity: pressed ? 0.6 : 1,
+              })}>
+              {dispatchLine ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.warningDot }} /> : null}
+              <Text variant="caption" style={{ flex: 1 }} numberOfLines={1}>
+                <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, color: colors.ink }}>
+                  {dispatchLine ? 'Open dispatches' : 'All dispatches'}
+                </Text>
+                {dispatchLine ? ` · ${dispatchLine}` : ''}
+              </Text>
+              <ChevronRightIcon size={16} color="#AEAEB2" />
+            </Pressable>
+          </Card>
 
-        {productTabs.length > 1 ? (
-          <Segmented
-            label="Chicken type"
-            hideLabel
-            compact
-            value={filter}
-            onChange={setFilter}
-            options={[{ value: 'all', label: 'All' }, ...productTabs.map(([id, name]) => ({ value: id, label: name }))]}
-          />
-        ) : null}
+          <View style={{ flexDirection: 'row', gap: space.md }}>
+            <ActionButton icon="plus" title="Buy stock" primary onPress={() => router.push('/purchases/new')} />
+            <ActionButton icon="truck" title="Send to branch" onPress={() => router.push('/dispatches/new')} />
+          </View>
+
+          {batches.length ? (
+            <SearchField
+              placeholder="Search chicken type or date"
+              accessibilityLabel="Search stock"
+              value={search}
+              onChangeText={setSearch}
+              autoCorrect={false}
+            />
+          ) : null}
         </View>
 
         <View style={{ gap: space.md, marginTop: space.md }}>
         {query.isError ? <ErrorBanner message={errorMessage(query.error)} onRetry={query.refetch} /> : null}
         {query.isPending ? <ActivityIndicator color={colors.accent} /> : null}
 
-        {query.isSuccess && shown.length === 0 ? (
+        {query.isSuccess && batches.length > 0 && shown.length === 0 ? (
+          <Text variant="caption" style={{ textAlign: 'center', paddingVertical: space.lg }}>
+            No stock matches “{search.trim()}”
+          </Text>
+        ) : null}
+
+        {query.isSuccess && batches.length === 0 ? (
           <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>
             <Text variant="bodyMedium">No stock in the warehouse</Text>
             <Text variant="caption" style={{ textAlign: 'center' }}>
@@ -223,33 +291,6 @@ export default function StockTab() {
             </Text>
           </Card>
         ) : null}
-
-        {draftCount + wayCount > 0 ? (
-          <Pressable accessibilityRole="button" onPress={() => router.push('/dispatches')}>
-            {({ pressed }) => (
-              <Card style={{ paddingVertical: 14, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md, opacity: pressed ? 0.8 : 1 }}>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Text variant="bodyMedium">Open dispatches</Text>
-                  <Text variant="caption">
-                    {[
-                      draftCount ? `${draftCount} ${draftCount === 1 ? 'draft' : 'drafts'} holding ${formatKgShort(heldByDrafts)}` : null,
-                      wayCount ? `${wayCount} on the way` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </Text>
-                </View>
-                <ChevronRightIcon size={16} color={colors.secondary} />
-              </Card>
-            )}
-          </Pressable>
-        ) : (
-          <Pressable accessibilityRole="link" onPress={() => router.push('/dispatches')} hitSlop={8}>
-            <Text variant="bodyMedium" style={{ color: colors.accent }}>
-              All dispatches ›
-            </Text>
-          </Pressable>
-        )}
 
         {shown.length ? <Text variant="caption">Oldest first · issued in this order</Text> : null}
         {shown.map((b) => (
