@@ -11,6 +11,7 @@ import { Text } from '@/components/text';
 import { Button, Card, Field, IconButton, Notice, TextLink } from '@/components/ui';
 import { useChangeOwnPassword } from '@/features/users-api';
 import { colors, space } from '@/theme/tokens';
+import { savedAndBack, showSaved } from '@/components/motion';
 
 function strength(p: string) {
   if (p.length < 8) return { score: p ? 1 : 0, label: 'Too short · at least 8 characters', color: colors.danger };
@@ -45,7 +46,7 @@ export function PasswordScreen({ forced }: { forced?: boolean }) {
     if (!user || errors.current || errors.next || errors.again) return;
     change.mutate(
       { username: user.username, currentPassword: current, newPassword: next },
-      { onSuccess: () => (forced ? undefined : router.back()) },
+      { onSuccess: () => (forced ? showSaved('Password set') : savedAndBack('Password changed')) },
     );
   }
 

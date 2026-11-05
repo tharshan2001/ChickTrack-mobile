@@ -14,6 +14,7 @@ import { useCurrentPrice, useSetPrice } from '@/features/prices-api';
 import { isDecimal, toFixedString } from '@/lib/decimal';
 import { formatRupees } from '@/lib/format';
 import { space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 export default function SetPrice() {
   const productList = products.useList('', true);
@@ -56,7 +57,7 @@ export default function SetPrice() {
         },
         key: idem.key,
       },
-      { onSuccess: () => router.back(), onError: idem.onError },
+      { onSuccess: () => savedAndBack('Price saved'), onError: idem.onError },
     );
   }
 

@@ -13,6 +13,7 @@ import { Button, Card, Separator, TextLink } from '@/components/ui';
 import { currentMargin, useMarginRules, useSetMargin } from '@/features/prices-api';
 import { formatPercent, isDecimal, toFixedString } from '@/lib/decimal';
 import { space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 /** Example on Rs 100 of landed cost, worked in integer cents to avoid float rounding. */
 function example(percent: string): string {
@@ -60,7 +61,7 @@ export default function SetMargin() {
         },
         key: idem.key,
       },
-      { onSuccess: () => router.back(), onError: idem.onError },
+      { onSuccess: () => savedAndBack('Margin saved'), onError: idem.onError },
     );
   }
 

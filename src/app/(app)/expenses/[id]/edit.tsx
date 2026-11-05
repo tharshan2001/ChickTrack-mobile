@@ -1,9 +1,10 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 
 import type { OperatingExpense } from '@/api/types';
 import { EditLoader } from '@/components/form';
 import { ExpenseForm } from '@/features/expense-form';
 import { useExpense, useUpdateExpense } from '@/features/expenses-api';
+import { savedAndBack } from '@/components/motion';
 
 export default function EditExpenseRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -12,5 +13,5 @@ export default function EditExpenseRoute() {
 
 function EditExpense({ e }: { e: OperatingExpense }) {
   const update = useUpdateExpense(e.id);
-  return <ExpenseForm title="Edit expense" submitTitle="Save changes" initial={e} save={update} onSaved={() => router.back()} />;
+  return <ExpenseForm title="Edit expense" submitTitle="Save changes" initial={e} save={update} onSaved={() => savedAndBack('Expense saved')} />;
 }

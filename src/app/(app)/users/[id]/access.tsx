@@ -11,6 +11,7 @@ import { Button, Card, Notice, TextLink } from '@/components/ui';
 import { ASSIGNABLE_ROLES, ROLE_HELP, ROLE_LABEL } from '@/features/roles';
 import { useSetAccess, useUser } from '@/features/users-api';
 import { space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 export default function AccessRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,7 +41,7 @@ function Access({ u }: { u: User }) {
             role &&
             save.mutate(
               { roles: [role], branchIds: branchIds.filter((id) => branchList.data?.content.some((b) => b.id === id) ?? true) },
-              { onSuccess: () => router.back() },
+              { onSuccess: () => savedAndBack('Access saved') },
             )
           }
         />

@@ -8,6 +8,7 @@ import { Text } from '@/components/text';
 import { Button, Card, Field, TextLink } from '@/components/ui';
 import { useUpdateUser, useUser } from '@/features/users-api';
 import { colors, radius, space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 export default function EditUserRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,7 +28,7 @@ function EditUser({ u }: { u: User }) {
     if (!v.fullName.trim()) return;
     update.mutate(
       { key: idem.key, input: { fullName: v.fullName.trim(), email: optional(v.email), phone: optional(v.phone) } },
-      { onError: idem.onError, onSuccess: () => router.back() },
+      { onError: idem.onError, onSuccess: () => savedAndBack('User saved') },
     );
   }
 

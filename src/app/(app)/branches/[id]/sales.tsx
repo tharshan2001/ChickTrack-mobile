@@ -16,6 +16,7 @@ import { useCurrentPriceGrid } from '@/features/prices-api';
 import { divRound, formatKg, fromUnits, isDecimal, toFixedString, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 export default function DailySalesRoute() {
   const params = useLocalSearchParams<{ id: string; date?: string }>();
@@ -115,7 +116,7 @@ function SalesForm({
         },
         key: idem.key,
       },
-      { onSuccess: () => router.back(), onError: idem.onError },
+      { onSuccess: () => savedAndBack('Sales saved'), onError: idem.onError },
     );
   }
 

@@ -15,6 +15,7 @@ import {
 import { Screen } from '@/components/screen';
 import { Button, Card, Field, TextLink } from '@/components/ui';
 import { space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 type Values = {
   name: string;
@@ -134,7 +135,7 @@ export function AddSupplierScreen() {
   function save() {
     form.setTouched(true);
     if (!isValid(form.values)) return;
-    create.mutate({ input: toInput(form.values), key: idem.key }, { onSuccess: () => router.back(), onError: idem.onError });
+    create.mutate({ input: toInput(form.values), key: idem.key }, { onSuccess: () => savedAndBack(), onError: idem.onError });
   }
 
   return (
@@ -165,7 +166,7 @@ function EditSupplier({ supplier }: { supplier: Supplier }) {
   function save() {
     form.setTouched(true);
     if (!isValid(form.values)) return;
-    update.mutate({ input: toInput(form.values), key: idem.key }, { onSuccess: () => router.back(), onError: idem.onError });
+    update.mutate({ input: toInput(form.values), key: idem.key }, { onSuccess: () => savedAndBack(), onError: idem.onError });
   }
 
   return (

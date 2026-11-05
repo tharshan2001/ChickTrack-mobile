@@ -20,6 +20,7 @@ import { useOpenBatches } from '@/features/stock-api';
 import { formatKg, formatPercent, fromUnits, isPositiveDecimal, toFixedString, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
+import { showSaved } from '@/components/motion';
 
 type Line = { key: string; productId: string | null; kg: string };
 const newLine = (): Line => ({ key: randomUUID(), productId: null, kg: '' });
@@ -116,7 +117,10 @@ export default function SendToBranch() {
         key: idem.key,
       },
       {
-        onSuccess: (d) => router.replace({ pathname: '/dispatches/[id]', params: { id: d.id } }),
+        onSuccess: (d) => {
+          showSaved('Draft created');
+          router.replace({ pathname: '/dispatches/[id]', params: { id: d.id } });
+        },
         onError: idem.onError,
       },
     );

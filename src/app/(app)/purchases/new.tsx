@@ -20,6 +20,7 @@ import { useCreateProcurement } from '@/features/stock-api';
 import { formatKg, fromUnits, isDecimal, isPositiveDecimal, toFixedString } from '@/lib/decimal';
 import { formatRupees, toIsoDate } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 type Item = ItemDraft & { key: string; productId: string | null };
 
@@ -115,7 +116,7 @@ export default function NewPurchase() {
         },
         key: idem.key,
       },
-      { onSuccess: () => router.back(), onError: idem.onError },
+      { onSuccess: () => savedAndBack('Purchase saved'), onError: idem.onError },
     );
   }
 

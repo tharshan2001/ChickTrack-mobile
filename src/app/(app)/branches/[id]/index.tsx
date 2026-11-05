@@ -14,6 +14,7 @@ import { useDispatch, useDistributions } from '@/features/distribution-api';
 import { formatKgShort, sum, toUnits } from '@/lib/decimal';
 import { BusinessDate, colomboToday, formatRupees, formatRupeesCompact, weekStart } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
+import { showSaved } from '@/components/motion';
 
 export default function BranchHomeRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -84,7 +85,7 @@ function DraftCard({ d, productName }: { d: Distribution; productName: (id: stri
           <ActionLink title="Review" onPress={() => router.push({ pathname: '/dispatches/[id]', params: { id: d.id } })} />
         </View>
         <View style={{ flex: 2 }}>
-          <ActionLink title={send.isPending ? 'Sending…' : 'Send now'} primary onPress={() => !send.isPending && send.mutate(idem.key, { onError: idem.onError })} />
+          <ActionLink title={send.isPending ? 'Sending…' : 'Send now'} primary onPress={() => !send.isPending && send.mutate(idem.key, { onSuccess: () => showSaved('Sent to branch'), onError: idem.onError })} />
         </View>
       </View>
     </Section>

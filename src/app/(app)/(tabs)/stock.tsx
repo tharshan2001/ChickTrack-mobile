@@ -8,6 +8,7 @@ import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { StockBatch } from '@/api/types';
 import { ChevronRightIcon, PlusIcon, TruckIcon } from '@/components/icons';
+import { PressScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, SearchField, Separator } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
@@ -43,12 +44,12 @@ function pct(part: string, of: string) {
 function BatchCard({ b, heldFor }: { b: StockBatch; heldFor?: string }) {
   const held = toUnits(b.reservedWeightKg, W) > 0n;
   return (
-    <Pressable
+    <PressScale
       accessibilityRole="button"
       accessibilityLabel={`${b.chickenTypeName}, ${formatKg(b.availableWeightKg)} free`}
       onPress={() => router.push({ pathname: '/stock/[id]', params: { id: b.id } })}>
-      {({ pressed }) => (
-        <Card style={{ padding: space.lg, gap: space.md, opacity: pressed ? 0.8 : 1 }}>
+      
+        <Card style={{ padding: space.lg, gap: space.md }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text variant="headline">
               {b.chickenTypeName}
@@ -80,8 +81,8 @@ function BatchCard({ b, heldFor }: { b: StockBatch; heldFor?: string }) {
             </Text>
           </View>
         </Card>
-      )}
-    </Pressable>
+      
+    </PressScale>
   );
 }
 

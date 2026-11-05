@@ -18,6 +18,7 @@ import { useOpenSales, useRecordPayment } from '@/features/money-api';
 import { fromUnits, isPositiveDecimal, toUnits } from '@/lib/decimal';
 import { colomboToday, formatIsoDate, formatRupees } from '@/lib/format';
 import { colors, fonts, radius, space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 /** Spreads the amount over the chosen sales, oldest first, never more than a sale still owes. */
 function allocate(sales: OpenSale[], chosen: Set<string>, amount: bigint) {
@@ -114,7 +115,7 @@ export default function RecordPayment() {
         },
         key: idem.key,
       },
-      { onSuccess: () => router.back(), onError: idem.onError },
+      { onSuccess: () => savedAndBack('Payment recorded'), onError: idem.onError },
     );
   }
 

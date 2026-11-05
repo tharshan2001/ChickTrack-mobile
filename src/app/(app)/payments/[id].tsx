@@ -16,6 +16,7 @@ import { dayLabel } from '@/features/payment-ui';
 import { METHOD_LABEL, useReversePayment, useSettlement } from '@/features/money-api';
 import { formatIsoDate, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
+import { haptic } from '@/components/motion';
 
 export default function PaymentRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -51,7 +52,10 @@ function Payment({ p }: { p: Settlement }) {
   function doReverse() {
     setTouched(true);
     if (!reason.trim()) return;
-    reverse.mutate({ reason: reason.trim(), key: idem.key }, { onSuccess: () => setConfirming(false), onError: idem.onError });
+    reverse.mutate({ reason: reason.trim(), key: idem.key }, { onSuccess: () => {
+        haptic.warning();
+        setConfirming(false);
+      }, onError: idem.onError });
   }
 
   return (

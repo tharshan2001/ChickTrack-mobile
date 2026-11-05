@@ -13,6 +13,7 @@ import { Button, Card, ErrorBanner, Field, IconButton, SectionHeader, Separator 
 import { useAdjustStock, useBatch, useBatchHistory } from '@/features/stock-api';
 import { formatKg, fromUnits, isPositiveDecimal, toFixedString, toUnits } from '@/lib/decimal';
 import { colors, space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 const W = 3;
 
@@ -73,7 +74,7 @@ function AdjustStock({ batch }: { batch: StockBatch }) {
         },
         key: idem.key,
       },
-      { onSuccess: () => router.back(), onError: idem.onError },
+      { onSuccess: () => savedAndBack('Stock adjusted'), onError: idem.onError },
     );
   }
 

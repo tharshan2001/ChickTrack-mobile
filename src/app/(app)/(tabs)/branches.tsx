@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { useDeferredValue, useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { Branch } from '@/api/types';
+import { PressScale } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { ChevronRightIcon } from '@/components/icons';
@@ -41,11 +42,11 @@ function BranchCard({ b }: { b: Branch }) {
       : null;
 
   return (
-    <Pressable
+    <PressScale
       accessibilityRole="button"
       onPress={() => router.push({ pathname: '/branches/[id]', params: { id: b.id } })}>
-      {({ pressed }) => (
-        <Card style={{ padding: space.lg, gap: 14, opacity: pressed ? 0.8 : 1 }}>
+      
+        <Card style={{ padding: space.lg, gap: 14 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md }}>
             <View style={{ flex: 1, gap: 2 }}>
               <Text variant="headline" style={{ color: b.active ? colors.ink : colors.secondary }}>
@@ -71,8 +72,8 @@ function BranchCard({ b }: { b: Branch }) {
             </View>
           ) : null}
         </Card>
-      )}
-    </Pressable>
+      
+    </PressScale>
   );
 }
 

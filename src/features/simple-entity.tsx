@@ -14,6 +14,7 @@ import {
 import { Screen } from '@/components/screen';
 import { Button, Card, Field, Notice, TextLink } from '@/components/ui';
 import { space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 /**
  * Add and edit screens for resources that are just a name and a description
@@ -84,7 +85,7 @@ export function AddSimpleEntity({ crud, copy }: { crud: Crud; copy: Copy }) {
   function save() {
     form.setTouched(true);
     if (!form.values.name.trim()) return;
-    create.mutate({ input: toInput(form.values), key: idem.key }, { onSuccess: () => router.back(), onError: idem.onError });
+    create.mutate({ input: toInput(form.values), key: idem.key }, { onSuccess: () => savedAndBack(), onError: idem.onError });
   }
 
   return (
@@ -117,7 +118,7 @@ function EditForm({ crud, copy, item }: { crud: Crud; copy: Copy; item: ChickenT
   function save() {
     form.setTouched(true);
     if (!form.values.name.trim()) return;
-    update.mutate({ input: toInput(form.values), key: idem.key }, { onSuccess: () => router.back(), onError: idem.onError });
+    update.mutate({ input: toInput(form.values), key: idem.key }, { onSuccess: () => savedAndBack(), onError: idem.onError });
   }
 
   return (

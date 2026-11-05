@@ -11,6 +11,7 @@ import { Badge, Button, Card, Field, IconButton, Notice, Separator, TextLink } f
 import { useExpense, useVoidExpense } from '@/features/expenses-api';
 import { formatIsoDate, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
+import { haptic } from '@/components/motion';
 
 const QUICK = ['Entered twice', 'Wrong amount', 'Wrong branch'] as const;
 
@@ -43,7 +44,10 @@ function Expense({ e }: { e: OperatingExpense }) {
   function doVoid() {
     setTouched(true);
     if (!reason.trim()) return;
-    voidIt.mutate({ reason: reason.trim(), key: idem.key }, { onSuccess: () => setConfirming(false), onError: idem.onError });
+    voidIt.mutate({ reason: reason.trim(), key: idem.key }, { onSuccess: () => {
+        haptic.warning();
+        setConfirming(false);
+      }, onError: idem.onError });
   }
 
   return (

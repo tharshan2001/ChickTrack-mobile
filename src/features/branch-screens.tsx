@@ -16,6 +16,7 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Button, Card, Field, Notice, TextLink } from '@/components/ui';
 import { colors, space, type } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 type Values = { code: string; name: string; phone: string; address: string };
 
@@ -114,7 +115,7 @@ export function AddBranchScreen() {
     const v = form.values;
     create.mutate(
       { input: { code: v.code, name: v.name.trim(), phone: optional(v.phone), address: optional(v.address) }, key: idem.key },
-      { onSuccess: () => router.back(), onError: idem.onError },
+      { onSuccess: () => savedAndBack(), onError: idem.onError },
     );
   }
 
@@ -155,7 +156,7 @@ function EditBranch({ branch }: { branch: Branch }) {
     const v = form.values;
     update.mutate(
       { input: { name: v.name.trim(), phone: optional(v.phone), address: optional(v.address) }, key: idem.key },
-      { onSuccess: () => router.back(), onError: idem.onError },
+      { onSuccess: () => savedAndBack(), onError: idem.onError },
     );
   }
 

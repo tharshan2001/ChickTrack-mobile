@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { ChevronLeftIcon, ChevronRightIcon, InfoIcon, PlusIcon } from '@/components/icons';
+import { Flip, PressScale } from '@/components/motion';
 import { MAX_FONT_SCALE, Text, androidText } from '@/components/text';
 import { cardShadow, colors, radius, space, type } from '@/theme/tokens';
 
@@ -34,13 +35,16 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
   const primary = variant === 'primary';
   const danger = variant === 'danger';
   const inactive = disabled || loading;
+  const [pressed, setPressed] = useState(false);
   return (
-    <Pressable
+    <PressScale
       accessibilityRole="button"
       accessibilityState={{ disabled: !!inactive, busy: !!loading }}
       disabled={inactive}
       onPress={onPress}
-      style={({ pressed }) => [
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[
         styles.button,
         primary ? styles.buttonPrimary : danger ? styles.buttonDanger : styles.buttonSecondary,
         danger && { height: 48 },
@@ -58,7 +62,7 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
           {title}
         </Text>
       )}
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -75,11 +79,13 @@ const badgeTones: Record<Tone, { bg: string; fg: string; border: string }> = {
 export function Badge({ label, tone = 'neutral' }: { label: string; tone?: Tone }) {
   const t = badgeTones[tone];
   return (
-    <View style={[styles.badge, { backgroundColor: t.bg, borderColor: t.border }]}>
-      <Text variant="badge" numberOfLines={1} style={{ color: t.fg }}>
-        {label}
-      </Text>
-    </View>
+    <Flip id={label}>
+      <View style={[styles.badge, { backgroundColor: t.bg, borderColor: t.border }]}>
+        <Text variant="badge" numberOfLines={1} style={{ color: t.fg }}>
+          {label}
+        </Text>
+      </View>
+    </Flip>
   );
 }
 

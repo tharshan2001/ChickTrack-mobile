@@ -13,6 +13,7 @@ import { Button, Card, Field, IconButton } from '@/components/ui';
 import { useDistribution, useReceiveDistribution } from '@/features/distribution-api';
 import { formatKg, fromUnits, isDecimal, toFixedString, toUnits } from '@/lib/decimal';
 import { colors, radius, space } from '@/theme/tokens';
+import { savedAndBack } from '@/components/motion';
 
 const REASONS: { value: DiscrepancyReason; label: string }[] = [
   { value: 'MELT_WATER', label: 'Melt water' },
@@ -80,7 +81,7 @@ function Receive({ d }: { d: Distribution }) {
         },
         key: idem.key,
       },
-      { onSuccess: () => router.back(), onError: idem.onError },
+      { onSuccess: () => savedAndBack('Delivery confirmed'), onError: idem.onError },
     );
   }
 
