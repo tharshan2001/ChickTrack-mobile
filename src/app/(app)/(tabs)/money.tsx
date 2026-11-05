@@ -7,6 +7,7 @@ import { api, errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { OpenSale } from '@/api/types';
 import { ChevronRightIcon } from '@/components/icons';
+import { AppearList, CountText, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, ListRow, SectionHeader, Separator, TextLink } from '@/components/ui';
@@ -34,6 +35,7 @@ export default function MoneyTab() {
     })),
   });
   const payments = useSettlements();
+  const firstPayments = useFirstBatch(payments.isSuccess);
   const thisMonth = colomboToday().slice(0, 7);
   const monthExpenses = useExpenses(`${thisMonth}-01`, colomboToday());
   const expenseTotal = sum(
@@ -71,7 +73,7 @@ export default function MoneyTab() {
           {loading ? (
             <ActivityIndicator color={colors.accent} style={{ alignSelf: 'flex-start' }} />
           ) : (
-            <Text variant="numDisplay">{formatRupees(total)}</Text>
+            <CountText variant="numDisplay" value={total} format={formatRupees} />
           )}
         </View>
       }>
@@ -148,12 +150,14 @@ export default function MoneyTab() {
         ) : null}
         {payments.data?.length ? (
           <Card>
-            {payments.data.slice(0, 5).map((p, i) => (
+            <AppearList still={firstPayments}>
+              {payments.data.slice(0, 5).map((p, i) => (
               <Fragment key={p.id}>
                 {i > 0 ? <Separator /> : null}
                 <PaymentRow p={p} branch={branchName(p.branchId)} />
               </Fragment>
             ))}
+            </AppearList>
           </Card>
         ) : null}
       </View>

@@ -6,6 +6,7 @@ import { branches } from '@/api/resources';
 import type { Branch } from '@/api/types';
 import { EditLoader } from '@/components/form';
 import { ChevronRightIcon } from '@/components/icons';
+import { AppearList, useCountUp, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Button, Card, IconButton, Separator } from '@/components/ui';
@@ -27,10 +28,12 @@ function BranchMoney({ b }: { b: Branch }) {
   const open = useOpenSales(b.id);
   const payments = useSettlements(b.id);
   const sales = [...(open.data ?? [])].sort((x, y) => x.saleDate.localeCompare(y.saleDate));
+  const owed = useCountUp(owes.data, 2);
+  const firstLoad = useFirstBatch(open.isSuccess && payments.isSuccess);
 
   return (
     <Screen
-      title={owes.data ? formatRupees(owes.data) : '…'}
+      title={owed ? formatRupees(owed) : '…'}
       titleVariant="numDisplay"
       subtitle={`${b.name} owes`}
       subtitleAbove
@@ -52,7 +55,8 @@ function BranchMoney({ b }: { b: Branch }) {
         ) : null}
         {sales.length ? (
           <Card>
-            {sales.map((s, i) => {
+            <AppearList still={firstLoad}>
+              {sales.map((s, i) => {
               const part = toUnits(s.outstandingAmount, 2) < toUnits(s.transferValue, 2);
               return (
                 <Fragment key={s.branchSaleId}>
@@ -88,6 +92,7 @@ function BranchMoney({ b }: { b: Branch }) {
                 </Fragment>
               );
             })}
+            </AppearList>
           </Card>
         ) : null}
       </View>
@@ -106,12 +111,14 @@ function BranchMoney({ b }: { b: Branch }) {
         ) : null}
         {payments.data?.length ? (
           <Card>
-            {payments.data.slice(0, 5).map((p, i) => (
+            <AppearList still={firstLoad}>
+              {payments.data.slice(0, 5).map((p, i) => (
               <Fragment key={p.id}>
                 {i > 0 ? <Separator /> : null}
                 <PaymentRow p={p} />
               </Fragment>
             ))}
+            </AppearList>
           </Card>
         ) : null}
       </View>

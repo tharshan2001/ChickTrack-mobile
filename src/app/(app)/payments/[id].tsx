@@ -16,7 +16,7 @@ import { dayLabel } from '@/features/payment-ui';
 import { METHOD_LABEL, useReversePayment, useSettlement } from '@/features/money-api';
 import { formatIsoDate, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
-import { haptic } from '@/components/motion';
+import { Appear, haptic } from '@/components/motion';
 
 export default function PaymentRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -42,6 +42,8 @@ function Payment({ p }: { p: Settlement }) {
   const [reason, setReason] = useState('');
   const [touched, setTouched] = useState(false);
   const reversed = p.status === 'REVERSED';
+  // Only animate the notice when the reversal happens here, not when opening an old one.
+  const [wasReversed] = useState(reversed);
   const sales = useQueries({
     queries: p.allocations.map((a) => ({
       queryKey: ['branch-sale', a.branchSaleId],
@@ -94,7 +96,11 @@ function Payment({ p }: { p: Settlement }) {
         )
       }>
       <FormError error={reverse.error} />
-      {reversed ? <Notice text={`Reversed: ${p.reversalReason ?? 'no reason given'}. ${branch} owes this amount again.`} /> : null}
+      {reversed ? (
+        <Appear still={wasReversed}>
+          <Notice text={`Reversed: ${p.reversalReason ?? 'no reason given'}. ${branch} owes this amount again.`} />
+        </Appear>
+      ) : null}
       <Card>
         {p.reference ? (
           <>

@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { errorMessage } from '@/api/client';
 import type { OperatingExpense } from '@/api/types';
 import { Segmented } from '@/components/pickers';
+import { AppearList, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, IconButton, Notice, Separator } from '@/components/ui';
@@ -30,6 +31,7 @@ export default function Expenses() {
   const [scope, setScope] = useState<ExpenseScope>('all');
   const range = monthRange(month);
   const expenses = useExpenses(range.from, range.to, scope);
+  const firstLoad = useFirstBatch(expenses.isSuccess);
   const list = expenses.data ?? [];
   const total = sum(
     list.filter((e) => e.status === 'POSTED').map((e) => e.amount),
@@ -79,7 +81,8 @@ export default function Expenses() {
           <Text variant="caption">No expenses in {monthName(month)}.</Text>
         </Card>
       ) : null}
-      {byDay(list).map((day) => (
+      <AppearList still={firstLoad}>
+        {byDay(list).map((day) => (
         <View key={day.date} style={{ gap: space.sm }}>
           <Text variant="caption" style={{ fontWeight: '600', paddingHorizontal: space.xs, paddingTop: 6 }}>
             {day.date === today ? `Today · ${formatDayHeading(day.date).split(' ').slice(1).join(' ')}` : formatDayHeading(day.date)}
@@ -126,6 +129,7 @@ export default function Expenses() {
           </Card>
         </View>
       ))}
+      </AppearList>
       <Notice icon={false} text="Running costs only. Transport and ice on a purchase or a dispatch stay on that document." />
     </Screen>
   );

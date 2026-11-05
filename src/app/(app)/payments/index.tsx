@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { Settlement } from '@/api/types';
+import { AppearList, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, IconButton, Separator, TextLink } from '@/components/ui';
@@ -45,6 +46,7 @@ export default function PaymentsList() {
   const branchList = branches.useList('');
   const list = branchList.data?.content ?? [];
   const payments = useSettlements(branchId);
+  const firstLoad = useFirstBatch(payments.isSuccess);
   const branchName = (id: string) => list.find((b) => b.id === id)?.name ?? 'Branch';
 
   const groups = new Map<string, Settlement[]>();
@@ -82,7 +84,8 @@ export default function PaymentsList() {
           <Text variant="caption">No payments yet.</Text>
         </Card>
       ) : null}
-      {[...groups.entries()].map(([month, rows]) => (
+      <AppearList still={firstLoad}>
+        {[...groups.entries()].map(([month, rows]) => (
         <View key={month} style={{ gap: space.sm }}>
           <Text variant="labelSmall">{monthLabel(month)}</Text>
           <Card>
@@ -95,6 +98,7 @@ export default function PaymentsList() {
           </Card>
         </View>
       ))}
+      </AppearList>
     </Screen>
   );
 }

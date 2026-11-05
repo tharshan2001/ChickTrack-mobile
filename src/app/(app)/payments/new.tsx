@@ -18,7 +18,7 @@ import { useOpenSales, useRecordPayment } from '@/features/money-api';
 import { fromUnits, isPositiveDecimal, toUnits } from '@/lib/decimal';
 import { colomboToday, formatIsoDate, formatRupees } from '@/lib/format';
 import { colors, fonts, radius, space } from '@/theme/tokens';
-import { savedAndBack } from '@/components/motion';
+import { CountText, savedAndBack } from '@/components/motion';
 
 /** Spreads the amount over the chosen sales, oldest first, never more than a sale still owes. */
 function allocate(sales: OpenSale[], chosen: Set<string>, amount: bigint) {
@@ -130,7 +130,8 @@ export default function RecordPayment() {
         <View style={{ gap: 10 }}>
           {after !== null && amountUnits > 0n && !errors.amount ? (
             <Text variant="caption" style={{ textAlign: 'center' }}>
-              {branchName} will {after > 0n ? 'still owe' : 'owe'} {formatRupees(fromUnits(after, 2))}
+              {branchName} will {after > 0n ? 'still owe' : 'owe'}{' '}
+              <CountText variant="caption" style={{ color: colors.ink }} value={fromUnits(after, 2)} format={formatRupees} />
             </Text>
           ) : null}
           <Button
@@ -280,9 +281,12 @@ export default function RecordPayment() {
                           {formatRupees(s.outstandingAmount)} left to pay
                         </Text>
                       </View>
-                      <Text variant="mono" style={{ color: part > 0n ? colors.ink : colors.secondary }}>
-                        {formatRupees(fromUnits(part, 2)).replace('Rs ', '')}
-                      </Text>
+                      <CountText
+                        variant="mono"
+                        style={{ color: part > 0n ? colors.ink : colors.secondary }}
+                        value={fromUnits(part, 2)}
+                        format={(v) => formatRupees(v).replace('Rs ', '')}
+                      />
                     </Pressable>
                   </Fragment>
                 );

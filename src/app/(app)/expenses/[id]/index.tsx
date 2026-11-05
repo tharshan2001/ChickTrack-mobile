@@ -11,7 +11,7 @@ import { Badge, Button, Card, Field, IconButton, Notice, Separator, TextLink } f
 import { useExpense, useVoidExpense } from '@/features/expenses-api';
 import { formatIsoDate, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
-import { haptic } from '@/components/motion';
+import { Appear, haptic } from '@/components/motion';
 
 const QUICK = ['Entered twice', 'Wrong amount', 'Wrong branch'] as const;
 
@@ -38,6 +38,7 @@ function Expense({ e }: { e: OperatingExpense }) {
   const [reason, setReason] = useState('');
   const [touched, setTouched] = useState(false);
   const voided = e.status === 'VOIDED';
+  const [wasVoided] = useState(voided);
   const where = e.branchName ?? 'Head office';
   const created = new Date(e.createdAt);
 
@@ -100,7 +101,11 @@ function Expense({ e }: { e: OperatingExpense }) {
         )
       }>
       <FormError error={voidIt.error} />
-      {voided ? <Notice text={`Voided: ${e.voidReason ?? 'no reason given'}. It no longer counts in Profit & loss.`} /> : null}
+      {voided ? (
+        <Appear still={wasVoided}>
+          <Notice text={`Voided: ${e.voidReason ?? 'no reason given'}. It no longer counts in Profit & loss.`} />
+        </Appear>
+      ) : null}
       {confirming ? (
         <Notice text={`${formatRupees(e.amount)} stops counting in Profit & loss. It stays in the list, crossed out, with your reason. This can't be undone.`} />
       ) : null}
