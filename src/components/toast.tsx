@@ -13,14 +13,13 @@ import Feather from '@expo/vector-icons/Feather';
 import { useEffect, useState } from 'react';
 import { PanResponder, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
+  FadeInDown,
   FadeOut,
   LinearTransition,
   ReduceMotion,
   runOnJS,
-  SlideInUp,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -81,7 +80,7 @@ export const toast = {
 
 // ---------- view ----------
 
-function ToastCard({ t, behind }: { t: Item; behind: number }) {
+function ToastCard({ t }: { t: Item }) {
   const k = KIND[t.kind];
   const y = useSharedValue(0);
   const close = () => dismiss(t.id);
@@ -93,18 +92,15 @@ function ToastCard({ t, behind }: { t: Item; behind: number }) {
       onPanResponderMove: (_, g) => y.set(Math.min(0, g.dy) + Math.max(0, g.dy) * 0.15),
       onPanResponderRelease: (_, g) => {
         if (g.dy < -30 || g.vy < -0.5) y.set(withTiming(-140, { duration: 160 }, () => runOnJS(close)()));
-        else y.set(withSpring(0, { damping: 18 }));
+        else y.set(withTiming(0, { duration: 150 }));
       },
     }),
   );
-  const style = useAnimatedStyle(() => ({
-    transform: [{ translateY: y.value }, { scale: withTiming(1 - behind * 0.04, { duration: 200 }) }],
-    opacity: withTiming(behind ? 0.9 : 1, { duration: 200 }),
-  }));
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
 
   return (
     <Animated.View
-      entering={SlideInUp.springify().damping(17).stiffness(220).reduceMotion(ReduceMotion.System)}
+      entering={FadeInDown.duration(180).withInitialValues({ transform: [{ translateY: -8 }] }).reduceMotion(ReduceMotion.System)}
       exiting={FadeOut.duration(160)}
       layout={LinearTransition.duration(200).reduceMotion(ReduceMotion.System)}
       {...pan.panHandlers}
@@ -154,8 +150,8 @@ export function ToastHost() {
   }, []);
   return (
     <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { paddingTop: insets.top + 6, paddingHorizontal: 12, gap: 8 }]}>
-      {list.map((t, i) => (
-        <ToastCard key={t.id} t={t} behind={i} />
+      {list.map((t) => (
+        <ToastCard key={t.id} t={t} />
       ))}
     </View>
   );
