@@ -7,6 +7,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { api } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { OpenSale, PaymentMethod } from '@/api/types';
+import { EmptyState } from '@/components/empty-state';
 import { DateField } from '@/components/date-field';
 import { FormError, optional, useIdempotencyKey } from '@/components/form';
 import { DecimalField } from '@/components/money-field';
@@ -241,9 +242,7 @@ export default function RecordPayment() {
           </View>
           {openSales.isPending ? <ActivityIndicator color={colors.accent} /> : null}
           {openSales.isSuccess && sales.length === 0 ? (
-            <Card style={{ padding: space.xl, alignItems: 'center' }}>
-              <Text variant="caption">Nothing owed. All sales are paid for.</Text>
-            </Card>
+            <EmptyState icon="check" tone="ok" title="Nothing owed" text={`Every ${branchName} sale is paid for.`} />
           ) : null}
           {sales.length ? (
             <Card>

@@ -7,7 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { StockBatch } from '@/api/types';
-import { ChevronRightIcon, PlusIcon, TruckIcon } from '@/components/icons';
+import { EmptyState } from '@/components/empty-state';
+import { ChevronRightIcon } from '@/components/icons';
+import { ActionButton } from '@/components/action-button';
 import { Appear, CountText, GrowBar, PressScale, useFirstBatch } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, SearchField, Separator } from '@/components/ui';
@@ -15,7 +17,7 @@ import { useDistributions } from '@/features/distribution-api';
 import { useOpenBatches } from '@/features/stock-api';
 import { formatKg, formatKgShort, formatKgWhole, sum, toUnits } from '@/lib/decimal';
 import { formatRupees, formatRupeesCompact } from '@/lib/format';
-import { colors, fonts, radius, space } from '@/theme/tokens';
+import { colors, fonts, space } from '@/theme/tokens';
 
 const W = 3; // weight scale
 
@@ -127,47 +129,6 @@ function Stat({
   );
 }
 
-function ActionButton({
-  icon,
-  title,
-  primary,
-  onPress,
-  disabled,
-}: {
-  icon: 'plus' | 'truck';
-  title: string;
-  primary?: boolean;
-  onPress: () => void;
-  disabled?: boolean;
-}) {
-  const fg = primary ? colors.surface : colors.ink;
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => ({
-        flex: 1,
-        minHeight: 44,
-        paddingVertical: 6,
-        paddingHorizontal: space.sm,
-        borderRadius: radius.field,
-        backgroundColor: primary ? (pressed ? colors.accentPressed : colors.accent) : colors.field,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: space.sm,
-        opacity: disabled ? 0.45 : 1,
-      })}>
-      {icon === 'plus' ? <PlusIcon size={18} color={fg} /> : <TruckIcon size={18} color={fg} strokeWidth={1.8} />}
-      <Text variant="bodyMedium" style={{ color: fg, letterSpacing: 0.5, flexShrink: 1, textAlign: 'center' }}>
-        {title}
-      </Text>
-    </Pressable>
-  );
-}
-
 export default function StockTab() {
   const qc = useQueryClient();
   const query = useOpenBatches();
@@ -178,6 +139,7 @@ export default function StockTab() {
   const [search, setSearch] = useState('');
   const firstLoad = useFirstBatch(query.isSuccess);
   const batches = query.data ?? [];
+  const empty = query.isSuccess && batches.length === 0;
 
   // Which branch each draft is holding stock for, so the badge can say who it is
   // for rather than only how much. Drafts are already loaded above.
@@ -223,7 +185,7 @@ export default function StockTab() {
         refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void qc.refetchQueries({ type: 'active' })} tintColor={colors.accent} />}>
         <View style={{ gap: space.lg }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', columnGap: space.md }}>
-            <Text variant="largeTitle" accessibilityRole="header" style={{ flexShrink: 1 }}>
+            <Text variant="tabTitle" accessibilityRole="header" style={{ flexShrink: 1 }}>
               Stock
             </Text>
             <Pressable
@@ -248,6 +210,16 @@ export default function StockTab() {
             </Pressable>
           </View>
 
+          {empty ? (
+            <EmptyState
+              full
+              icon="layers"
+              tone="brand"
+              title="The warehouse is empty"
+              text="Record what you buy from a supplier and it shows up here, oldest first, ready to send to branches."
+            />
+          ) : (
+          <>
           <Card style={{ borderWidth: 1, borderColor: 'rgba(162, 8, 12, 0.25)' }}>
             <View style={{ flexDirection: 'row', paddingVertical: 14 }}>
               <Stat first label="On hand" value={onHand} decimals={3} format={formatKgWhole} />
@@ -279,6 +251,9 @@ export default function StockTab() {
             </Pressable>
           </Card>
 
+          </>
+          )}
+
           <View style={{ flexDirection: 'row', gap: space.md }}>
             <ActionButton icon="plus" title="Buy stock" primary onPress={() => router.push('/purchases/new')} />
             <ActionButton icon="truck" title="Send to branch" onPress={() => router.push('/dispatches/new')} />
@@ -300,18 +275,7 @@ export default function StockTab() {
         {query.isPending ? <ActivityIndicator color={colors.accent} /> : null}
 
         {query.isSuccess && batches.length > 0 && shown.length === 0 ? (
-          <Text variant="caption" style={{ textAlign: 'center', paddingVertical: space.lg }}>
-            No stock matches “{search.trim()}”
-          </Text>
-        ) : null}
-
-        {query.isSuccess && batches.length === 0 ? (
-          <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>
-            <Text variant="bodyMedium">No stock in the warehouse</Text>
-            <Text variant="caption" style={{ textAlign: 'center' }}>
-              Record a purchase with Buy stock and it shows up here.
-            </Text>
-          </Card>
+          <EmptyState icon="search" title={`No stock matches “${search.trim()}”`} text="Try a chicken type, today, or a date like 2 Nov." />
         ) : null}
 
         {shown.length ? <Text variant="caption">Oldest first · issued in this order</Text> : null}

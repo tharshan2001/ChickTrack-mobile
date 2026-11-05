@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { errorMessage } from '@/api/client';
 import { branches, products } from '@/api/resources';
+import { EmptyState } from '@/components/empty-state';
 import { DateField } from '@/components/date-field';
 import { Segmented } from '@/components/pickers';
 import { AppearList, CountText, useFirstBatch } from '@/components/motion';
@@ -142,9 +143,7 @@ export default function BranchSales() {
 
       {sales.isPending ? <ActivityIndicator color={colors.accent} /> : null}
       {sales.isSuccess && list.length === 0 && !missingToday ? (
-        <Card style={{ padding: space.xl, alignItems: 'center' }}>
-          <Text variant="caption">No sales in this period.</Text>
-        </Card>
+        <EmptyState icon="bar-chart-2" title="No sales in this period" text="Pick another period, or enter today's sales." />
       ) : null}
 
       {list.length ? (

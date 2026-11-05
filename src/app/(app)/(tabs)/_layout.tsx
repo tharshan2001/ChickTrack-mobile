@@ -54,7 +54,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="stock" options={tab('Stock', StockTabIcon)} />
       <Tabs.Screen name="branches" options={tab('Branches', BranchesTabIcon)} />
       <Tabs.Screen name="money" options={tab('Money', MoneyTabIcon)} />
-      <Tabs.Screen name="more" options={tab('More', MoreTabIcon)} />
+      <Tabs.Screen name="more" options={tab('Setup', MoreTabIcon)} />
     </Tabs>
   );
 }

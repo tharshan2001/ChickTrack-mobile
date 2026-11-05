@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { errorMessage } from '@/api/client';
 import type { OperatingExpense } from '@/api/types';
+import { EmptyState } from '@/components/empty-state';
 import { Segmented } from '@/components/pickers';
 import { AppearList, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
@@ -77,9 +78,11 @@ export default function Expenses() {
       {expenses.isError ? <ErrorBanner message={errorMessage(expenses.error)} onRetry={expenses.refetch} /> : null}
       {expenses.isPending ? <ActivityIndicator color={colors.accent} /> : null}
       {expenses.isSuccess && list.length === 0 ? (
-        <Card style={{ padding: space.xl, alignItems: 'center' }}>
-          <Text variant="caption">No expenses in {monthName(month)}.</Text>
-        </Card>
+        <EmptyState
+          icon="file-text"
+          title={`No expenses in ${monthName(month)}`}
+          text="Pick another month, or add one for this month."
+        />
       ) : null}
       <AppearList still={firstLoad}>
         {byDay(list).map((day) => (

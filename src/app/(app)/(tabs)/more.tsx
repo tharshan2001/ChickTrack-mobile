@@ -4,11 +4,11 @@ import { Pressable, View } from 'react-native';
 import { useAuth } from '@/auth/auth-context';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Badge, Card, ListRow, SectionHeader, Separator } from '@/components/ui';
+import { Card, ListRow, SectionHeader, Separator } from '@/components/ui';
 import { branches, expenseCategories, products, suppliers } from '@/api/resources';
 import { useCurrentPriceGrid } from '@/features/prices-api';
 import { useUsers } from '@/features/users-api';
-import { colors, space } from '@/theme/tokens';
+import { colors, fonts, space } from '@/theme/tokens';
 
 function initials(name: string) {
   return name
@@ -48,31 +48,33 @@ export default function More() {
   ).length;
 
   return (
-    <Screen title="More" bodyGap={space.xl}>
-      <Card style={{ paddingVertical: 14, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+    <Screen title="Setup" titleVariant="tabTitle" bodyGap={space.xl}>
+      <View style={{ paddingHorizontal: space.xs, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <View
           style={{
-            width: 48,
-            height: 48,
-            borderRadius: 24,
+            width: 52,
+            height: 52,
+            borderRadius: 16,
             backgroundColor: colors.tint,
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-          <Text variant="headline" style={{ color: colors.accentPressed }}>
+          <Text variant="headline" style={{ color: colors.accentPressed, fontFamily: fonts.bodySemiBold, fontSize: 18 }}>
             {user ? initials(user.fullName) : ''}
           </Text>
         </View>
-        <View style={{ flex: 1, gap: space.xs, alignItems: 'flex-start' }}>
-          <Text variant="headline">
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text variant="headline" numberOfLines={1}>
             {user?.fullName ?? '…'}
           </Text>
-          {isOwner ? <Badge label="Owner · full access" tone="brand" /> : null}
+          <Text variant="monoSmall" style={{ color: colors.secondary }} numberOfLines={1}>
+            {user ? `@${user.username}` : ''}
+          </Text>
         </View>
-      </Card>
+      </View>
 
       <View style={{ gap: space.sm }}>
-        <SectionHeader title="Setup" size="small" />
+        <SectionHeader title="Business" size="small" />
         <Card>
           <ListRow
             title="Prices & margins"

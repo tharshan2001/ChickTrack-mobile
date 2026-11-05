@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { Distribution } from '@/api/types';
+import { EmptyState } from '@/components/empty-state';
 import { Segmented } from '@/components/pickers';
 import { AppearList, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
@@ -113,19 +114,12 @@ export default function Dispatches() {
             />
           </>
         ) : (
-          <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>
-            <Text variant="bodyMedium">Nothing open</Text>
-            <Text variant="caption" style={{ textAlign: 'center' }}>
-              Every dispatch has been received or cancelled.
-            </Text>
-          </Card>
+          <EmptyState icon="check" tone="ok" title="Nothing open" text="Every dispatch has been received or cancelled." />
         )
       ) : null}
 
       {view !== 'open' && period.isSuccess && byDay.size === 0 ? (
-        <Card style={{ padding: space.xl, alignItems: 'center' }}>
-          <Text variant="bodyMedium">No dispatches in this period</Text>
-        </Card>
+        <EmptyState icon="truck" title="No dispatches in this period" text="Pick another period to see earlier ones." />
       ) : null}
       <AppearList still={firstLoad}>
         {[...byDay.entries()].map(([day, list]) => (

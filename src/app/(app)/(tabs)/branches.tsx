@@ -5,6 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { Branch } from '@/api/types';
+import { EmptyState } from '@/components/empty-state';
 import { AppearList, PressScale, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
@@ -89,21 +90,27 @@ export default function BranchesTab() {
   return (
     <Screen
       title="Branches"
+      titleVariant="tabTitle"
       inlineActions
       bodyGap={12}
-      right={<TextLink title="+ Add branch" pill onPress={() => router.push('/branches/new')} />}>
+      right={<TextLink title="+ Branch" pill onPress={() => router.push('/branches/new')} />}>
       {all.length > 5 || search ? (
         <SearchField placeholder="Search branches" accessibilityLabel="Search branches" value={search} onChangeText={setSearch} />
       ) : null}
       {query.isError ? <ErrorBanner message={errorMessage(query.error)} onRetry={query.refetch} /> : null}
       {query.isPending ? <ActivityIndicator color={colors.accent} /> : null}
       {query.isSuccess && all.length === 0 ? (
-        <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>
-          <Text variant="bodyMedium">{deferred ? 'No matches' : 'No branches yet'}</Text>
-          <Text variant="caption" style={{ textAlign: 'center' }}>
-            {deferred ? 'Try another name.' : 'Add your first branch, like Kandy Central.'}
-          </Text>
-        </Card>
+        deferred ? (
+          <EmptyState icon="search" title={`No branch matches “${deferred}”`} text="Try another name or code." />
+        ) : (
+          <EmptyState
+            full
+            icon="home"
+            tone="brand"
+            title="No branches yet"
+            text="Add your first branch, like Kandy Central, to start sending stock and recording sales."
+          />
+        )
       ) : null}
       <AppearList still={firstLoad}>
         {list.map((b) => (

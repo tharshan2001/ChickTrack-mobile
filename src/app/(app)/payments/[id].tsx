@@ -141,7 +141,7 @@ function Payment({ p }: { p: Settlement }) {
                         </Text>
                       ) : null}
                     </Text>
-                    <Text variant="mono">{formatRupees(a.amount)}</Text>
+                    <Text variant="mono">{formatRupees(a.amount).replace('Rs ', '')}</Text>
                     <ChevronRightIcon size={16} color="#AEAEB2" />
                   </Pressable>
                 </Fragment>

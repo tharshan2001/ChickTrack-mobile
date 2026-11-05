@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { branches } from '@/api/resources';
 import type { Branch } from '@/api/types';
+import { EmptyState } from '@/components/empty-state';
 import { EditLoader } from '@/components/form';
 import { ChevronRightIcon } from '@/components/icons';
 import { AppearList, useCountUp, useFirstBatch } from '@/components/motion';
@@ -49,9 +50,7 @@ function BranchMoney({ b }: { b: Branch }) {
         <TitleWithLink title="Unpaid sales" />
         {open.isPending ? <ActivityIndicator color={colors.accent} /> : null}
         {open.isSuccess && sales.length === 0 ? (
-          <Card style={{ padding: space.xl, alignItems: 'center' }}>
-            <Text variant="caption">Nothing owed. Every sale is paid for.</Text>
-          </Card>
+          <EmptyState icon="check" tone="ok" title="Nothing owed" text={`Every ${b.name} sale is paid for.`} />
         ) : null}
         {sales.length ? (
           <Card>
@@ -84,7 +83,7 @@ function BranchMoney({ b }: { b: Branch }) {
                       </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                      <Text variant="mono">{formatRupees(s.outstandingAmount)}</Text>
+                      <Text variant="mono">{formatRupees(s.outstandingAmount).replace('Rs ', '')}</Text>
                       <Badge label={part ? 'Part paid' : 'Unpaid'} tone={part ? 'warning' : 'danger'} />
                     </View>
                     <ChevronRightIcon size={16} color="#AEAEB2" />
@@ -105,9 +104,7 @@ function BranchMoney({ b }: { b: Branch }) {
         />
         {payments.isPending ? <ActivityIndicator color={colors.accent} /> : null}
         {payments.isSuccess && payments.data.length === 0 ? (
-          <Card style={{ padding: space.xl, alignItems: 'center' }}>
-            <Text variant="caption">No payments from {b.name} yet.</Text>
-          </Card>
+          <EmptyState icon="credit-card" title="No payments yet" text={`Payments from ${b.name} show up here.`} />
         ) : null}
         {payments.data?.length ? (
           <Card>

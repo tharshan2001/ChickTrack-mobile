@@ -6,17 +6,19 @@ import { useQueries } from '@tanstack/react-query';
 import { api, errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { OpenSale } from '@/api/types';
+import { EmptyState } from '@/components/empty-state';
+import { ActionButton } from '@/components/action-button';
 import { ChevronRightIcon } from '@/components/icons';
 import { AppearList, CountText, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Card, ErrorBanner, ListRow, SectionHeader, Separator, TextLink } from '@/components/ui';
+import { Card, ErrorBanner, SectionHeader, Separator } from '@/components/ui';
 import { useExpenses } from '@/features/expenses-api';
 import { useSettlements } from '@/features/money-api';
 import { PaymentRow, TitleWithLink, unpaidLine } from '@/features/payment-ui';
 import { sum, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
-import { colors, space } from '@/theme/tokens';
+import { colors, fonts, space } from '@/theme/tokens';
 
 export default function MoneyTab() {
   const branchList = branches.useList('');
@@ -54,33 +56,50 @@ export default function MoneyTab() {
   const loading = branchList.isPending || balances.some((q) => q.isPending);
 
   return (
-    <Screen
-      title="Money"
-      left={<></>}
-      right={
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
-          <TextLink title="+ Expense" onPress={() => router.push('/expenses/new')} />
-          <TextLink title="Record payment" pill onPress={() => router.push('/payments/new')} />
+    <Screen title="Money" titleVariant="tabTitle" bodyGap={space.xl} bodyPaddingTop={space.sm}>
+        <View style={{ gap: space.lg }}>
+          <Card style={{ borderWidth: 1, borderColor: 'rgba(162, 8, 12, 0.25)' }}>
+            <View style={{ paddingVertical: 14, paddingHorizontal: space.lg, gap: 2 }}>
+              <Text variant="caption">Branches owe you</Text>
+              {loading ? (
+                <ActivityIndicator color={colors.accent} style={{ alignSelf: 'flex-start', marginVertical: 8 }} />
+              ) : (
+                <CountText variant="numMoney" value={total} format={formatRupees} numberOfLines={1} adjustsFontSizeToFit />
+              )}
+            </View>
+            <Separator inset={space.lg} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Expenses this month, ${formatRupees(expenseTotal)}`}
+              onPress={() => router.push('/expenses')}
+              style={({ pressed }) => ({
+                minHeight: 44,
+                paddingLeft: space.lg,
+                paddingRight: space.md,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: space.sm,
+                opacity: pressed ? 0.6 : 1,
+              })}>
+              <Text variant="caption" style={{ flex: 1 }} numberOfLines={1}>
+                <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, color: colors.ink }}>
+                  Expenses
+                </Text>
+                {' · this month'}
+              </Text>
+              <Text variant="monoSmall">{monthExpenses.data ? formatRupees(expenseTotal).replace('Rs ', '') : '…'}</Text>
+              <ChevronRightIcon size={16} color="#AEAEB2" />
+            </Pressable>
+          </Card>
+          <View style={{ flexDirection: 'row', gap: space.md }}>
+            <ActionButton icon="plus" title="Payment" primary onPress={() => router.push('/payments/new')} />
+            <ActionButton icon="receipt" title="Expense" onPress={() => router.push('/expenses/new')} />
+          </View>
         </View>
-      }
-      inlineActions
-      titleGap={20}
-      bodyPaddingTop={24}
-      bodyGap={32}
-      headerExtra={
-        <View style={{ gap: 4 }}>
-          <Text variant="caption">Branches owe you</Text>
-          {loading ? (
-            <ActivityIndicator color={colors.accent} style={{ alignSelf: 'flex-start' }} />
-          ) : (
-            <CountText variant="numDisplay" value={total} format={formatRupees} />
-          )}
-        </View>
-      }>
       {branchList.isError ? <ErrorBanner message={errorMessage(branchList.error)} onRetry={branchList.refetch} /> : null}
 
       <View style={{ gap: space.sm }}>
-        <SectionHeader title="By branch" />
+        <SectionHeader title="By branch" size="small" />
         <Card>
           {rows.map(({ b, owes, unpaid }, i) => {
             const owing = !!owes && toUnits(owes, 2) > 0n;
@@ -113,7 +132,7 @@ export default function MoneyTab() {
                     ) : null}
                   </View>
                   <Text variant="mono" style={{ color: owing ? colors.ink : colors.secondary }}>
-                    {owes ? formatRupees(owes) : '…'}
+                    {owes ? formatRupees(owes).replace('Rs ', '') : '…'}
                   </Text>
                   <ChevronRightIcon size={16} color="#AEAEB2" />
                 </Pressable>
@@ -124,29 +143,15 @@ export default function MoneyTab() {
       </View>
 
       <View style={{ gap: space.sm }}>
-        <SectionHeader title="Expenses" />
-        <Card>
-          <ListRow
-            title="This month"
-            subtitle="Rent, salaries and other running costs"
-            right={
-              <Text variant="mono" style={{ color: colors.ink }}>
-                {monthExpenses.data ? formatRupees(expenseTotal) : '…'}
-              </Text>
-            }
-            chevron
-            onPress={() => router.push('/expenses')}
-          />
-        </Card>
-      </View>
-
-      <View style={{ gap: space.sm }}>
-        <TitleWithLink title="Recent payments" link={payments.data?.length ? 'See all' : undefined} onPress={() => router.push('/payments')} />
+        <TitleWithLink small title="Recent payments" link={payments.data?.length ? 'See all' : undefined} onPress={() => router.push('/payments')} />
         {payments.isPending ? <ActivityIndicator color={colors.accent} /> : null}
         {payments.isSuccess && payments.data.length === 0 ? (
-          <Card style={{ padding: space.xl, alignItems: 'center' }}>
-            <Text variant="caption">No payments recorded yet.</Text>
-          </Card>
+          <EmptyState
+            icon="credit-card"
+            tone="brand"
+            title="No payments yet"
+            text="When a branch pays you, record it here and it comes off what they owe."
+          />
         ) : null}
         {payments.data?.length ? (
           <Card>

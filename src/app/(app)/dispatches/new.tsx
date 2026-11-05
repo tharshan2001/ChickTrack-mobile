@@ -5,6 +5,7 @@ import { View } from 'react-native';
 
 import { branches } from '@/api/resources';
 import type { StockBatch } from '@/api/types';
+import { EmptyState } from '@/components/empty-state';
 import { AddRow, CostCard, costError, newCost, type Cost } from '@/components/cost-card';
 import { DateField } from '@/components/date-field';
 import { FormError, optional, useIdempotencyKey } from '@/components/form';
@@ -171,12 +172,12 @@ export default function SendToBranch() {
       </View>
 
       {batchesQuery.isSuccess && productIds.length === 0 ? (
-        <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>
-          <Text variant="bodyMedium">No free stock</Text>
-          <Text variant="caption" style={{ textAlign: 'center' }}>
-            Record a purchase first, or cancel a draft that is holding stock.
-          </Text>
-        </Card>
+        <EmptyState
+          icon="layers"
+          tone="brand"
+          title="No free stock"
+          text="Record a purchase first, or cancel a draft that is holding stock."
+        />
       ) : null}
 
       <AppearList>

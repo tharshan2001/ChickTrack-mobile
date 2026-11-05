@@ -4,6 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { errorMessage } from '@/api/client';
 import { branches, products } from '@/api/resources';
+import { EmptyState } from '@/components/empty-state';
 import { CountText } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
@@ -79,12 +80,12 @@ export default function Prices() {
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
 
       {!loading && ps.length === 0 ? (
-        <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>
-          <Text variant="bodyMedium">No active products</Text>
-          <Text variant="caption" style={{ textAlign: 'center' }}>
-            Add a product in More → Products, then set its prices here.
-          </Text>
-        </Card>
+        <EmptyState
+          icon="tag"
+          tone="brand"
+          title="No active products"
+          text="Add a product first, then set its buying and selling prices here."
+        />
       ) : null}
 
       {ps.map((p) => {

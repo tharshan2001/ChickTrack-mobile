@@ -7,7 +7,7 @@ import { Text } from '@/components/text';
 import { Badge } from '@/components/ui';
 import { METHOD_LABEL } from '@/features/money-api';
 import { formatRupees } from '@/lib/format';
-import { colors, space } from '@/theme/tokens';
+import { colors, fonts, space } from '@/theme/tokens';
 
 /** "Wed 4 Nov" from an ISO business date. */
 export function dayLabel(iso: string) {
@@ -56,7 +56,7 @@ export function PaymentRow({ p, branch }: { p: Settlement; branch?: string }) {
       <Text
         variant="mono"
         style={reversed ? { color: colors.secondary, textDecorationLine: 'line-through' } : undefined}>
-        {formatRupees(p.amount)}
+        {formatRupees(p.amount).replace('Rs ', '')}
       </Text>
       <ChevronRightIcon size={16} color="#AEAEB2" />
     </Pressable>
@@ -64,13 +64,23 @@ export function PaymentRow({ p, branch }: { p: Settlement; branch?: string }) {
 }
 
 /** Section title with an optional link on the right ("See all"). */
-export function TitleWithLink({ title, link, onPress }: { title: string; link?: string; onPress?: () => void }) {
+export function TitleWithLink({
+  title,
+  link,
+  onPress,
+  small,
+}: {
+  title: string;
+  link?: string;
+  onPress?: () => void;
+  small?: boolean;
+}) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
-      <Text variant="title">{title}</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginHorizontal: small ? space.xs : 0 }}>
+      <Text variant={small ? 'labelSmall' : 'title'}>{title}</Text>
       {link && onPress ? (
         <Pressable accessibilityRole="link" hitSlop={8} onPress={onPress}>
-          <Text variant="bodyMedium" style={{ color: colors.accent }}>
+          <Text variant={small ? 'caption' : 'bodyMedium'} style={{ color: colors.accent, fontFamily: fonts.bodyMedium }}>
             {link}
           </Text>
         </Pressable>

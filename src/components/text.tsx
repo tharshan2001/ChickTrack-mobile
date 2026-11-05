@@ -10,6 +10,7 @@ import { colors, fonts } from '@/theme/tokens';
 const variants = {
   display: { fontFamily: fonts.title, fontSize: 34, lineHeight: 40, letterSpacing: -0.68, color: colors.ink },
   largeTitle: { fontFamily: fonts.title, fontSize: 28, lineHeight: 34, letterSpacing: -0.28, color: colors.ink },
+  tabTitle: { fontFamily: fonts.title, fontSize: 24, lineHeight: 30, letterSpacing: -0.24, color: colors.ink },
   title: { fontFamily: fonts.title, fontSize: 22, lineHeight: 28, color: colors.ink },
   headline: { fontFamily: fonts.bodyMedium, fontSize: 16, lineHeight: 22, color: colors.ink },
   body: { fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.ink },

@@ -6,6 +6,7 @@ import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { User } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
+import { EmptyState } from '@/components/empty-state';
 import { AppearList, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
@@ -42,9 +43,11 @@ export default function UsersScreen() {
       {users.isError ? <ErrorBanner message={errorMessage(users.error)} onRetry={users.refetch} /> : null}
       {users.isPending ? <ActivityIndicator color={colors.accent} /> : null}
       {users.isSuccess && list.length === 0 ? (
-        <Card style={{ padding: space.xl, alignItems: 'center' }}>
-          <Text variant="caption">{search ? 'No one matches that search.' : 'No users yet.'}</Text>
-        </Card>
+        search ? (
+          <EmptyState icon="search" title={`No one matches “${search}”`} text="Try a name or username." />
+        ) : (
+          <EmptyState icon="users" tone="brand" title="No users yet" text="Add the people who work at head office and the branches." />
+        )
       ) : null}
       {list.length ? (
         <Card>

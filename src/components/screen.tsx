@@ -6,12 +6,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, type Variant } from '@/components/text';
 import { colors, space } from '@/theme/tokens';
 
+const refreshListeners = new Set<() => void>();
+
+/** Run `fn` each time the person pulls down to refresh (e.g. the Home mascot reacts). */
+export function onPullRefresh(fn: () => void) {
+  refreshListeners.add(fn);
+  return () => {
+    refreshListeners.delete(fn);
+  };
+}
+
 /** Pull down on any screen to reload everything it shows from the server. */
 function usePullToRefresh() {
   const qc = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = async () => {
     setRefreshing(true);
+    refreshListeners.forEach((fn) => fn());
     try {
       await qc.refetchQueries({ type: 'active' });
     } finally {

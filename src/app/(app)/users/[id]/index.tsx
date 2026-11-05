@@ -120,7 +120,7 @@ function UserView({ u }: { u: User }) {
       </Card>
 
       {owner ? (
-        <Notice text="The owner is the main admin. Change your password from More → Change password." />
+        <Notice text="The owner is the main admin. Change your password from Setup → Change password." />
       ) : (
         <View style={{ gap: space.sm }}>
           <SectionHeader title="Sign-in" />

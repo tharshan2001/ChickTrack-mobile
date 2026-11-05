@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
 import type { Settlement } from '@/api/types';
+import { EmptyState } from '@/components/empty-state';
 import { AppearList, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
@@ -61,7 +62,7 @@ export default function PaymentsList() {
       left={<IconButton icon="chevron-left" label="Back" onPress={() => router.back()} />}
       right={
         <TextLink
-          title="Record payment"
+          title="+ Payment"
           pill
           onPress={() => router.push({ pathname: '/payments/new', params: branchId ? { branchId } : {} })}
         />
@@ -80,9 +81,12 @@ export default function PaymentsList() {
       {payments.isError ? <ErrorBanner message={errorMessage(payments.error)} onRetry={payments.refetch} /> : null}
       {payments.isPending ? <ActivityIndicator color={colors.accent} /> : null}
       {payments.isSuccess && payments.data.length === 0 ? (
-        <Card style={{ padding: space.xl, alignItems: 'center' }}>
-          <Text variant="caption">No payments yet.</Text>
-        </Card>
+        <EmptyState
+          icon="credit-card"
+          tone="brand"
+          title="No payments yet"
+          text="When a branch pays you, record it here and it comes off what they owe."
+        />
       ) : null}
       <AppearList still={firstLoad}>
         {[...groups.entries()].map(([month, rows]) => (

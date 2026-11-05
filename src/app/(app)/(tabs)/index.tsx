@@ -13,7 +13,7 @@ import { Text } from '@/components/text';
 import { Card, ErrorBanner, SectionHeader, Separator } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
 import { Appear, CountText, haptic, PressScale, useFirstBatch } from '@/components/motion';
-import { BannerDate, WelcomeBanner } from '@/features/welcome-banner';
+import { WelcomeBanner } from '@/features/welcome-banner';
 import { formatKgShort, formatKgWhole, sum, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, fonts, space } from '@/theme/tokens';
@@ -216,7 +216,7 @@ export default function Home() {
   const firstName = user?.fullName.split(' ')[0];
 
   return (
-    <Screen title="Home" hideTitle headerExtra={<BannerDate />} bodyPaddingTop={4} bodyGap={space.xl}>
+    <Screen title="Home" hideTitle bodyPaddingTop={12} bodyGap={space.xl}>
       <WelcomeBanner
         greeting={greeting()}
         name={firstName || undefined}

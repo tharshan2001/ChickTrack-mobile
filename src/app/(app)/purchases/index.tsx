@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { errorMessage } from '@/api/client';
 import { suppliers } from '@/api/resources';
 import type { Procurement } from '@/api/types';
+import { EmptyState } from '@/components/empty-state';
 import { Segmented } from '@/components/pickers';
 import { AppearList, CountText, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
@@ -70,12 +71,11 @@ export default function Purchases() {
       {query.isPending ? <ActivityIndicator color={colors.accent} /> : null}
 
       {query.isSuccess && list.length === 0 ? (
-        <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>
-          <Text variant="bodyMedium">No purchases in this period</Text>
-          <Text variant="caption" style={{ textAlign: 'center' }}>
-            Tap + to record what you bought.
-          </Text>
-        </Card>
+        <EmptyState
+          icon="shopping-cart"
+          title="No purchases in this period"
+          text="Pick another period, or record what you bought."
+        />
       ) : null}
 
       <AppearList still={firstLoad}>

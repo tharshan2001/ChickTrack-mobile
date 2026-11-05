@@ -4,11 +4,11 @@ import { Fragment, useDeferredValue, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
 import { errorMessage, type Page } from '@/api/client';
+import { EmptyState } from '@/components/empty-state';
 import { AppearList, useFirstBatch } from '@/components/motion';
 import { Screen } from '@/components/screen';
-import { Text } from '@/components/text';
 import { Badge, Card, ErrorBanner, IconButton, ListRow, Notice, SearchField, Separator } from '@/components/ui';
-import { colors, space } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 
 type Item = { id: string; name: string; active: boolean };
 
@@ -79,12 +79,11 @@ export function MasterList<T extends Item>(p: Props<T>) {
           <Notice text={p.note} icon={false} />
         </>
       ) : query.isSuccess ? (
-        <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>
-          <Text variant="bodyMedium">{deferred ? 'No matches' : `No ${p.plural} yet`}</Text>
-          <Text variant="caption" style={{ textAlign: 'center' }}>
-            {deferred ? 'Try another name.' : p.emptyText}
-          </Text>
-        </Card>
+        deferred ? (
+          <EmptyState icon="search" title={`No ${p.plural} match “${deferred}”`} text="Try another name." />
+        ) : (
+          <EmptyState icon="inbox" tone="brand" title={`No ${p.plural} yet`} text={p.emptyText} />
+        )
       ) : null}
     </Screen>
   );

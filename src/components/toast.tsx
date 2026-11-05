@@ -1,19 +1,19 @@
 /**
- * Global toasts: light cards that drop in at the top of the screen.
+ * Global toasts: light cards that rise in at the bottom of the screen, above the tab bar.
  *
  *   toast.success('Payment recorded', { detail: 'Rs 60,000.00 from Kandy', action: { label: 'View', onPress } })
  *   toast.error("Couldn't save the sale", { detail: 'No connection.', action: { label: 'Retry', onPress } })
  *   toast.warning('Payment reversed')   toast.info("You're offline")
  *
  * Success, warning and info close on their own (4 s, 2.5 s without detail);
- * errors stay until closed. Up to three stack, newest on top. Swipe up or tap ×
+ * errors stay until closed. Up to three stack, newest nearest the bottom. Swipe down or tap ×
  * to dismiss. Each kind has its haptic; errors are announced right away.
  */
 import Feather from '@expo/vector-icons/Feather';
 import { useEffect, useState } from 'react';
 import { PanResponder, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
-  FadeInDown,
+  FadeInUp,
   FadeOut,
   LinearTransition,
   ReduceMotion,
@@ -85,13 +85,13 @@ function ToastCard({ t }: { t: Item }) {
   const y = useSharedValue(0);
   const close = () => dismiss(t.id);
 
-  // Drag up to dismiss; a small pull springs back.
+  // Drag down to dismiss; a small pull eases back.
   const [pan] = useState(() =>
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 6 && Math.abs(g.dy) > Math.abs(g.dx),
-      onPanResponderMove: (_, g) => y.set(Math.min(0, g.dy) + Math.max(0, g.dy) * 0.15),
+      onPanResponderMove: (_, g) => y.set(Math.max(0, g.dy) + Math.min(0, g.dy) * 0.15),
       onPanResponderRelease: (_, g) => {
-        if (g.dy < -30 || g.vy < -0.5) y.set(withTiming(-140, { duration: 160 }, () => runOnJS(close)()));
+        if (g.dy > 30 || g.vy > 0.5) y.set(withTiming(160, { duration: 160 }, () => runOnJS(close)()));
         else y.set(withTiming(0, { duration: 150 }));
       },
     }),
@@ -100,9 +100,10 @@ function ToastCard({ t }: { t: Item }) {
 
   return (
     <Animated.View
-      entering={FadeInDown.duration(180).withInitialValues({ transform: [{ translateY: -8 }] }).reduceMotion(ReduceMotion.System)}
+      entering={FadeInUp.duration(180).withInitialValues({ transform: [{ translateY: 8 }] }).reduceMotion(ReduceMotion.System)}
       exiting={FadeOut.duration(160)}
-      layout={LinearTransition.duration(200).reduceMotion(ReduceMotion.System)}
+      layout={LinearTransition.duration(200).reduceMotion(ReduceMotion.System)}>
+    <Animated.View
       {...pan.panHandlers}
       accessibilityRole={t.kind === 'error' ? 'alert' : undefined}
       accessibilityLiveRegion={t.kind === 'error' ? 'assertive' : 'polite'}
@@ -135,8 +136,15 @@ function ToastCard({ t }: { t: Item }) {
         <Feather name="x" size={16} color="#8E8E93" />
       </Pressable>
     </Animated.View>
+    </Animated.View>
   );
 }
+
+/**
+ * Space kept free above the bottom edge: the tab bar is a fixed 84 px tall, plus a
+ * small gap. On screens without tabs this also clears a pinned Save button.
+ */
+const BOTTOM_CLEARANCE = 92;
 
 /** Mounted once at the root, above every screen. */
 export function ToastHost() {
@@ -149,8 +157,10 @@ export function ToastHost() {
     };
   }, []);
   return (
-    <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { paddingTop: insets.top + 6, paddingHorizontal: 12, gap: 8 }]}>
-      {list.map((t) => (
+    <View
+      pointerEvents="box-none"
+      style={[StyleSheet.absoluteFill, { justifyContent: 'flex-end', paddingBottom: Math.max(BOTTOM_CLEARANCE, insets.bottom + 16), paddingHorizontal: 12, gap: 8 }]}>
+      {[...list].reverse().map((t) => (
         <ToastCard key={t.id} t={t} />
       ))}
     </View>
