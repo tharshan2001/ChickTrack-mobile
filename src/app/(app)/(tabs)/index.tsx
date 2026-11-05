@@ -12,8 +12,9 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, SectionHeader, Separator } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
+import { WelcomeBanner } from '@/features/welcome-banner';
 import { formatKgShort, formatKgWhole, sum, toUnits } from '@/lib/decimal';
-import { BusinessDate, colomboToday, formatRupees } from '@/lib/format';
+import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, fonts, space } from '@/theme/tokens';
 
 /** Home refreshes on its own every minute while it is open. */
@@ -198,11 +199,15 @@ export default function Home() {
   const firstName = user?.fullName.split(' ')[0];
 
   return (
-    <Screen
-      title={firstName ? `${greeting()}, ${firstName}` : greeting()}
-      subtitle={BusinessDate.today()}
-      subtitleAbove
-      bodyGap={space.xl}>
+    <Screen title="Home" hideTitle bodyPaddingTop={12} bodyGap={space.xl}>
+      <WelcomeBanner
+        greeting={firstName ? `${greeting()}, ${firstName}` : greeting()}
+        summary={
+          tasks.length
+            ? `${tasks.length} ${tasks.length === 1 ? 'thing needs' : 'things need'} you today`
+            : 'All caught up for today'
+        }
+      />
       <View style={{ flexDirection: 'row', gap: space.sm }}>
         <QuickAction icon={<CartIcon color={colors.surface} strokeWidth={1.8} />} label="Buy" href="/purchases/new" primary />
         <QuickAction icon={<TruckIcon />} label="Send" href="/dispatches/new" />

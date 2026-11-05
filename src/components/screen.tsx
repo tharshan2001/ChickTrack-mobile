@@ -42,6 +42,7 @@ type ScreenProps = {
   inlineActions?: boolean;
   /** Show the subtitle above the title, as Home does in the mockups. */
   subtitleAbove?: boolean;
+  hideTitle?: boolean;
   /** Space around the scroll body. Defaults to 16 on all sides. */
   bodyPadding?: number;
   bodyPaddingTop?: number;
@@ -70,6 +71,7 @@ export function Screen({
   scroll = true,
   inlineActions,
   subtitleAbove,
+  hideTitle,
   bodyPadding = space.lg,
   bodyPaddingTop,
   bodyPaddingBottom = space.xxl,
@@ -124,19 +126,21 @@ export function Screen({
             <View style={{ marginRight: space.sm }}>{right}</View>
           </View>
         ) : null}
-        <View
-          style={{
-            paddingHorizontal: space.lg,
-            paddingTop: hasBar ? 0 : 12,
-            paddingBottom: titleGap,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: space.md,
-          }}>
-          {inlineActions && left ? left : null}
-          {titleBlock}
-          {inlineActions && right ? right : null}
-        </View>
+        {hideTitle ? null : (
+          <View
+            style={{
+              paddingHorizontal: space.lg,
+              paddingTop: hasBar ? 0 : 12,
+              paddingBottom: titleGap,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: space.md,
+            }}>
+            {inlineActions && left ? left : null}
+            {titleBlock}
+            {inlineActions && right ? right : null}
+          </View>
+        )}
         {headerExtra ? (
           <View style={{ paddingHorizontal: space.lg, paddingBottom: space.sm, gap: space.xs }}>{headerExtra}</View>
         ) : null}
