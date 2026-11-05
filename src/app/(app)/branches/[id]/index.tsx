@@ -3,10 +3,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Fragment, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
+import { errorMessage } from '@/api/client';
 import { branches, products } from '@/api/resources';
 import type { Branch, Distribution } from '@/api/types';
-import { EditLoader, FormError, useIdempotencyKey } from '@/components/form';
+import { EditLoader, useIdempotencyKey } from '@/components/form';
 import { Screen } from '@/components/screen';
+import { toast } from '@/components/toast';
 import { Text } from '@/components/text';
 import { Badge, Card, IconButton, Separator } from '@/components/ui';
 import { useBranchBalance, useBranchSales, useBranchStock } from '@/features/branch-api';
@@ -79,13 +81,22 @@ function DraftCard({ d, productName }: { d: Distribution; productName: (id: stri
           · held in warehouse
         </Text>
       </View>
-      <FormError error={send.error} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1 }}>
           <ActionLink title="Review" onPress={() => router.push({ pathname: '/dispatches/[id]', params: { id: d.id } })} />
         </View>
         <View style={{ flex: 2 }}>
-          <ActionLink title={send.isPending ? 'Sending…' : 'Send now'} primary onPress={() => !send.isPending && send.mutate(idem.key, { onSuccess: () => showSaved('Sent to branch'), onError: idem.onError })} />
+          <ActionLink title={send.isPending ? 'Sending…' : 'Send now'} primary onPress={() => !send.isPending && send.mutate(idem.key, {
+                onSuccess: (x) =>
+                  showSaved('Sent to branch', {
+                    detail: `${x.reference} · ${formatKgShort(x.totalWeightKg)}`,
+                    action: { label: 'View', onPress: () => router.push({ pathname: '/dispatches/[id]', params: { id: x.id } }) },
+                  }),
+                onError: (e) => {
+                  idem.onError(e);
+                  toast.error("Couldn't send it", { detail: errorMessage(e) });
+                },
+              })} />
         </View>
       </View>
     </Section>

@@ -16,7 +16,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ApiError } from '@/api/client';
 import { AuthProvider, useAuth } from '@/auth/auth-context';
 import { LaunchOverlay } from '@/components/launch-screen';
-import { SavedHost } from '@/components/motion';
+import { ToastHost } from '@/components/toast';
 import { colors } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
@@ -76,7 +76,7 @@ export default function RootLayout() {
         <AuthProvider>
           <StatusBar style="dark" />
           <RootNavigator />
-          <SavedHost />
+          <ToastHost />
           <LaunchGate />
         </AuthProvider>
       </QueryClientProvider>

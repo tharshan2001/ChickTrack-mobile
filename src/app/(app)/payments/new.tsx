@@ -115,7 +115,14 @@ export default function RecordPayment() {
         },
         key: idem.key,
       },
-      { onSuccess: () => savedAndBack('Payment recorded'), onError: idem.onError },
+      {
+        onSuccess: (pay) =>
+          savedAndBack('Payment recorded', {
+            detail: `${formatRupees(pay.amount)} from ${branchName}`,
+            action: { label: 'View', onPress: () => router.push({ pathname: '/payments/[id]', params: { id: pay.id } }) },
+          }),
+        onError: idem.onError,
+      },
     );
   }
 

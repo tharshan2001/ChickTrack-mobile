@@ -10,13 +10,14 @@ import type { BranchSale, Settlement } from '@/api/types';
 import { ChevronRightIcon } from '@/components/icons';
 import { EditLoader, FormError, useIdempotencyKey } from '@/components/form';
 import { Screen } from '@/components/screen';
+import { toast } from '@/components/toast';
 import { Text } from '@/components/text';
 import { Badge, Button, Card, Field, IconButton, Notice, SectionHeader, Separator } from '@/components/ui';
 import { dayLabel } from '@/features/payment-ui';
 import { METHOD_LABEL, useReversePayment, useSettlement } from '@/features/money-api';
 import { formatIsoDate, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
-import { Appear, haptic } from '@/components/motion';
+import { Appear } from '@/components/motion';
 
 export default function PaymentRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -55,7 +56,7 @@ function Payment({ p }: { p: Settlement }) {
     setTouched(true);
     if (!reason.trim()) return;
     reverse.mutate({ reason: reason.trim(), key: idem.key }, { onSuccess: () => {
-        haptic.warning();
+        toast.warning('Payment reversed', { detail: `${formatRupees(p.amount)} is owed by ${branch} again` });
         setConfirming(false);
       }, onError: idem.onError });
   }

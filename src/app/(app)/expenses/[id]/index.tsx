@@ -6,12 +6,13 @@ import type { OperatingExpense } from '@/api/types';
 import { EditLoader, FormError, useIdempotencyKey } from '@/components/form';
 import { Chips } from '@/components/pickers';
 import { Screen } from '@/components/screen';
+import { toast } from '@/components/toast';
 import { Text } from '@/components/text';
 import { Badge, Button, Card, Field, IconButton, Notice, Separator, TextLink } from '@/components/ui';
 import { useExpense, useVoidExpense } from '@/features/expenses-api';
 import { formatIsoDate, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
-import { Appear, haptic } from '@/components/motion';
+import { Appear } from '@/components/motion';
 
 const QUICK = ['Entered twice', 'Wrong amount', 'Wrong branch'] as const;
 
@@ -46,7 +47,7 @@ function Expense({ e }: { e: OperatingExpense }) {
     setTouched(true);
     if (!reason.trim()) return;
     voidIt.mutate({ reason: reason.trim(), key: idem.key }, { onSuccess: () => {
-        haptic.warning();
+        toast.warning('Expense voided', { detail: `${formatRupees(e.amount)} no longer counts in Profit & loss` });
         setConfirming(false);
       }, onError: idem.onError });
   }

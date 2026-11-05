@@ -2,12 +2,10 @@
  * Small, shared motion pieces. Everything here is short (150–400 ms), never loops,
  * and switches off when the phone's "Reduce motion" setting is on.
  */
-import Feather from '@expo/vector-icons/Feather';
-import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import type React from 'react';
 import { Children, isValidElement, useEffect, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Pressable, StyleSheet, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { AccessibilityInfo, Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -22,10 +20,10 @@ import Animated, {
   withTiming,
   ZoomIn,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/text';
-import { colors, fonts } from '@/theme/tokens';
+import { toast } from '@/components/toast';
+import { haptic } from '@/components/haptics';
 
 // ---------- Reduce motion ----------
 
@@ -44,18 +42,7 @@ export function useReduceMotion() {
   return still;
 }
 
-// ---------- Haptics (best effort; silently does nothing where unsupported) ----------
-
-const safe = (f: () => Promise<unknown>) => {
-  f().catch(() => undefined);
-};
-export const haptic = {
-  tap: () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)),
-  select: () => safe(() => Haptics.selectionAsync()),
-  success: () => safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)),
-  warning: () => safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)),
-  error: () => safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)),
-};
+export { haptic } from '@/components/haptics';
 
 // ---------- A. Press feedback ----------
 
@@ -189,70 +176,19 @@ export function useFirstBatch(ready: boolean) {
   return first;
 }
 
-// ---------- D. Saved ✓ ----------
+// ---------- D. Saved ----------
 
-type Listener = (label: string) => void;
-let savedListener: Listener | null = null;
+type SavedOptions = { detail?: string; action?: { label: string; onPress: () => void } };
 
-/** Close the form and show a brief ✓ over the screen underneath, with a success haptic. */
-export function savedAndBack(label = 'Saved') {
-  haptic.success();
-  savedListener?.(label);
+/** Close the form and confirm with a success toast over the screen underneath. */
+export function savedAndBack(label = 'Saved', opts?: SavedOptions) {
+  toast.success(label, opts);
   if (router.canGoBack()) router.back();
 }
 
-/** Show the ✓ without navigating (e.g. an action on the same screen). */
-export function showSaved(label = 'Saved') {
-  haptic.success();
-  savedListener?.(label);
-}
-
-/** Mounted once at the root; renders the ✓ pill. */
-export function SavedHost() {
-  const [label, setLabel] = useState<string | null>(null);
-  const [n, setN] = useState(0);
-  const insets = useSafeAreaInsets();
-  useEffect(() => {
-    savedListener = (l) => {
-      setLabel(l);
-      setN((x) => x + 1);
-    };
-    return () => {
-      savedListener = null;
-    };
-  }, []);
-  useEffect(() => {
-    if (!label) return;
-    const t = setTimeout(() => setLabel(null), 1100);
-    return () => clearTimeout(t);
-  }, [label, n]);
-
-  return (
-    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: 'center', paddingTop: insets.top + 8 }]}>
-      {label ? (
-        <Animated.View
-          key={n}
-          entering={ZoomIn.springify().damping(16).reduceMotion(ReduceMotion.System)}
-          exiting={FadeOut.duration(200)}
-          accessibilityLiveRegion="polite"
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
-            height: 40,
-            paddingHorizontal: 16,
-            borderRadius: 20,
-            backgroundColor: colors.ink,
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.18)',
-          }}>
-          <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: colors.success, alignItems: 'center', justifyContent: 'center' }}>
-            <Feather name="check" size={14} color={colors.surface} />
-          </View>
-          <Text style={{ color: colors.surface, fontFamily: fonts.bodyMedium }}>{label}</Text>
-        </Animated.View>
-      ) : null}
-    </View>
-  );
+/** Confirm an action on the same screen with a success toast. */
+export function showSaved(label = 'Saved', opts?: SavedOptions) {
+  toast.success(label, opts);
 }
 
 // ---------- E. Status flip ----------

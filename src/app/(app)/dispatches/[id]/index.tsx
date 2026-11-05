@@ -2,18 +2,20 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { errorMessage } from '@/api/client';
 import { branches, products } from '@/api/resources';
 import type { Distribution, DistributionItem } from '@/api/types';
 import { EditLoader, FormError, useIdempotencyKey } from '@/components/form';
 import { Screen } from '@/components/screen';
+import { toast } from '@/components/toast';
 import { Text } from '@/components/text';
 import { Badge, Button, Card, Field, IconButton, Notice, Separator } from '@/components/ui';
 import { useDispatch, useDistribution as useDistributionQuery, useReverseDistribution } from '@/features/distribution-api';
 import { useBatches } from '@/features/stock-api';
-import { divRound, formatKg, fromUnits, sum, toUnits } from '@/lib/decimal';
+import { divRound, formatKg, formatKgShort, fromUnits, sum, toUnits } from '@/lib/decimal';
 import { formatIsoDate, formatRupees, statusLabel } from '@/lib/format';
 import { colors, fonts, radius, space } from '@/theme/tokens';
-import { haptic, showSaved } from '@/components/motion';
+import { showSaved } from '@/components/motion';
 
 export default function DispatchDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -115,7 +117,7 @@ function DispatchDetail({ d }: { d: Distribution }) {
     reverse.mutate(
       { reason: reason.trim(), key: reverseKey.key },
       { onSuccess: () => {
-          haptic.warning();
+          toast.warning(d.status === 'DRAFT' ? 'Draft cancelled' : 'Dispatch reversed', { detail: 'The stock is back in the warehouse' });
           setConfirming(false);
         }, onError: reverseKey.onError },
     );
@@ -144,7 +146,13 @@ function DispatchDetail({ d }: { d: Distribution }) {
       {isDraft ? (
         <Button
           title="Dispatch now"
-          onPress={() => dispatch.mutate(dispatchKey.key, { onSuccess: () => showSaved('Sent to branch'), onError: dispatchKey.onError })}
+          onPress={() => dispatch.mutate(dispatchKey.key, {
+              onSuccess: (x) => showSaved('Sent to branch', { detail: `${x.reference} · ${formatKgShort(x.totalWeightKg)}` }),
+              onError: (e) => {
+                dispatchKey.onError(e);
+                toast.error("Couldn't send it", { detail: errorMessage(e) });
+              },
+            })}
           loading={dispatch.isPending}
         />
       ) : null}
