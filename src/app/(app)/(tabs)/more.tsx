@@ -7,6 +7,7 @@ import { Text } from '@/components/text';
 import { Badge, Card, ListRow, SectionHeader, Separator } from '@/components/ui';
 import { branches, expenseCategories, products, suppliers } from '@/api/resources';
 import { useCurrentPriceGrid } from '@/features/prices-api';
+import { useUsers } from '@/features/users-api';
 import { colors, space } from '@/theme/tokens';
 
 function initials(name: string) {
@@ -34,6 +35,7 @@ export default function More() {
     branches: branchList.data?.totalElements,
     suppliers: suppliers.useList('', true).data?.totalElements,
     categories: expenseCategories.useList('', true).data?.totalElements,
+    users: useUsers('', isOwner).data?.totalElements,
   };
 
   // A branch can only sell a chicken type once its selling price is set.
@@ -112,8 +114,12 @@ export default function More() {
       <View style={{ gap: space.sm }}>
         <SectionHeader title="Account" size="small" />
         <Card>
-          <ListRow title="Users & roles" right={<Text variant="caption">Only you</Text>} chevron compact onPress={() => router.push('/users')} />
-          <Separator />
+          {isOwner ? (
+            <>
+              <ListRow title="Users & roles" right={count(counts.users)} chevron compact onPress={() => router.push('/users')} />
+              <Separator />
+            </>
+          ) : null}
           <ListRow title="Change password" chevron compact onPress={() => router.push('/change-password')} />
           <Separator />
           <Pressable

@@ -8,10 +8,11 @@ import { branches } from '@/api/resources';
 import type { Settlement } from '@/api/types';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Badge, Card, ErrorBanner, SectionHeader, Separator, TextLink } from '@/components/ui';
+import { Badge, Card, ErrorBanner, ListRow, SectionHeader, Separator, TextLink } from '@/components/ui';
+import { useExpenses } from '@/features/expenses-api';
 import { METHOD_LABEL, useSettlements } from '@/features/money-api';
 import { sum, toUnits } from '@/lib/decimal';
-import { formatRupees } from '@/lib/format';
+import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
 
 const shortDate = (iso: string) => {
@@ -32,6 +33,12 @@ export default function MoneyTab() {
     })),
   });
   const payments = useSettlements();
+  const thisMonth = colomboToday().slice(0, 7);
+  const monthExpenses = useExpenses(`${thisMonth}-01`, colomboToday());
+  const expenseTotal = sum(
+    (monthExpenses.data ?? []).filter((e) => e.status === 'POSTED').map((e) => e.amount),
+    2,
+  );
 
   const rows = list
     .map((b, i) => ({ b, owes: balances[i]?.data ?? null }))
@@ -48,7 +55,12 @@ export default function MoneyTab() {
     <Screen
       title="Money"
       left={<></>}
-      right={<TextLink title="+ Payment" pill onPress={() => router.push('/payments/new')} />}
+      right={
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+          <TextLink title="+ Expense" onPress={() => router.push('/expenses/new')} />
+          <TextLink title="+ Payment" pill onPress={() => router.push('/payments/new')} />
+        </View>
+      }
       inlineActions
       titleGap={20}
       bodyPaddingTop={24}
@@ -103,6 +115,23 @@ export default function MoneyTab() {
               </Fragment>
             );
           })}
+        </Card>
+      </View>
+
+      <View style={{ gap: space.sm }}>
+        <SectionHeader title="Expenses" />
+        <Card>
+          <ListRow
+            title="This month"
+            subtitle="Rent, salaries and other running costs"
+            right={
+              <Text variant="mono" style={{ color: colors.ink }}>
+                {monthExpenses.data ? formatRupees(expenseTotal).replace('Rs ', '') : '…'}
+              </Text>
+            }
+            chevron
+            onPress={() => router.push('/expenses')}
+          />
         </Card>
       </View>
 

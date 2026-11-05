@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, use, useEffect, useState, type ReactNode } from 'react';
 
-import { api } from '@/api/client';
+import { api, onPasswordChangeRequired } from '@/api/client';
 import type { User } from '@/api/types';
 import { SignInError, endSession, onSessionChange, restoreSession, signInWithPassword } from '@/auth/session';
 
@@ -33,6 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!signedIn) qc.clear();
     });
   }, [qc]);
+
+  useEffect(() => onPasswordChangeRequired(() => void qc.invalidateQueries({ queryKey: ['me'] })), [qc]);
 
   const me = useQuery({
     queryKey: ['me'],

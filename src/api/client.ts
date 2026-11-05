@@ -49,6 +49,15 @@ type RequestOptions = {
 
 export const newIdempotencyKey = () => randomUUID();
 
+const passwordChangeListeners = new Set<() => void>();
+
+export function onPasswordChangeRequired(listener: () => void) {
+  passwordChangeListeners.add(listener);
+  return () => {
+    passwordChangeListeners.delete(listener);
+  };
+}
+
 function buildUrl(path: string, query?: RequestOptions['query']) {
   const url = `${API_URL}${path}`;
   if (!query) return url;
@@ -90,7 +99,11 @@ export async function api<T>(method: Method, path: string, opts: RequestOptions 
     const fresh = await getAccessToken({ forceRefresh: true });
     if (fresh) res = await send(method, path, opts, fresh);
   }
-  if (!res.ok) throw await toError(res);
+  if (!res.ok) {
+    const error = await toError(res);
+    if (error.body.code === 'PASSWORD_CHANGE_REQUIRED') passwordChangeListeners.forEach((l) => l());
+    throw error;
+  }
   if (res.status === 204) return undefined as T;
   const json = (await res.json()) as Envelope<T>;
   return json.data;

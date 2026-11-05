@@ -218,3 +218,51 @@ export function Chips<T extends string>({ label, options, value, onChange, error
     </View>
   );
 }
+
+type MultiChipsProps<T extends string> = {
+  label: string;
+  options: { value: T; label: string }[];
+  value: T[];
+  onChange: (value: T[]) => void;
+  hint?: string;
+  error?: string;
+};
+
+export function MultiChips<T extends string>({ label, options, value, onChange, hint, error }: MultiChipsProps<T>) {
+  return (
+    <View style={{ gap: 6 }}>
+      <Text variant="caption">{label}</Text>
+      <View accessibilityLabel={label} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+        {options.map((o) => {
+          const on = value.includes(o.value);
+          return (
+            <Pressable
+              key={o.value}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: on }}
+              onPress={() => onChange(on ? value.filter((v) => v !== o.value) : [...value, o.value])}
+              style={{
+                height: 40,
+                paddingHorizontal: 14,
+                borderRadius: radius.field,
+                justifyContent: 'center',
+                backgroundColor: on ? colors.tint : colors.field,
+                boxShadow: on ? `inset 0 0 0 1.5px ${colors.accent}` : undefined,
+              }}>
+              <Text style={{ fontFamily: on ? fonts.bodyMedium : fonts.body, fontSize: 15, lineHeight: 20, color: on ? colors.accentPressed : colors.ink }}>
+                {o.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {error ? (
+        <Text variant="caption" style={{ color: colors.danger }}>
+          {error}
+        </Text>
+      ) : hint ? (
+        <Text variant="caption">{hint}</Text>
+      ) : null}
+    </View>
+  );
+}

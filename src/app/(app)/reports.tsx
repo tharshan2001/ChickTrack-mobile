@@ -6,7 +6,7 @@ import { DateField } from '@/components/date-field';
 import { Segmented } from '@/components/pickers';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Card, ErrorBanner, IconButton, Separator } from '@/components/ui';
+import { Card, ErrorBanner, IconButton, ListRow, Separator } from '@/components/ui';
 import { useProfitReport } from '@/features/reports-api';
 import { errorMessage } from '@/api/client';
 import { exportReport } from '@/lib/export';
@@ -92,6 +92,14 @@ export default function Reports() {
         </View>
       }>
       {error ? <ErrorBanner message={error} /> : null}
+      <Card>
+        <ListRow
+          title="Profit & loss"
+          subtitle="Net profit by day, month or year"
+          chevron
+          onPress={() => router.push('/profit-loss')}
+        />
+      </Card>
       {profit.isError ? <ErrorBanner message={errorMessage(profit.error)} onRetry={profit.refetch} /> : null}
 
       <Card style={{ padding: space.lg, gap: 12 }}>

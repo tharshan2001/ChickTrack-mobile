@@ -6,11 +6,30 @@ export type User = {
   email: string | null;
   phone: string | null;
   active: boolean;
+  mustChangePassword: boolean;
   roles: string[];
   branchIds: string[];
   version: number;
   createdAt: string;
+  updatedAt: string;
 };
+
+export type UserCredentials = User & { temporaryPassword?: string };
+
+export type Role = { id: string; name: string; description: string | null };
+
+export type UserCreateInput = {
+  username: string;
+  password: string | null;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  roles: string[];
+  branchIds: string[];
+  mustChangePassword: boolean;
+};
+
+export type UserUpdateInput = { fullName: string; email: string | null; phone: string | null };
 
 type Audited = { version: number; createdAt: string; updatedAt: string };
 
@@ -362,4 +381,50 @@ export type Dashboard = {
   branchProfit: string;
   branchOutstanding: string;
   shrinkageWeightKg: string;
+};
+
+export type OperatingExpense = {
+  id: string;
+  reference: string;
+  expenseDate: string;
+  categoryId: string;
+  categoryName: string;
+  branchId: string | null;
+  branchName: string | null;
+  amount: string;
+  payee: string | null;
+  description: string | null;
+  status: 'POSTED' | 'VOIDED';
+  voidReason: string | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type OperatingExpenseInput = {
+  expenseDate: string;
+  categoryId: string;
+  branchId: string | null;
+  amount: string;
+  payee: string | null;
+  description: string | null;
+};
+
+export type ProfitLossStatement = {
+  headOffice: { transferRevenue: string; costOfGoods: string; distributionExpenses: string; margin: string };
+  branches: { sales: string; costOfSales: string; profit: string };
+  stockLosses: { weightKg: string; warehouseValue: string; transitValue: string; value: string };
+  operatingExpenses: { total: string; byCategory: { categoryId: string; categoryName: string; amount: string }[] };
+  netProfit: string;
+  netMarginPercent: string | null;
+};
+
+export type ProfitLoss = {
+  period: 'DAILY' | 'MONTHLY' | 'YEARLY' | 'CUSTOM';
+  from: string;
+  to: string;
+  groupBy: 'NONE' | 'DAY' | 'MONTH' | 'YEAR';
+  branchId: string | null;
+  summary: ProfitLossStatement;
+  breakdown: { label: string; from: string; to: string; statement: ProfitLossStatement }[];
 };
