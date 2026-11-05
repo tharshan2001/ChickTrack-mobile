@@ -12,7 +12,7 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, SectionHeader, Separator } from '@/components/ui';
 import { useDistributions } from '@/features/distribution-api';
-import { WelcomeBanner } from '@/features/welcome-banner';
+import { BannerDate, WelcomeBanner } from '@/features/welcome-banner';
 import { formatKgShort, formatKgWhole, sum, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, fonts, space } from '@/theme/tokens';
@@ -45,12 +45,12 @@ function QuickAction({
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={() => router.push(href)}
-      style={({ pressed }) => ({ flex: 1, alignItems: 'center', gap: 6, opacity: pressed ? 0.6 : 1 })}>
+      style={({ pressed }) => ({ flex: 1, alignItems: 'center', gap: 4, opacity: pressed ? 0.6 : 1 })}>
       <View
         style={{
-          width: 56,
-          height: 56,
-          borderRadius: 14,
+          width: 40,
+          height: 40,
+          borderRadius: 10,
           backgroundColor: primary ? colors.accent : colors.field,
           alignItems: 'center',
           justifyContent: 'center',
@@ -58,7 +58,7 @@ function QuickAction({
         }}>
         {icon}
       </View>
-      <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, color: colors.ink }}>
+      <Text variant="caption" style={{ fontFamily: fonts.bodyMedium, fontSize: 12, lineHeight: 16, color: colors.ink }}>
         {label}
       </Text>
     </Pressable>
@@ -199,25 +199,23 @@ export default function Home() {
   const firstName = user?.fullName.split(' ')[0];
 
   return (
-    <Screen title="Home" hideTitle bodyPaddingTop={12} bodyGap={space.xl}>
+    <Screen title="Home" hideTitle headerExtra={<BannerDate />} bodyPaddingTop={4} bodyGap={space.xl}>
       <WelcomeBanner
         greeting={greeting()}
         name={firstName || undefined}
-        summary={
-          tasks.length
-            ? `${tasks.length} ${tasks.length === 1 ? 'thing needs' : 'things need'} you today`
-            : 'All caught up for today'
-        }
       />
-      <View style={{ flexDirection: 'row', gap: space.sm }}>
-        <QuickAction icon={<CartIcon color={colors.surface} strokeWidth={1.8} />} label="Buy" href="/purchases/new" primary />
-        <QuickAction icon={<TruckIcon />} label="Send" href="/dispatches/new" />
-        <QuickAction
-          icon={<BarsIcon />}
-          label="Sales"
-          href={firstMissing ? { pathname: '/branches/[id]/sales', params: { id: firstMissing.id } } : '/branches'}
-        />
-        <QuickAction icon={<CardIcon />} label="Payment" href="/payments/new" />
+      <View style={{ gap: space.sm }}>
+        <SectionHeader title="Quick actions" size="small" />
+        <Card style={{ flexDirection: 'row', gap: space.sm, paddingVertical: space.md, paddingHorizontal: space.sm }}>
+          <QuickAction icon={<CartIcon size={20} color={colors.surface} strokeWidth={1.8} />} label="Buy" href="/purchases/new" primary />
+          <QuickAction icon={<TruckIcon size={20} />} label="Send" href="/dispatches/new" />
+          <QuickAction
+            icon={<BarsIcon size={20} />}
+            label="Sales"
+            href={firstMissing ? { pathname: '/branches/[id]/sales', params: { id: firstMissing.id } } : '/branches'}
+          />
+          <QuickAction icon={<CardIcon size={20} />} label="Payment" href="/payments/new" />
+        </Card>
       </View>
 
       {tasks.length ? (

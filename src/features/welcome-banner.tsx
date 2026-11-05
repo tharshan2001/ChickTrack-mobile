@@ -3,14 +3,14 @@ import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 
 import { Text } from '@/components/text';
 import { BUSINESS_TZ } from '@/lib/format';
-import { cardShadow, colors, fonts, radius, space } from '@/theme/tokens';
+import { cardShadow, colors, fonts, radius } from '@/theme/tokens';
 
 const CREAM = '#FFF3DF';
 const SUN = '#FFC93C';
 const INK = '#4A2511';
 const RED = '#D7261E';
 
-function bannerDate() {
+function dateParts() {
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: BUSINESS_TZ,
     weekday: 'long',
@@ -19,7 +19,7 @@ function bannerDate() {
     year: 'numeric',
   }).formatToParts(new Date());
   const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
-  return `${get('weekday')} · ${get('day')} ${get('month')} ${get('year')}`;
+  return { weekday: get('weekday'), date: `${get('day')} ${get('month')} ${get('year')}` };
 }
 
 function Rooster() {
@@ -43,21 +43,29 @@ function Rooster() {
   );
 }
 
-export function WelcomeBanner({ greeting, name, summary }: { greeting: string; name?: string; summary: string }) {
-  const date = bannerDate();
+/** Today's date (no weekday), shown at the top left of Home above the welcome card. */
+export function BannerDate() {
+  return (
+    <Text style={styles.date} accessibilityRole="text">
+      {dateParts().date}
+    </Text>
+  );
+}
+
+export function WelcomeBanner({ greeting, name }: { greeting: string; name?: string }) {
+  const { weekday } = dateParts();
   const label = name ? `${greeting}, ${name}` : greeting;
   return (
-    <View accessible accessibilityRole="header" accessibilityLabel={`${label}. ${date}. ${summary}`} style={styles.card}>
-      <Text style={styles.date}>{date}</Text>
-      <Text style={styles.greeting}>{name ? `${greeting},` : greeting}</Text>
-      {name ? (
-        <Text variant="largeTitle" style={styles.name} numberOfLines={1}>
-          {name}
-        </Text>
-      ) : null}
-      <Text variant="caption" style={styles.summary}>
-        {summary}
-      </Text>
+    <View accessible accessibilityRole="header" accessibilityLabel={`${weekday}. ${label}`} style={styles.card}>
+      <Text style={styles.date}>{weekday}</Text>
+      <View style={styles.hello}>
+        <Text style={styles.greeting}>{name ? `${greeting},` : greeting}</Text>
+        {name ? (
+          <Text variant="largeTitle" style={styles.name} numberOfLines={1}>
+            {name}
+          </Text>
+        ) : null}
+      </View>
       <View style={styles.sun} />
       <Rooster />
     </View>
@@ -65,18 +73,6 @@ export function WelcomeBanner({ greeting, name, summary }: { greeting: string; n
 }
 
 const styles = StyleSheet.create({
-  card: {
-    minHeight: 118,
-    borderRadius: radius.card,
-    backgroundColor: CREAM,
-    ...cardShadow,
-    overflow: 'hidden',
-    paddingVertical: space.lg,
-    paddingLeft: space.lg,
-    paddingRight: 120,
-    justifyContent: 'center',
-    gap: space.xs,
-  },
   date: {
     fontFamily: fonts.mono,
     fontSize: 11,
@@ -85,9 +81,21 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.accentPressed,
   },
-  greeting: { fontFamily: fonts.body, fontSize: 15, lineHeight: 20, color: '#5A3A2A' },
-  name: { fontSize: 26, lineHeight: 31 },
-  summary: { color: '#5A3A2A' },
+  card: {
+    minHeight: 118,
+    borderRadius: radius.card,
+    backgroundColor: CREAM,
+    ...cardShadow,
+    overflow: 'hidden',
+    paddingVertical: 20,
+    paddingLeft: 20,
+    paddingRight: 120,
+    justifyContent: 'center',
+    gap: 8,
+  },
+  hello: { gap: 2 },
+  greeting: { fontFamily: fonts.body, fontSize: 20, lineHeight: 24, color: '#5A3A2A', includeFontPadding: false },
+  name: { fontSize: 26, lineHeight: 30, includeFontPadding: false },
   sun: { position: 'absolute', right: -26, bottom: -34, width: 150, height: 150, borderRadius: 75, backgroundColor: SUN },
   rooster: { position: 'absolute', right: 12, bottom: -6 },
 });
