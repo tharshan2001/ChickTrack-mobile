@@ -43,14 +43,18 @@ function Rooster() {
   );
 }
 
-export function WelcomeBanner({ greeting, summary }: { greeting: string; summary: string }) {
+export function WelcomeBanner({ greeting, name, summary }: { greeting: string; name?: string; summary: string }) {
   const date = bannerDate();
+  const label = name ? `${greeting}, ${name}` : greeting;
   return (
-    <View accessible accessibilityRole="header" accessibilityLabel={`${greeting}. ${date}. ${summary}`} style={styles.card}>
+    <View accessible accessibilityRole="header" accessibilityLabel={`${label}. ${date}. ${summary}`} style={styles.card}>
       <Text style={styles.date}>{date}</Text>
-      <Text variant="largeTitle" style={styles.greeting} numberOfLines={2}>
-        {greeting}
-      </Text>
+      <Text style={styles.greeting}>{name ? `${greeting},` : greeting}</Text>
+      {name ? (
+        <Text variant="largeTitle" style={styles.name} numberOfLines={1}>
+          {name}
+        </Text>
+      ) : null}
       <Text variant="caption" style={styles.summary}>
         {summary}
       </Text>
@@ -81,7 +85,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.accentPressed,
   },
-  greeting: { fontSize: 26, lineHeight: 31 },
+  greeting: { fontFamily: fonts.body, fontSize: 15, lineHeight: 20, color: '#5A3A2A' },
+  name: { fontSize: 26, lineHeight: 31 },
   summary: { color: '#5A3A2A' },
   sun: { position: 'absolute', right: -26, bottom: -34, width: 150, height: 150, borderRadius: 75, backgroundColor: SUN },
   rooster: { position: 'absolute', right: 12, bottom: -6 },

@@ -201,7 +201,8 @@ export default function Home() {
   return (
     <Screen title="Home" hideTitle bodyPaddingTop={12} bodyGap={space.xl}>
       <WelcomeBanner
-        greeting={firstName ? `${greeting()}, ${firstName}` : greeting()}
+        greeting={greeting()}
+        name={firstName || undefined}
         summary={
           tasks.length
             ? `${tasks.length} ${tasks.length === 1 ? 'thing needs' : 'things need'} you today`
