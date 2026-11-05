@@ -202,7 +202,7 @@ export default function StockTab() {
         <View style={{ gap: space.lg }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', columnGap: space.md }}>
             <Text variant="largeTitle" accessibilityRole="header" style={{ flexShrink: 1 }}>
-              Warehouse stock
+              Stock
             </Text>
             <Pressable
               accessibilityRole="link"
@@ -226,7 +226,7 @@ export default function StockTab() {
             </Pressable>
           </View>
 
-          <Card>
+          <Card style={{ borderWidth: 1, borderColor: 'rgba(162, 8, 12, 0.25)' }}>
             <View style={{ flexDirection: 'row', paddingVertical: 14 }}>
               <Stat first label="On hand" value={formatKgWhole(onHand)} />
               <Stat label="Held" value={formatKgWhole(held)} tone={toUnits(held, W) > 0n ? colors.warning : undefined} />

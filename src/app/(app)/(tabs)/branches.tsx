@@ -7,11 +7,12 @@ import { branches } from '@/api/resources';
 import type { Branch } from '@/api/types';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Badge, Card, ErrorBanner, IconButton, SearchField } from '@/components/ui';
-import { useBranchBalance, useBranchSales, useBranchStock } from '@/features/branch-api';
+import { ChevronRightIcon } from '@/components/icons';
+import { Badge, Card, ErrorBanner, SearchField, TextLink } from '@/components/ui';
+import { useBranchBalance, useBranchStock } from '@/features/branch-api';
 import { useDistributions } from '@/features/distribution-api';
 import { formatKgShort, sum, toUnits } from '@/lib/decimal';
-import { colomboToday, formatRupees } from '@/lib/format';
+import { formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
 
 function Stat({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
@@ -27,19 +28,16 @@ function Stat({ label, value, muted }: { label: string; value: string; muted?: b
 
 /** One branch with its stock, today's sales and what it owes. */
 function BranchCard({ b }: { b: Branch }) {
-  const today = colomboToday();
   const stock = useBranchStock(b.id);
-  const sales = useBranchSales(b.id, today, today);
   const owes = useBranchBalance(b.id);
   const arriving = useDistributions('', '', 'DISPATCHED', b.id);
   const drafts = useDistributions('', '', 'DRAFT', b.id);
 
   const onHand = stock.data ? sum(stock.data.map((s) => s.availableWeightKg), 3) : null;
-  const sold = sales.data?.[0]?.totalSales;
   const badge = arriving.data?.totalElements
     ? { label: 'Delivery to confirm', tone: 'warning' as const }
     : drafts.data?.totalElements
-      ? { label: 'Draft ready', tone: 'neutral' as const }
+      ? { label: 'Draft to send', tone: 'warning' as const }
       : null;
 
   return (
@@ -57,15 +55,17 @@ function BranchCard({ b }: { b: Branch }) {
                 {b.code}
               </Text>
             </View>
-            {!b.active ? <Badge label="Inactive" tone="danger" /> : badge ? <Badge {...badge} /> : null}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              {!b.active ? <Badge label="Inactive" tone="danger" /> : badge ? <Badge {...badge} /> : null}
+              <ChevronRightIcon size={16} color="#AEAEB2" />
+            </View>
           </View>
           {b.active ? (
             <View style={{ flexDirection: 'row', gap: space.sm }}>
               <Stat label="Stock" value={onHand ? formatKgShort(onHand) : '…'} />
-              <Stat label="Sales today" value={sold ? formatRupees(sold, 0).replace('Rs ', '') : '—'} muted={!sold} />
               <Stat
                 label="Owes"
-                value={owes.data ? formatRupees(owes.data, 0).replace('Rs ', '') : '…'}
+                value={owes.data ? formatRupees(owes.data) : '…'}
                 muted={!owes.data || toUnits(owes.data, 2) === 0n}
               />
             </View>
@@ -80,21 +80,22 @@ export default function BranchesTab() {
   const [search, setSearch] = useState('');
   const deferred = useDeferredValue(search);
   const query = branches.useList(deferred);
-  // Active branches first, then closed ones.
-  const list = [...(query.data?.content ?? [])].sort((a, b) => Number(b.active) - Number(a.active));
+  const all = query.data?.content ?? [];
+  const list = all.filter((b) => b.active);
+  const closed = all.filter((b) => !b.active);
 
   return (
     <Screen
       title="Branches"
       inlineActions
       bodyGap={12}
-      right={<IconButton icon="plus" label="Add branch" filled onPress={() => router.push('/branches/new')} />}>
-      {list.length > 5 || search ? (
+      right={<TextLink title="+ Add branch" pill onPress={() => router.push('/branches/new')} />}>
+      {all.length > 5 || search ? (
         <SearchField placeholder="Search branches" accessibilityLabel="Search branches" value={search} onChangeText={setSearch} />
       ) : null}
       {query.isError ? <ErrorBanner message={errorMessage(query.error)} onRetry={query.refetch} /> : null}
       {query.isPending ? <ActivityIndicator color={colors.accent} /> : null}
-      {query.isSuccess && list.length === 0 ? (
+      {query.isSuccess && all.length === 0 ? (
         <Card style={{ padding: space.xl, alignItems: 'center', gap: space.sm }}>
           <Text variant="bodyMedium">{deferred ? 'No matches' : 'No branches yet'}</Text>
           <Text variant="caption" style={{ textAlign: 'center' }}>
@@ -103,6 +104,14 @@ export default function BranchesTab() {
         </Card>
       ) : null}
       {list.map((b) => (
+        <BranchCard key={b.id} b={b} />
+      ))}
+      {closed.length ? (
+        <Text variant="labelSmall" style={{ marginTop: space.md, marginHorizontal: space.xs }}>
+          Inactive
+        </Text>
+      ) : null}
+      {closed.map((b) => (
         <BranchCard key={b.id} b={b} />
       ))}
     </Screen>

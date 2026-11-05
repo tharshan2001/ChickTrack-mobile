@@ -85,6 +85,8 @@ const styles = StyleSheet.create({
     minHeight: 118,
     borderRadius: radius.card,
     backgroundColor: CREAM,
+    borderWidth: 1,
+    borderColor: 'rgba(162, 8, 12, 0.25)',
     ...cardShadow,
     overflow: 'hidden',
     paddingVertical: 20,

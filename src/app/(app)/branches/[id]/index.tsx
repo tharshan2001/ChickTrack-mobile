@@ -4,13 +4,13 @@ import { Fragment, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { branches, products } from '@/api/resources';
-import type { Branch } from '@/api/types';
-import { EditLoader } from '@/components/form';
+import type { Branch, Distribution } from '@/api/types';
+import { EditLoader, FormError, useIdempotencyKey } from '@/components/form';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Card, IconButton, Separator } from '@/components/ui';
 import { useBranchBalance, useBranchSales, useBranchStock } from '@/features/branch-api';
-import { useDistributions } from '@/features/distribution-api';
+import { useDispatch, useDistributions } from '@/features/distribution-api';
 import { formatKgShort, sum, toUnits } from '@/lib/decimal';
 import { BusinessDate, colomboToday, formatRupees, formatRupeesCompact, weekStart } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
@@ -58,11 +58,45 @@ function Section({ children }: { children: ReactNode }) {
   return <Card style={{ padding: space.lg, gap: 14 }}>{children}</Card>;
 }
 
+/** A draft dispatch waiting at head office: review it, or send it from here. */
+function DraftCard({ d, productName }: { d: Distribution; productName: (id: string) => string }) {
+  const send = useDispatch(d.id);
+  const idem = useIdempotencyKey();
+  return (
+    <Section>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text variant="headline">Ready to send</Text>
+        <Badge label="Draft" tone="neutral" />
+      </View>
+      <View style={{ gap: 2 }}>
+        <Text variant="numBig">{formatKgShort(d.totalWeightKg)}</Text>
+        <Text variant="caption">
+          {[...new Set(d.items.map((i) => productName(i.chickenTypeId)))].join(', ')} ·{' '}
+          <Text variant="monoSmall" style={{ color: colors.secondary }}>
+            {d.reference}
+          </Text>{' '}
+          · held in warehouse
+        </Text>
+      </View>
+      <FormError error={send.error} />
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <View style={{ flex: 1 }}>
+          <ActionLink title="Review" onPress={() => router.push({ pathname: '/dispatches/[id]', params: { id: d.id } })} />
+        </View>
+        <View style={{ flex: 2 }}>
+          <ActionLink title={send.isPending ? 'Sending…' : 'Send now'} primary onPress={() => !send.isPending && send.mutate(idem.key, { onError: idem.onError })} />
+        </View>
+      </View>
+    </Section>
+  );
+}
+
 function BranchHome({ b }: { b: Branch }) {
   const today = colomboToday();
   const productList = products.useList('');
   const productName = (id: string) => productList.data?.content.find((p) => p.id === id)?.name ?? 'Product';
   const arriving = useDistributions('', '', 'DISPATCHED', b.id);
+  const drafts = useDistributions('', '', 'DRAFT', b.id);
   const sales = useBranchSales(b.id, today, today);
   const week = useBranchSales(b.id, weekStart(today), today);
   const weekTotal = sum((week.data ?? []).map((s) => s.totalSales), 2);
@@ -86,6 +120,10 @@ function BranchHome({ b }: { b: Branch }) {
         />
       }>
       {!b.active ? <Badge label="Inactive · no new dispatches or sales" tone="neutral" /> : null}
+
+      {(drafts.data?.content ?? []).map((d) => (
+        <DraftCard key={d.id} d={d} productName={productName} />
+      ))}
 
       {(arriving.data?.content ?? []).map((d) => (
         <Section key={d.id}>
@@ -183,10 +221,15 @@ function BranchHome({ b }: { b: Branch }) {
       </Card>
 
       <Card style={{ padding: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md }}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text variant="caption">Owes head office</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Owes head office ${owes.data ? formatRupees(owes.data) : ''}, see statement`}
+          hitSlop={8}
+          onPress={() => router.push({ pathname: '/branches/[id]/money', params: { id: b.id } })}
+          style={({ pressed }) => ({ flex: 1, gap: 2, opacity: pressed ? 0.6 : 1 })}>
+          <Text variant="caption">Owes head office ›</Text>
           <Text variant="numMoney">{owes.data ? formatRupees(owes.data) : '…'}</Text>
-        </View>
+        </Pressable>
         <ActionLink
           title="Record payment"
           accent

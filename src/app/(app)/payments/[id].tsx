@@ -1,13 +1,18 @@
+import { useQueries } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { View } from 'react-native';
+import { Fragment, useState } from 'react';
+import { Pressable, View } from 'react-native';
+
+import { api } from '@/api/client';
 
 import { branches } from '@/api/resources';
-import type { Settlement } from '@/api/types';
+import type { BranchSale, Settlement } from '@/api/types';
+import { ChevronRightIcon } from '@/components/icons';
 import { EditLoader, FormError, useIdempotencyKey } from '@/components/form';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Badge, Button, Card, Field, IconButton, Notice, Separator } from '@/components/ui';
+import { Badge, Button, Card, Field, IconButton, Notice, SectionHeader, Separator } from '@/components/ui';
+import { dayLabel } from '@/features/payment-ui';
 import { METHOD_LABEL, useReversePayment, useSettlement } from '@/features/money-api';
 import { formatIsoDate, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
@@ -36,6 +41,12 @@ function Payment({ p }: { p: Settlement }) {
   const [reason, setReason] = useState('');
   const [touched, setTouched] = useState(false);
   const reversed = p.status === 'REVERSED';
+  const sales = useQueries({
+    queries: p.allocations.map((a) => ({
+      queryKey: ['branch-sale', a.branchSaleId],
+      queryFn: () => api<BranchSale>('GET', `/api/v1/branch-sales/${a.branchSaleId}`),
+    })),
+  });
 
   function doReverse() {
     setTouched(true);
@@ -70,7 +81,12 @@ function Payment({ p }: { p: Settlement }) {
             </View>
           </View>
         ) : (
-          <Button title="Reverse payment" variant="secondary" onPress={() => setConfirming(true)} />
+          <View style={{ gap: 8 }}>
+            <Text variant="caption" style={{ textAlign: 'center' }}>
+              Bounced or entered by mistake? Reversing puts the amount back on what {branch} owes.
+            </Text>
+            <Button title="Reverse payment" variant="danger" onPress={() => setConfirming(true)} />
+          </View>
         )
       }>
       <FormError error={reverse.error} />
@@ -82,8 +98,47 @@ function Payment({ p }: { p: Settlement }) {
             <Separator />
           </>
         ) : null}
-        <Line label="Sales paid" value={String(p.allocations.length)} />
+        <Line label="Recorded" value={new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(p.createdAt))} />
       </Card>
+      {p.allocations.length ? (
+        <View style={{ gap: space.sm }}>
+          <SectionHeader title="Paid for" />
+          <Card>
+            {p.allocations.map((a, i) => {
+              const sale = sales[i]?.data;
+              return (
+                <Fragment key={a.id}>
+                  {i > 0 ? <Separator /> : null}
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => router.push({ pathname: '/sales/[id]', params: { id: a.branchSaleId } })}
+                    style={({ pressed }) => ({
+                      minHeight: 56,
+                      paddingLeft: space.lg,
+                      paddingRight: space.md,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: space.md,
+                      backgroundColor: pressed ? colors.field : 'transparent',
+                    })}>
+                    <Text variant="bodyMedium" style={{ flex: 1 }} numberOfLines={1}>
+                      {sale ? dayLabel(sale.saleDate) : 'Sale'}
+                      {sale ? (
+                        <Text variant="monoSmall" style={{ color: colors.secondary }}>
+                          {' '}
+                          · {sale.reference}
+                        </Text>
+                      ) : null}
+                    </Text>
+                    <Text variant="mono">{formatRupees(a.amount)}</Text>
+                    <ChevronRightIcon size={16} color="#AEAEB2" />
+                  </Pressable>
+                </Fragment>
+              );
+            })}
+          </Card>
+        </View>
+      ) : null}
     </Screen>
   );
 }

@@ -5,22 +5,17 @@ import { useQueries } from '@tanstack/react-query';
 
 import { api, errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
-import type { Settlement } from '@/api/types';
+import type { OpenSale } from '@/api/types';
+import { ChevronRightIcon } from '@/components/icons';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
-import { Badge, Card, ErrorBanner, ListRow, SectionHeader, Separator, TextLink } from '@/components/ui';
+import { Card, ErrorBanner, ListRow, SectionHeader, Separator, TextLink } from '@/components/ui';
 import { useExpenses } from '@/features/expenses-api';
-import { METHOD_LABEL, useSettlements } from '@/features/money-api';
+import { useSettlements } from '@/features/money-api';
+import { PaymentRow, TitleWithLink, unpaidLine } from '@/features/payment-ui';
 import { sum, toUnits } from '@/lib/decimal';
 import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
-
-const shortDate = (iso: string) => {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
-    new Date(Date.UTC(y!, m! - 1, d!)),
-  );
-};
 
 export default function MoneyTab() {
   const branchList = branches.useList('');
@@ -32,6 +27,12 @@ export default function MoneyTab() {
         api<{ outstandingAmount: string }>('GET', `/api/v1/branches/${b.id}/balance`).then((r) => r.outstandingAmount),
     })),
   });
+  const openSales = useQueries({
+    queries: list.map((b) => ({
+      queryKey: ['open-sales', b.id],
+      queryFn: () => api<OpenSale[]>('GET', `/api/v1/branches/${b.id}/open-sales`),
+    })),
+  });
   const payments = useSettlements();
   const thisMonth = colomboToday().slice(0, 7);
   const monthExpenses = useExpenses(`${thisMonth}-01`, colomboToday());
@@ -41,13 +42,12 @@ export default function MoneyTab() {
   );
 
   const rows = list
-    .map((b, i) => ({ b, owes: balances[i]?.data ?? null }))
+    .map((b, i) => ({ b, owes: balances[i]?.data ?? null, unpaid: openSales[i]?.data }))
     .sort((x, y) => Number(toUnits(y.owes ?? '0', 2) - toUnits(x.owes ?? '0', 2)));
   const total = sum(
     rows.map((r) => r.owes),
     2,
   );
-  const max = rows.reduce((m, r) => (toUnits(r.owes ?? '0', 2) > m ? toUnits(r.owes ?? '0', 2) : m), 0n);
   const branchName = (id: string) => list.find((b) => b.id === id)?.name ?? 'Branch';
   const loading = branchList.isPending || balances.some((q) => q.isPending);
 
@@ -58,7 +58,7 @@ export default function MoneyTab() {
       right={
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
           <TextLink title="+ Expense" onPress={() => router.push('/expenses/new')} />
-          <TextLink title="+ Payment" pill onPress={() => router.push('/payments/new')} />
+          <TextLink title="Record payment" pill onPress={() => router.push('/payments/new')} />
         </View>
       }
       inlineActions
@@ -80,37 +80,40 @@ export default function MoneyTab() {
       <View style={{ gap: space.sm }}>
         <SectionHeader title="By branch" />
         <Card>
-          {rows.map(({ b, owes }, i) => {
-            const pct = max > 0n && owes ? Number((toUnits(owes, 2) * 1000n) / max) / 10 : 0;
+          {rows.map(({ b, owes, unpaid }, i) => {
+            const owing = !!owes && toUnits(owes, 2) > 0n;
             return (
               <Fragment key={b.id}>
                 {i > 0 ? <Separator /> : null}
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => router.push({ pathname: '/branches/[id]', params: { id: b.id } })}
+                  accessibilityLabel={`${b.name}, owes ${owes ? formatRupees(owes) : 'loading'}`}
+                  onPress={() => router.push({ pathname: '/branches/[id]/money', params: { id: b.id } })}
                   style={({ pressed }) => ({
                     minHeight: 64,
-                    paddingHorizontal: space.lg,
-                    paddingVertical: space.md,
+                    paddingLeft: space.lg,
+                    paddingRight: space.md,
+                    paddingVertical: 10,
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: space.md,
                     backgroundColor: pressed ? colors.field : 'transparent',
                   })}>
-                  <View style={{ flex: 1, gap: 6, marginRight: space.md }}>
+                  <View style={{ flex: 1, gap: 2 }}>
                     <Text variant="bodyMedium" style={{ color: b.active ? colors.ink : colors.secondary }}>
                       {b.name}
                       {!b.active ? <Text variant="caption"> · closed</Text> : null}
                     </Text>
-                    {toUnits(owes ?? '0', 2) > 0n ? (
-                      <View style={{ height: 4, borderRadius: 2, backgroundColor: colors.field, overflow: 'hidden' }}>
-                        <View style={{ width: `${pct}%`, height: 4, backgroundColor: colors.success }} />
-                      </View>
+                    {unpaidLine(unpaid) ? (
+                      <Text variant="caption" numberOfLines={1}>
+                        {unpaidLine(unpaid)}
+                      </Text>
                     ) : null}
                   </View>
-                  <Text variant="mono" style={{ color: owes && toUnits(owes, 2) > 0n ? colors.ink : colors.secondary }}>
-                    {owes ? formatRupees(owes).replace('Rs ', '') : '…'}
+                  <Text variant="mono" style={{ color: owing ? colors.ink : colors.secondary }}>
+                    {owes ? formatRupees(owes) : '…'}
                   </Text>
+                  <ChevronRightIcon size={16} color="#AEAEB2" />
                 </Pressable>
               </Fragment>
             );
@@ -126,7 +129,7 @@ export default function MoneyTab() {
             subtitle="Rent, salaries and other running costs"
             right={
               <Text variant="mono" style={{ color: colors.ink }}>
-                {monthExpenses.data ? formatRupees(expenseTotal).replace('Rs ', '') : '…'}
+                {monthExpenses.data ? formatRupees(expenseTotal) : '…'}
               </Text>
             }
             chevron
@@ -136,7 +139,7 @@ export default function MoneyTab() {
       </View>
 
       <View style={{ gap: space.sm }}>
-        <SectionHeader title="Recent payments" />
+        <TitleWithLink title="Recent payments" link={payments.data?.length ? 'See all' : undefined} onPress={() => router.push('/payments')} />
         {payments.isPending ? <ActivityIndicator color={colors.accent} /> : null}
         {payments.isSuccess && payments.data.length === 0 ? (
           <Card style={{ padding: space.xl, alignItems: 'center' }}>
@@ -145,48 +148,12 @@ export default function MoneyTab() {
         ) : null}
         {payments.data?.length ? (
           <Card>
-            {payments.data.slice(0, 20).map((p: Settlement, i) => {
-              const reversed = p.status === 'REVERSED';
-              return (
-                <Fragment key={p.id}>
-                  {i > 0 ? <Separator /> : null}
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => router.push({ pathname: '/payments/[id]', params: { id: p.id } })}
-                    style={({ pressed }) => ({
-                      minHeight: 64,
-                      paddingHorizontal: space.lg,
-                      paddingVertical: space.md,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: space.md,
-                      backgroundColor: pressed ? colors.field : 'transparent',
-                    })}>
-                    <View style={{ flex: 1, gap: 4, alignItems: 'flex-start' }}>
-                      <Text numberOfLines={1} style={reversed ? { color: colors.secondary } : undefined}>
-                        {branchName(p.branchId)} · {METHOD_LABEL[p.method] ?? p.method.toLowerCase()}
-                        {p.reference ? (
-                          <Text variant="monoSmall" style={{ color: colors.secondary }}>
-                            {' '}
-                            · {p.reference}
-                          </Text>
-                        ) : null}
-                      </Text>
-                      {reversed ? (
-                        <Badge label={`Reversed · ${p.reversalReason ?? 'bounced'}`} tone="danger" />
-                      ) : (
-                        <Text variant="caption">{shortDate(p.settlementDate)}</Text>
-                      )}
-                    </View>
-                    <Text
-                      variant="mono"
-                      style={reversed ? { color: colors.secondary, textDecorationLine: 'line-through' } : undefined}>
-                      {formatRupees(p.amount).replace('Rs ', '')}
-                    </Text>
-                  </Pressable>
-                </Fragment>
-              );
-            })}
+            {payments.data.slice(0, 5).map((p, i) => (
+              <Fragment key={p.id}>
+                {i > 0 ? <Separator /> : null}
+                <PaymentRow p={p} branch={branchName(p.branchId)} />
+              </Fragment>
+            ))}
           </Card>
         ) : null}
       </View>

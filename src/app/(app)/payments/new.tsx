@@ -17,7 +17,7 @@ import { Badge, Button, Card, Field, SectionHeader, Separator, TextLink } from '
 import { useOpenSales, useRecordPayment } from '@/features/money-api';
 import { fromUnits, isPositiveDecimal, toUnits } from '@/lib/decimal';
 import { colomboToday, formatIsoDate, formatRupees } from '@/lib/format';
-import { colors, radius, space } from '@/theme/tokens';
+import { colors, fonts, radius, space } from '@/theme/tokens';
 
 /** Spreads the amount over the chosen sales, oldest first, never more than a sale still owes. */
 function allocate(sales: OpenSale[], chosen: Set<string>, amount: bigint) {
@@ -46,6 +46,8 @@ export default function RecordPayment() {
   const owes = (id: string) => balances[list.findIndex((b) => b.id === id)]?.data ?? null;
 
   const [branchId, setBranchId] = useState<string | null>(params.branchId ?? null);
+  // Opened from a branch: that branch is the only sensible choice, so it is fixed.
+  const locked = !!params.branchId;
   const openSales = useOpenSales(branchId);
   const sales = openSales.data ?? [];
 
@@ -62,8 +64,9 @@ export default function RecordPayment() {
 
   const chosen = new Set(sales.map((s) => s.branchSaleId).filter((id) => !excluded.has(id)));
   const chosenTotal = sales.filter((s) => chosen.has(s.branchSaleId)).reduce((a, s) => a + toUnits(s.outstandingAmount, 2), 0n);
-  // Until the owner types an amount, offer the full balance of the chosen sales.
-  const amountText = amountTouched ? amount : chosenTotal > 0n ? fromUnits(chosenTotal, 2) : '';
+  // The amount starts empty so a full payment is never recorded by accident;
+  // "Pay full balance" fills it in one tap.
+  const amountText = amount;
   const amountUnits = toUnits(amountText, 2);
   const { parts, unallocated } = allocate(sales, chosen, amountUnits);
   const branchOwes = branchId ? owes(branchId) : null;
@@ -82,6 +85,7 @@ export default function RecordPayment() {
   function pickBranch(id: string) {
     setBranchId(id);
     setExcluded(new Set());
+    setAmount('');
     setAmountTouched(false);
   }
 
@@ -104,7 +108,7 @@ export default function RecordPayment() {
           settlementDate: date,
           amount: fromUnits(amountUnits, 2),
           method,
-          reference: optional(reference),
+          reference: method === 'CASH' ? null : optional(reference),
           notes: null,
           allocations: [...parts.entries()].filter(([, v]) => v > 0n).map(([branchSaleId, v]) => ({ branchSaleId, amount: fromUnits(v, 2) })),
         },
@@ -125,14 +129,31 @@ export default function RecordPayment() {
         <View style={{ gap: 10 }}>
           {after !== null && amountUnits > 0n && !errors.amount ? (
             <Text variant="caption" style={{ textAlign: 'center' }}>
-              {branchName} will owe {formatRupees(fromUnits(after, 2))}
+              {branchName} will {after > 0n ? 'still owe' : 'owe'} {formatRupees(fromUnits(after, 2))}
             </Text>
           ) : null}
-          <Button title="Record payment" onPress={save} loading={record.isPending} />
+          <Button
+            title={amountUnits > 0n && !errors.amount ? `Record ${formatRupees(fromUnits(amountUnits, 2))}` : 'Record payment'}
+            onPress={save}
+            loading={record.isPending}
+          />
         </View>
       }>
       <FormError error={record.error} />
       <Card style={{ padding: space.lg, gap: 14 }}>
+        {locked ? (
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: space.md }}>
+            <View style={{ gap: 2, flexShrink: 1 }}>
+              <Text variant="caption">Branch</Text>
+              <Text variant="headline">{branchName}</Text>
+            </View>
+            {branchOwes ? (
+              <Text variant="caption">
+                Owes <Text variant="monoSmall">{formatRupees(branchOwes)}</Text>
+              </Text>
+            ) : null}
+          </View>
+        ) : (
         <SelectField
           label="Branch"
           compact
@@ -145,6 +166,7 @@ export default function RecordPayment() {
           }))}
           error={touched ? errors.branch : undefined}
         />
+        )}
         <DecimalField
           label="Amount received (Rs)"
           value={amountText}
@@ -156,6 +178,28 @@ export default function RecordPayment() {
           large
           error={touched || amountTouched ? errors.amount : undefined}
         />
+        {chosenTotal > 0n && amountUnits !== chosenTotal ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setAmountTouched(true);
+              setAmount(fromUnits(chosenTotal, 2));
+            }}
+            style={({ pressed }) => ({
+              alignSelf: 'flex-start',
+              height: 30,
+              marginTop: -6,
+              paddingHorizontal: 10,
+              borderRadius: 15,
+              justifyContent: 'center',
+              backgroundColor: colors.tint,
+              opacity: pressed ? 0.7 : 1,
+            })}>
+            <Text variant="caption" style={{ color: colors.accentPressed, fontFamily: fonts.bodyMedium, letterSpacing: 0 }}>
+              Pay full balance · <Text variant="monoSmall" style={{ color: colors.accentPressed }}>{formatRupees(fromUnits(chosenTotal, 2)).replace('Rs ', '')}</Text>
+            </Text>
+          </Pressable>
+        ) : null}
         <Segmented
           label="Method"
           value={method}
@@ -166,21 +210,26 @@ export default function RecordPayment() {
             { value: 'CHEQUE', label: 'Cheque' },
           ]}
         />
+        {method === 'CASH' ? null : (
         <Field
-          label="Reference"
+          label={method === 'CHEQUE' ? 'Cheque number' : 'Bank reference'}
           value={reference}
           onChangeText={setReference}
           autoCapitalize="characters"
           mono
           compact
-          placeholder={method === 'CHEQUE' ? 'Cheque no.' : method === 'BANK' ? 'Transfer ref.' : 'Receipt no.'}
+          placeholder={method === 'CHEQUE' ? 'Cheque no.' : 'Transfer ref.'}
         />
-        <DateField label="Date" value={date} onChange={setDate} compact />
+        )}
+        <DateField label="Received on" value={date} onChange={setDate} compact />
       </Card>
 
       {branchId ? (
         <View style={{ gap: space.sm }}>
-          <SectionHeader title="Pays for" />
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <SectionHeader title="Pays for" />
+            {sales.length > 1 ? <Text variant="caption">Oldest sale first</Text> : null}
+          </View>
           {openSales.isPending ? <ActivityIndicator color={colors.accent} /> : null}
           {openSales.isSuccess && sales.length === 0 ? (
             <Card style={{ padding: space.xl, alignItems: 'center' }}>
