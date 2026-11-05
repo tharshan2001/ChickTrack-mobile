@@ -1,3 +1,4 @@
+import Feather from '@expo/vector-icons/Feather';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Fragment, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
@@ -10,8 +11,8 @@ import { Text } from '@/components/text';
 import { Badge, Card, IconButton, Separator } from '@/components/ui';
 import { useBranchBalance, useBranchSales, useBranchStock } from '@/features/branch-api';
 import { useDistributions } from '@/features/distribution-api';
-import { formatKgShort, toUnits } from '@/lib/decimal';
-import { BusinessDate, colomboToday, formatRupees } from '@/lib/format';
+import { formatKgShort, sum, toUnits } from '@/lib/decimal';
+import { BusinessDate, colomboToday, formatRupees, formatRupeesCompact, weekStart } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
 
 export default function BranchHomeRoute() {
@@ -63,6 +64,8 @@ function BranchHome({ b }: { b: Branch }) {
   const productName = (id: string) => productList.data?.content.find((p) => p.id === id)?.name ?? 'Product';
   const arriving = useDistributions('', '', 'DISPATCHED', b.id);
   const sales = useBranchSales(b.id, today, today);
+  const week = useBranchSales(b.id, weekStart(today), today);
+  const weekTotal = sum((week.data ?? []).map((s) => s.totalSales), 2);
   const stock = useBranchStock(b.id);
   const owes = useBranchBalance(b.id);
 
@@ -107,23 +110,53 @@ function BranchHome({ b }: { b: Branch }) {
         </Section>
       ))}
 
-      <Card style={{ padding: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md }}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text variant="headline">Today&apos;s sales</Text>
-          {sales.isPending ? (
-            <ActivityIndicator color={colors.secondary} />
-          ) : todaySale ? (
-            <Text variant="caption">{formatRupees(todaySale.totalSales)}</Text>
-          ) : (
-            <Text variant="caption">Not entered yet</Text>
-          )}
+      <Card>
+        <View style={{ padding: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text variant="headline">Today&apos;s sales</Text>
+            {sales.isPending ? (
+              <ActivityIndicator color={colors.secondary} />
+            ) : todaySale ? (
+              <Text variant="caption">{formatRupees(todaySale.totalSales)}</Text>
+            ) : (
+              <Text variant="caption">Not entered yet</Text>
+            )}
+          </View>
+          {b.active ? (
+            <ActionLink
+              title={todaySale ? 'Edit' : 'Enter'}
+              onPress={() => router.push({ pathname: '/branches/[id]/sales', params: { id: b.id } })}
+            />
+          ) : null}
         </View>
-        {b.active ? (
-          <ActionLink
-            title={todaySale ? 'Edit' : 'Enter'}
-            onPress={() => router.push({ pathname: '/branches/[id]/sales', params: { id: b.id } })}
-          />
-        ) : null}
+        <Separator />
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push({ pathname: '/branches/[id]/all-sales', params: { id: b.id } })}
+          style={({ pressed }) => ({
+            minHeight: 52,
+            paddingLeft: space.lg,
+            paddingRight: space.md,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: space.sm,
+            backgroundColor: pressed ? colors.field : 'transparent',
+            borderBottomLeftRadius: radius.card,
+            borderBottomRightRadius: radius.card,
+          })}>
+          <Text variant="bodyMedium" style={{ flex: 1, color: colors.accent }}>
+            See all sales
+          </Text>
+          {week.data ? (
+            <Text variant="caption">
+              This week{' '}
+              <Text variant="monoSmall" style={{ color: colors.secondary }}>
+                {formatRupeesCompact(weekTotal)}
+              </Text>
+            </Text>
+          ) : null}
+          <Feather name="chevron-right" size={16} color={colors.secondary} />
+        </Pressable>
       </Card>
 
       <Card style={{ padding: space.lg, gap: space.md }}>

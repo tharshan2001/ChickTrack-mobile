@@ -36,6 +36,10 @@ export function useBranchSales(branchId: string, from: string, to: string) {
   });
 }
 
+export function useBranchSale(id: string) {
+  return useQuery({ queryKey: ['branch-sale', id], queryFn: () => api<BranchSale>('GET', `/api/v1/branch-sales/${id}`) });
+}
+
 export function useRecordSale() {
   const qc = useQueryClient();
   return useMutation({
@@ -44,6 +48,8 @@ export function useRecordSale() {
     onSuccess: (_d, { input }) =>
       Promise.all([
         qc.invalidateQueries({ queryKey: ['branch-sales', input.branchId] }),
+        qc.invalidateQueries({ queryKey: ['branch-sale'] }),
+        qc.invalidateQueries({ queryKey: ['open-sales'] }),
         qc.invalidateQueries({ queryKey: branchKeys.stock(input.branchId) }),
         qc.invalidateQueries({ queryKey: branchKeys.balance(input.branchId) }),
       ]),

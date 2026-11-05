@@ -18,9 +18,9 @@ import { colomboToday, formatRupees } from '@/lib/format';
 import { colors, radius, space } from '@/theme/tokens';
 
 export default function DailySalesRoute() {
-  const params = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id: string; date?: string }>();
   const [branchId, setBranchId] = useState(params.id);
-  const [date, setDate] = useState(colomboToday);
+  const [date, setDate] = useState(() => params.date ?? colomboToday());
   const branchList = branches.useList('', true);
   const stock = useBranchStock(branchId);
   const existing = useBranchSales(branchId, date, date);
