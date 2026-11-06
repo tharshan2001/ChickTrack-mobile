@@ -10,7 +10,7 @@ export const ROLE_LABEL: Record<string, string> = {
 };
 
 export const ROLE_HELP: Record<string, string> = {
-  BRANCH_RECEIVER: 'Receives deliveries and enters daily sales for their branch.',
+  BRANCH_RECEIVER: 'Receives deliveries and closes each day (stock left and takings) for their branch.',
   ACCOUNTANT: 'Records payments and expenses, and sees reports and profit & loss.',
   PROCUREMENT_MANAGER: 'Buys from suppliers and sets purchase prices.',
   WAREHOUSE_MANAGER: 'Looks after stock, batches and adjustments.',

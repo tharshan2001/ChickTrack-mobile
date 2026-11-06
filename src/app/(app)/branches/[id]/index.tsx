@@ -179,7 +179,7 @@ function BranchHome({ b }: { b: Branch }) {
           </View>
           {b.active ? (
             <ActionLink
-              title={todaySale ? 'Edit' : 'Enter'}
+              title={todaySale ? 'Edit' : 'Close day'}
               onPress={() => router.push({ pathname: '/branches/[id]/sales', params: { id: b.id } })}
             />
           ) : null}

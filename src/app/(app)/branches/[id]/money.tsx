@@ -12,8 +12,8 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Button, Card, IconButton, Separator } from '@/components/ui';
 import { useBranchBalance } from '@/features/branch-api';
-import { useOpenSales, useSettlements } from '@/features/money-api';
-import { dayLabel, PaymentRow, TitleWithLink, unpaidLine } from '@/features/payment-ui';
+import { useOpenDeliveries, useSettlements } from '@/features/money-api';
+import { colomboDay, dayLabel, PaymentRow, TitleWithLink, unpaidLine } from '@/features/payment-ui';
 import { toUnits } from '@/lib/decimal';
 import { formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
@@ -23,12 +23,12 @@ export default function BranchMoneyRoute() {
   return <EditLoader title="Branch money" query={branches.useOne(id)}>{(b) => <BranchMoney b={b} />}</EditLoader>;
 }
 
-/** What one branch owes: the total, the sales still unpaid, and its payments. */
+/** What one branch owes: the total, the deliveries still unpaid, and its payments. */
 function BranchMoney({ b }: { b: Branch }) {
   const owes = useBranchBalance(b.id);
-  const open = useOpenSales(b.id);
+  const open = useOpenDeliveries(b.id);
   const payments = useSettlements(b.id);
-  const sales = [...(open.data ?? [])].sort((x, y) => x.saleDate.localeCompare(y.saleDate));
+  const sales = [...(open.data ?? [])].sort((x, y) => x.receivedAt.localeCompare(y.receivedAt));
   const owed = useCountUp(owes.data, 2);
   const firstLoad = useFirstBatch(open.isSuccess && payments.isSuccess);
 
@@ -47,22 +47,22 @@ function BranchMoney({ b }: { b: Branch }) {
         ) : undefined
       }>
       <View style={{ gap: space.sm }}>
-        <TitleWithLink title="Unpaid sales" />
+        <TitleWithLink title="Unpaid deliveries" />
         {open.isPending ? <ActivityIndicator color={colors.accent} /> : null}
         {open.isSuccess && sales.length === 0 ? (
-          <EmptyState icon="check" tone="ok" title="Nothing owed" text={`Every ${b.name} sale is paid for.`} />
+          <EmptyState icon="check" tone="ok" title="Nothing owed" text={`Every ${b.name} delivery is paid for.`} />
         ) : null}
         {sales.length ? (
           <Card>
             <AppearList still={firstLoad}>
               {sales.map((s, i) => {
-              const part = toUnits(s.outstandingAmount, 2) < toUnits(s.transferValue, 2);
+              const part = toUnits(s.outstandingAmount, 2) < toUnits(s.owedAmount, 2);
               return (
-                <Fragment key={s.branchSaleId}>
+                <Fragment key={s.distributionId}>
                   {i > 0 ? <Separator /> : null}
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() => router.push({ pathname: '/sales/[id]', params: { id: s.branchSaleId } })}
+                    onPress={() => router.push({ pathname: '/dispatches/[id]', params: { id: s.distributionId } })}
                     style={({ pressed }) => ({
                       minHeight: 64,
                       paddingLeft: space.lg,
@@ -74,12 +74,12 @@ function BranchMoney({ b }: { b: Branch }) {
                       backgroundColor: pressed ? colors.field : 'transparent',
                     })}>
                     <View style={{ flex: 1, gap: 3 }}>
-                      <Text variant="bodyMedium">{dayLabel(s.saleDate)}</Text>
+                      <Text variant="bodyMedium">{dayLabel(colomboDay(s.receivedAt))}</Text>
                       <Text variant="caption" numberOfLines={1}>
                         <Text variant="monoSmall" style={{ color: colors.secondary }}>
                           {s.reference}
                         </Text>{' '}
-                        · owed of {formatRupees(s.transferValue)}
+                        · owed of {formatRupees(s.owedAmount)}
                       </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end', gap: 4 }}>

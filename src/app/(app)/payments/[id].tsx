@@ -6,14 +6,14 @@ import { Pressable, View } from 'react-native';
 import { api } from '@/api/client';
 
 import { branches } from '@/api/resources';
-import type { BranchSale, Settlement } from '@/api/types';
+import type { Distribution, Settlement } from '@/api/types';
 import { ChevronRightIcon } from '@/components/icons';
 import { EditLoader, FormError, useIdempotencyKey } from '@/components/form';
 import { Screen } from '@/components/screen';
 import { toast } from '@/components/toast';
 import { Text } from '@/components/text';
 import { Badge, Button, Card, Field, IconButton, Notice, SectionHeader, Separator } from '@/components/ui';
-import { dayLabel } from '@/features/payment-ui';
+import { colomboDay, dayLabel } from '@/features/payment-ui';
 import { METHOD_LABEL, useReversePayment, useSettlement } from '@/features/money-api';
 import { formatIsoDate, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
@@ -45,10 +45,10 @@ function Payment({ p }: { p: Settlement }) {
   const reversed = p.status === 'REVERSED';
   // Only animate the notice when the reversal happens here, not when opening an old one.
   const [wasReversed] = useState(reversed);
-  const sales = useQueries({
+  const deliveries = useQueries({
     queries: p.allocations.map((a) => ({
-      queryKey: ['branch-sale', a.branchSaleId],
-      queryFn: () => api<BranchSale>('GET', `/api/v1/branch-sales/${a.branchSaleId}`),
+      queryKey: ['distribution', a.distributionId],
+      queryFn: () => api<Distribution>('GET', `/api/v1/distributions/${a.distributionId}`),
     })),
   });
 
@@ -116,13 +116,13 @@ function Payment({ p }: { p: Settlement }) {
           <SectionHeader title="Paid for" />
           <Card>
             {p.allocations.map((a, i) => {
-              const sale = sales[i]?.data;
+              const delivery = deliveries[i]?.data;
               return (
                 <Fragment key={a.id}>
                   {i > 0 ? <Separator /> : null}
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() => router.push({ pathname: '/sales/[id]', params: { id: a.branchSaleId } })}
+                    onPress={() => router.push({ pathname: '/dispatches/[id]', params: { id: a.distributionId } })}
                     style={({ pressed }) => ({
                       minHeight: 56,
                       paddingLeft: space.lg,
@@ -133,11 +133,11 @@ function Payment({ p }: { p: Settlement }) {
                       backgroundColor: pressed ? colors.field : 'transparent',
                     })}>
                     <Text variant="bodyMedium" style={{ flex: 1 }} numberOfLines={1}>
-                      {sale ? dayLabel(sale.saleDate) : 'Sale'}
-                      {sale ? (
+                      {delivery ? dayLabel(delivery.receipts[0] ? colomboDay(delivery.receipts[0].receivedAt) : delivery.distributionDate) : 'Delivery'}
+                      {delivery ? (
                         <Text variant="monoSmall" style={{ color: colors.secondary }}>
                           {' '}
-                          · {sale.reference}
+                          · {delivery.reference}
                         </Text>
                       ) : null}
                     </Text>

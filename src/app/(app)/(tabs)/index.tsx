@@ -202,7 +202,7 @@ export default function Home() {
           <Task
             key="sales"
             tone="neutral"
-            title="Enter today's sales"
+            title="Close today"
             detail={missingSales.map((b) => b.name).join(' · ')}
             onPress={() => router.push({ pathname: '/branches/[id]/sales', params: { id: missingSales[0]!.id } })}
           />,

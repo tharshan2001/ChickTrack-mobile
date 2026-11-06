@@ -7,7 +7,7 @@ export const productCopy = {
   nameHint: 'Must be unique. Shown on purchases, stock and reports.',
   titleGap: 4,
   addNote:
-    'New products start active. Set its buying and selling prices in Prices & margins before branches can record sales.',
+    'New products start active. Set its buying and selling prices in Prices & margins so day closes can show expected sales.',
   activeOn: 'Shown in the purchase picker',
   activeOff: 'Hidden from new purchases',
 };

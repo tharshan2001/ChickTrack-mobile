@@ -5,23 +5,20 @@ import { View } from 'react-native';
 import { branches, products } from '@/api/resources';
 import type { BranchSale } from '@/api/types';
 import { EditLoader } from '@/components/form';
-import { GrowBar } from '@/components/motion';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Button, Card, IconButton, SectionHeader, Separator, TextLink } from '@/components/ui';
 import { useBranchSale } from '@/features/branch-api';
-import { useOpenSales } from '@/features/money-api';
-import { PaymentBadge, paymentState } from '@/features/sale-status';
-import { formatKg, fromUnits, toUnits } from '@/lib/decimal';
+import { VarianceBadge } from '@/features/sale-status';
+import { formatKg, toUnits } from '@/lib/decimal';
 import { formatDayHeading, formatRupees } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
 
 const plain = (v: string) => formatRupees(v).replace('Rs ', '');
-const signed = (v: string) => (v.startsWith('-') ? `−${plain(v.slice(1))}` : `+${plain(v)}`);
 
 export default function SaleRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  return <EditLoader title="Sale" query={useBranchSale(id)}>{(s) => <Sale s={s} />}</EditLoader>;
+  return <EditLoader title="Day close" query={useBranchSale(id)}>{(s) => <Sale s={s} />}</EditLoader>;
 }
 
 function Line({ label, value, strong, color }: { label: string; value: string; strong?: boolean; color?: string }) {
@@ -48,11 +45,6 @@ function Sale({ s }: { s: BranchSale }) {
   const branch = branches.useOne(s.branchId);
   const productList = products.useList('');
   const productName = (pid: string) => productList.data?.content.find((p) => p.id === pid)?.name ?? 'Product';
-  const open = useOpenSales(s.branchId);
-  const status = paymentState(s, open.data);
-  const owedUnits = toUnits(status.owed, 2);
-  const paid = fromUnits(toUnits(s.transferValue, 2) - owedUnits, 2);
-  const paidPct = toUnits(s.transferValue, 2) > 0n ? Number((toUnits(paid, 2) * 100n) / toUnits(s.transferValue, 2)) : 0;
   const margin = toUnits(s.totalSales, 2) > 0n ? (Number(s.branchProfit) / Number(s.totalSales)) * 100 : null;
 
   return (
@@ -64,7 +56,7 @@ function Sale({ s }: { s: BranchSale }) {
         </Text>
       }
       subtitleAbove
-      left={<IconButton icon="chevron-left" label="Back to sales" onPress={() => router.back()} />}
+      left={<IconButton icon="chevron-left" label="Back" onPress={() => router.back()} />}
       right={
         branch.data?.active ? (
           <TextLink
@@ -86,9 +78,11 @@ function Sale({ s }: { s: BranchSale }) {
         </View>
       }
       footer={
-        owedUnits > 0n ? (
-          <Button title="Record payment" onPress={() => router.push({ pathname: '/payments/new', params: { branchId: s.branchId } })} />
-        ) : undefined
+        <Button
+          title="Branch money"
+          variant="secondary"
+          onPress={() => router.push({ pathname: '/branches/[id]/money', params: { id: s.branchId } })}
+        />
       }>
       <View style={{ gap: space.sm }}>
         <SectionHeader title="By product" />
@@ -108,13 +102,13 @@ function Sale({ s }: { s: BranchSale }) {
                 <View style={{ flex: 1, gap: 3 }}>
                   <Text variant="bodyMedium">{productName(it.chickenTypeId)}</Text>
                   <Text variant="monoSmall" style={{ color: colors.secondary }}>
-                    {formatKg(it.weightKg)} × {plain(it.sellingPricePerKg)}
+                    {formatKg(it.openingWeightKg)} → {formatKg(it.closingWeightKg)} left
                   </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end', gap: 3 }}>
-                  <Text variant="mono">{plain(it.revenue)}</Text>
-                  <Text variant="monoSmall" style={{ color: it.profit.startsWith('-') ? colors.danger : colors.success }}>
-                    {signed(it.profit)}
+                  <Text variant="mono">{formatKg(it.weightKg)} sold</Text>
+                  <Text variant="monoSmall" style={{ color: colors.secondary }}>
+                    {it.sellingPricePerKg ? `@ ${plain(it.sellingPricePerKg)}/kg` : 'No price set'}
                   </Text>
                 </View>
               </View>
@@ -124,9 +118,23 @@ function Sale({ s }: { s: BranchSale }) {
       </View>
 
       <Card>
-        <Line label="Sales" value={plain(s.totalSales)} />
+        <Line label="Expected at branch price" value={s.expectedSales ? plain(s.expectedSales) : '—'} />
         <Separator />
-        <Line label="Stock cost (owed to us)" value={`−${plain(s.transferValue)}`} />
+        <Line label="Takings" value={plain(s.totalSales)} />
+        <Separator />
+        <View
+          style={{ minHeight: 44, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text variant="body" style={{ color: colors.secondary }}>
+            Short / over
+          </Text>
+          {s.variance ? <VarianceBadge sale={s} /> : <Text variant="mono">—</Text>}
+        </View>
+      </Card>
+
+      <Card>
+        <Line label="Takings" value={plain(s.totalSales)} />
+        <Separator />
+        <Line label="Cost of stock sold" value={`−${plain(s.transferValue)}`} />
         <View style={{ height: 1, backgroundColor: colors.ink, marginHorizontal: space.lg }} />
         <Line
           label="Branch profit"
@@ -136,31 +144,6 @@ function Sale({ s }: { s: BranchSale }) {
         />
       </Card>
 
-      {open.data ? (
-        <View style={{ gap: space.sm }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <SectionHeader title="Payment" />
-            <PaymentBadge state={status.state} />
-          </View>
-          <Card style={{ padding: space.lg, gap: 10 }}>
-            <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.field, overflow: 'hidden' }}>
-              <GrowBar pct={Math.min(100, Math.max(0, paidPct))} color={colors.success} />
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <View style={{ gap: 2 }}>
-                <Text variant="footnote">Paid</Text>
-                <Text variant="mono">{plain(paid)}</Text>
-              </View>
-              <View style={{ gap: 2, alignItems: 'flex-end' }}>
-                <Text variant="footnote">Still owed</Text>
-                <Text variant="mono" style={{ color: owedUnits > 0n ? colors.danger : colors.secondary }}>
-                  {plain(status.owed)}
-                </Text>
-              </View>
-            </View>
-          </Card>
-        </View>
-      ) : null}
       {s.notes ? (
         <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
           Note: {s.notes}

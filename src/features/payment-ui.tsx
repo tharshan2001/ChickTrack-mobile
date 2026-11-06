@@ -10,6 +10,13 @@ import { formatRupees } from '@/lib/format';
 import { colors, fonts, space } from '@/theme/tokens';
 
 /** "Wed 4 Nov" from an ISO business date. */
+/** The Colombo calendar day (YYYY-MM-DD) of an instant, e.g. when a delivery was received. */
+export function colomboDay(instant: string) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(
+    new Date(instant),
+  );
+}
+
 export function dayLabel(iso: string) {
   const [y, m, d] = iso.split('-').map(Number);
   return new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
@@ -89,14 +96,13 @@ export function TitleWithLink({
   );
 }
 
-/** "2 unpaid sales · oldest 4 Nov", or "All paid". */
-export function unpaidLine(sales: { saleDate: string }[] | undefined) {
-  if (!sales) return undefined;
-  if (!sales.length) return 'All paid';
-  const oldest = [...sales].sort((a, b) => a.saleDate.localeCompare(b.saleDate))[0]!;
-  const [, m, d] = oldest.saleDate.split('-').map(Number);
-  const when = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
-    new Date(Date.UTC(2000, m! - 1, d!)),
+/** "2 unpaid deliveries · oldest 4 Nov", or "All paid". */
+export function unpaidLine(deliveries: { receivedAt: string }[] | undefined) {
+  if (!deliveries) return undefined;
+  if (!deliveries.length) return 'All paid';
+  const oldest = [...deliveries].sort((a, b) => a.receivedAt.localeCompare(b.receivedAt))[0]!;
+  const when = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'Asia/Colombo' }).format(
+    new Date(oldest.receivedAt),
   );
-  return `${sales.length} unpaid ${sales.length === 1 ? 'sale' : 'sales'} · oldest ${when}`;
+  return `${deliveries.length} unpaid ${deliveries.length === 1 ? 'delivery' : 'deliveries'} · oldest ${when}`;
 }

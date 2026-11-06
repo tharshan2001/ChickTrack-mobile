@@ -171,7 +171,7 @@ function EditBranch({ branch }: { branch: Branch }) {
       <ActiveSwitch
         active={branch.active}
         mutation={setActive}
-        onText="Can receive stock and record sales"
+        onText="Can receive stock and close the day"
         offText="Closed: no new dispatches or sales"
       />
     </Screen>

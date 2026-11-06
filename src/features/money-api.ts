@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api, type Page } from '@/api/client';
-import type { OpenSale, Settlement, SettlementInput } from '@/api/types';
+import type { OpenDelivery, Settlement, SettlementInput } from '@/api/types';
 
 export const METHOD_LABEL: Record<string, string> = { CASH: 'cash', BANK: 'bank', CHEQUE: 'cheque' };
 
 const keys = {
   settlements: ['settlements'] as const,
-  openSales: (branchId: string) => ['open-sales', branchId] as const,
+  openDeliveries: (branchId: string) => ['open-deliveries', branchId] as const,
 };
 
 export function useSettlements(branchId?: string) {
@@ -27,11 +27,11 @@ export function useSettlement(id: string) {
   });
 }
 
-/** Unpaid sales of a branch, oldest first. */
-export function useOpenSales(branchId: string | null) {
+/** Received deliveries a branch still owes for, oldest first. */
+export function useOpenDeliveries(branchId: string | null) {
   return useQuery({
-    queryKey: keys.openSales(branchId ?? ''),
-    queryFn: () => api<OpenSale[]>('GET', `/api/v1/branches/${branchId}/open-sales`),
+    queryKey: keys.openDeliveries(branchId ?? ''),
+    queryFn: () => api<OpenDelivery[]>('GET', `/api/v1/branches/${branchId}/open-deliveries`),
     enabled: !!branchId,
   });
 }
@@ -41,7 +41,7 @@ function useAfterPayment() {
   return (branchId: string) =>
     Promise.all([
       qc.invalidateQueries({ queryKey: keys.settlements }),
-      qc.invalidateQueries({ queryKey: keys.openSales(branchId) }),
+      qc.invalidateQueries({ queryKey: keys.openDeliveries(branchId) }),
       qc.invalidateQueries({ queryKey: ['branch-balance'] }),
     ]);
 }

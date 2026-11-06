@@ -297,21 +297,34 @@ export type BranchStock = { chickenTypeId: string; availableWeightKg: string };
 export type BranchSaleItem = {
   id: string;
   chickenTypeId: string;
+  /** Stock before the day closed. */
+  openingWeightKg: string;
+  /** Stock counted at the end of the day. */
+  closingWeightKg: string;
+  /** Weight that left the branch: opening - closing. */
   weightKg: string;
-  sellingPricePerKg: string;
+  /** Branch price that day; null when none is set. */
+  sellingPricePerKg: string | null;
   transferPricePerKg: string;
-  revenue: string;
+  /** Expected revenue of this line at the branch price; null without a price. */
+  revenue: string | null;
   cost: string;
-  profit: string;
+  profit: string | null;
 };
 
-/** One record per branch per day; saving again for the same day replaces it. */
+/**
+ * One day close per branch per day; saving again for the same day replaces it.
+ * totalSales is what the branch took in; transferValue is the cost of the stock sold;
+ * variance = totalSales - expectedSales (negative = short), null when expected is unknown.
+ */
 export type BranchSale = {
   id: string;
   reference: string;
   branchId: string;
   saleDate: string;
   totalSales: string;
+  expectedSales: string | null;
+  variance: string | null;
   transferValue: string;
   branchProfit: string;
   notes: string | null;
@@ -323,8 +336,9 @@ export type BranchSale = {
 export type BranchSaleInput = {
   branchId: string;
   saleDate: string;
+  totalSales: string;
   notes: string | null;
-  items: { chickenTypeId: string; weightKg: string }[];
+  items: { chickenTypeId: string; closingWeightKg: string }[];
 };
 
 // ---- money ----
@@ -342,7 +356,7 @@ export type Settlement = {
   notes: string | null;
   status: 'POSTED' | 'REVERSED' | string;
   reversalReason: string | null;
-  allocations: { id: string; branchSaleId: string; amount: string }[];
+  allocations: { id: string; distributionId: string; amount: string }[];
   createdAt: string;
   updatedAt: string;
 };
@@ -354,15 +368,15 @@ export type SettlementInput = {
   method: PaymentMethod;
   reference: string | null;
   notes: string | null;
-  allocations: { branchSaleId: string; amount: string }[];
+  allocations: { distributionId: string; amount: string }[];
 };
 
-/** A branch sale not fully paid for yet (GET /branches/{id}/open-sales). */
-export type OpenSale = {
-  branchSaleId: string;
+/** A received delivery the branch has not fully paid for (GET /branches/{id}/open-deliveries). */
+export type OpenDelivery = {
+  distributionId: string;
   reference: string;
-  saleDate: string;
-  transferValue: string;
+  receivedAt: string;
+  owedAmount: string;
   outstandingAmount: string;
 };
 

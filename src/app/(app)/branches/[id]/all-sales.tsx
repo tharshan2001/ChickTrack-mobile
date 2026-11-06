@@ -12,8 +12,7 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Card, ErrorBanner, IconButton, Separator, TextLink } from '@/components/ui';
 import { useBranchSales } from '@/features/branch-api';
-import { useOpenSales } from '@/features/money-api';
-import { PaymentBadge, paymentState } from '@/features/sale-status';
+import { VarianceBadge } from '@/features/sale-status';
 import { formatKgShort, sum } from '@/lib/decimal';
 import { addDays, colomboToday, formatDayHeading, formatRupees, formatRupeesCompact, formatShortDate, weekStart } from '@/lib/format';
 import { colors, space } from '@/theme/tokens';
@@ -59,7 +58,6 @@ export default function BranchSales() {
   const range = rangeFor(period, custom);
   const sales = useBranchSales(id, range.from, range.to);
   const firstLoad = useFirstBatch(sales.isSuccess);
-  const open = useOpenSales(id);
   const list = sales.data ?? [];
   const today = colomboToday();
   const missingToday = branch.data?.active && range.from <= today && range.to >= today && !list.some((s) => s.saleDate === today);
@@ -74,7 +72,7 @@ export default function BranchSales() {
       title="Sales"
       subtitle={branch.data?.name}
       left={<IconButton icon="chevron-left" label="Back" onPress={() => router.back()} />}
-      right={branch.data?.active ? <TextLink title="+ Record" pill onPress={() => enter()} /> : undefined}
+      right={branch.data?.active ? <TextLink title="+ Close day" pill onPress={() => enter()} /> : undefined}
       bodyGap={10}
       bodyPaddingTop={12}
       headerExtra={
@@ -132,10 +130,10 @@ export default function BranchSales() {
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.warningDot }} />
             <View style={{ flex: 1, gap: 2 }}>
               <Text variant="bodyMedium">Today · {formatDayHeading(today)}</Text>
-              <Text variant="caption">Not entered yet</Text>
+              <Text variant="caption">Not closed yet</Text>
             </View>
             <Text variant="bodyMedium" style={{ color: colors.accent }}>
-              Enter
+              Close day
             </Text>
           </Pressable>
         </Card>
@@ -143,14 +141,13 @@ export default function BranchSales() {
 
       {sales.isPending ? <ActivityIndicator color={colors.accent} /> : null}
       {sales.isSuccess && list.length === 0 && !missingToday ? (
-        <EmptyState icon="bar-chart-2" title="No sales in this period" text="Pick another period, or enter today's sales." />
+        <EmptyState icon="bar-chart-2" title="No sales in this period" text="Pick another period, or close today." />
       ) : null}
 
       {list.length ? (
         <Card>
           <AppearList still={firstLoad}>
             {list.map((s, i) => {
-            const status = paymentState(s, open.data);
             const names = [...new Set(s.items.map((it) => productName(it.chickenTypeId)))].join(', ');
             const saleKg = sum(
               s.items.map((it) => it.weightKg),
@@ -182,7 +179,7 @@ export default function BranchSales() {
                   </View>
                   <View style={{ alignItems: 'flex-end', gap: space.xs }}>
                     <Text variant="mono">{formatRupees(s.totalSales).replace('Rs ', '')}</Text>
-                    {open.data ? <PaymentBadge state={status.state} /> : null}
+                    <VarianceBadge sale={s} />
                   </View>
                 </Pressable>
               </Fragment>

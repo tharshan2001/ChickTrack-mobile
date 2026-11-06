@@ -6,7 +6,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { api } from '@/api/client';
 import { branches } from '@/api/resources';
-import type { OpenSale, PaymentMethod } from '@/api/types';
+import type { OpenDelivery, PaymentMethod } from '@/api/types';
 import { EmptyState } from '@/components/empty-state';
 import { DateField } from '@/components/date-field';
 import { FormError, optional, useIdempotencyKey } from '@/components/form';
@@ -15,20 +15,21 @@ import { Segmented, SelectField } from '@/components/pickers';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { Badge, Button, Card, Field, SectionHeader, Separator, TextLink } from '@/components/ui';
-import { useOpenSales, useRecordPayment } from '@/features/money-api';
+import { useOpenDeliveries, useRecordPayment } from '@/features/money-api';
 import { fromUnits, isPositiveDecimal, toUnits } from '@/lib/decimal';
-import { colomboToday, formatIsoDate, formatRupees } from '@/lib/format';
+import { colomboToday, formatRupees } from '@/lib/format';
+import { colomboDay, dayLabel } from '@/features/payment-ui';
 import { colors, fonts, radius, space } from '@/theme/tokens';
 import { CountText, savedAndBack } from '@/components/motion';
 
-/** Spreads the amount over the chosen sales, oldest first, never more than a sale still owes. */
-function allocate(sales: OpenSale[], chosen: Set<string>, amount: bigint) {
+/** Spreads the amount over the chosen deliveries, oldest first, never more than a delivery still owes. */
+function allocate(deliveries: OpenDelivery[], chosen: Set<string>, amount: bigint) {
   let left = amount;
   const parts = new Map<string, bigint>();
-  for (const s of sales) {
-    if (!chosen.has(s.branchSaleId) || left <= 0n) continue;
+  for (const s of deliveries) {
+    if (!chosen.has(s.distributionId) || left <= 0n) continue;
     const take = toUnits(s.outstandingAmount, 2) < left ? toUnits(s.outstandingAmount, 2) : left;
-    parts.set(s.branchSaleId, take);
+    parts.set(s.distributionId, take);
     left -= take;
   }
   return { parts, unallocated: left };
@@ -50,12 +51,12 @@ export default function RecordPayment() {
   const [branchId, setBranchId] = useState<string | null>(params.branchId ?? null);
   // Opened from a branch: that branch is the only sensible choice, so it is fixed.
   const locked = !!params.branchId;
-  const openSales = useOpenSales(branchId);
-  const sales = openSales.data ?? [];
+  const openDeliveries = useOpenDeliveries(branchId);
+  const sales = openDeliveries.data ?? [];
 
   const [amount, setAmount] = useState('');
   const [amountTouched, setAmountTouched] = useState(false);
-  // Sales the owner unticked; everything else is open to the payment.
+  // Deliveries the owner unticked; everything else is open to the payment.
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
   const [method, setMethod] = useState<PaymentMethod>('CASH');
   const [reference, setReference] = useState('');
@@ -64,8 +65,8 @@ export default function RecordPayment() {
   const record = useRecordPayment();
   const idem = useIdempotencyKey();
 
-  const chosen = new Set(sales.map((s) => s.branchSaleId).filter((id) => !excluded.has(id)));
-  const chosenTotal = sales.filter((s) => chosen.has(s.branchSaleId)).reduce((a, s) => a + toUnits(s.outstandingAmount, 2), 0n);
+  const chosen = new Set(sales.map((s) => s.distributionId).filter((id) => !excluded.has(id)));
+  const chosenTotal = sales.filter((s) => chosen.has(s.distributionId)).reduce((a, s) => a + toUnits(s.outstandingAmount, 2), 0n);
   // The amount starts empty so a full payment is never recorded by accident;
   // "Pay full balance" fills it in one tap.
   const amountText = amount;
@@ -80,7 +81,7 @@ export default function RecordPayment() {
     amount: !isPositiveDecimal(amountText)
       ? 'Enter the amount received'
       : unallocated > 0n
-        ? `More than the ${formatRupees(fromUnits(chosenTotal, 2))} these sales owe`
+        ? `More than the ${formatRupees(fromUnits(chosenTotal, 2))} these deliveries owe`
         : undefined,
   };
 
@@ -112,7 +113,7 @@ export default function RecordPayment() {
           method,
           reference: method === 'CASH' ? null : optional(reference),
           notes: null,
-          allocations: [...parts.entries()].filter(([, v]) => v > 0n).map(([branchSaleId, v]) => ({ branchSaleId, amount: fromUnits(v, 2) })),
+          allocations: [...parts.entries()].filter(([, v]) => v > 0n).map(([distributionId, v]) => ({ distributionId, amount: fromUnits(v, 2) })),
         },
         key: idem.key,
       },
@@ -238,24 +239,24 @@ export default function RecordPayment() {
         <View style={{ gap: space.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <SectionHeader title="Pays for" />
-            {sales.length > 1 ? <Text variant="caption">Oldest sale first</Text> : null}
+            {sales.length > 1 ? <Text variant="caption">Oldest delivery first</Text> : null}
           </View>
-          {openSales.isPending ? <ActivityIndicator color={colors.accent} /> : null}
-          {openSales.isSuccess && sales.length === 0 ? (
-            <EmptyState icon="check" tone="ok" title="Nothing owed" text={`Every ${branchName} sale is paid for.`} />
+          {openDeliveries.isPending ? <ActivityIndicator color={colors.accent} /> : null}
+          {openDeliveries.isSuccess && sales.length === 0 ? (
+            <EmptyState icon="check" tone="ok" title="Nothing owed" text={`Every ${branchName} delivery is paid for.`} />
           ) : null}
           {sales.length ? (
             <Card>
               {sales.map((s, i) => {
-                const on = chosen.has(s.branchSaleId);
-                const part = parts.get(s.branchSaleId) ?? 0n;
+                const on = chosen.has(s.distributionId);
+                const part = parts.get(s.distributionId) ?? 0n;
                 return (
-                  <Fragment key={s.branchSaleId}>
+                  <Fragment key={s.distributionId}>
                     {i > 0 ? <Separator /> : null}
                     <Pressable
                       accessibilityRole="checkbox"
                       accessibilityState={{ checked: on }}
-                      onPress={() => toggle(s.branchSaleId)}
+                      onPress={() => toggle(s.distributionId)}
                       style={({ pressed }) => ({
                         minHeight: 64,
                         paddingHorizontal: space.lg,
@@ -280,7 +281,7 @@ export default function RecordPayment() {
                       </View>
                       <View style={{ flex: 1, gap: 2 }}>
                         <Text variant="bodyMedium">
-                          {formatIsoDate(s.saleDate)} ·{' '}
+                          {dayLabel(colomboDay(s.receivedAt))} ·{' '}
                           <Text variant="monoSmall">{s.reference}</Text>
                         </Text>
                         <Text variant="caption" numberOfLines={1}>
@@ -302,7 +303,7 @@ export default function RecordPayment() {
           {sales.length && amountUnits > 0n ? (
             unallocated > 0n ? (
               <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
-                {formatRupees(fromUnits(unallocated, 2))} more than the ticked sales owe
+                {formatRupees(fromUnits(unallocated, 2))} more than the ticked deliveries owe
               </Text>
             ) : amountUnits === chosenTotal ? (
               <View style={{ alignSelf: 'flex-start' }}>
@@ -310,7 +311,7 @@ export default function RecordPayment() {
               </View>
             ) : (
               <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
-                Paid oldest sale first; the rest stays owed
+                Paid oldest delivery first; the rest stays owed
               </Text>
             )
           ) : null}

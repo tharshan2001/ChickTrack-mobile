@@ -5,7 +5,7 @@ import { useQueries } from '@tanstack/react-query';
 
 import { api, errorMessage } from '@/api/client';
 import { branches } from '@/api/resources';
-import type { OpenSale } from '@/api/types';
+import type { OpenDelivery } from '@/api/types';
 import { EmptyState } from '@/components/empty-state';
 import { ActionButton } from '@/components/action-button';
 import { ChevronRightIcon } from '@/components/icons';
@@ -30,10 +30,10 @@ export default function MoneyTab() {
         api<{ outstandingAmount: string }>('GET', `/api/v1/branches/${b.id}/balance`).then((r) => r.outstandingAmount),
     })),
   });
-  const openSales = useQueries({
+  const openDeliveries = useQueries({
     queries: list.map((b) => ({
-      queryKey: ['open-sales', b.id],
-      queryFn: () => api<OpenSale[]>('GET', `/api/v1/branches/${b.id}/open-sales`),
+      queryKey: ['open-deliveries', b.id],
+      queryFn: () => api<OpenDelivery[]>('GET', `/api/v1/branches/${b.id}/open-deliveries`),
     })),
   });
   const payments = useSettlements();
@@ -46,7 +46,7 @@ export default function MoneyTab() {
   );
 
   const rows = list
-    .map((b, i) => ({ b, owes: balances[i]?.data ?? null, unpaid: openSales[i]?.data }))
+    .map((b, i) => ({ b, owes: balances[i]?.data ?? null, unpaid: openDeliveries[i]?.data }))
     .sort((x, y) => Number(toUnits(y.owes ?? '0', 2) - toUnits(x.owes ?? '0', 2)));
   const total = sum(
     rows.map((r) => r.owes),

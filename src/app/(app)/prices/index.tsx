@@ -150,7 +150,7 @@ export default function Prices() {
 
       {ps.length ? (
         <Text variant="caption" style={{ paddingHorizontal: space.xs }}>
-          A branch can&apos;t record sales of a chicken type until its selling price is set. Margin is added to landed cost when
+          Without a branch selling price, the day close can&apos;t work out expected sales or short/over. Margin is added to landed cost when
           you dispatch.
         </Text>
       ) : null}
